@@ -1,6 +1,6 @@
 /* ============================================
-   TV KIOSK - APP.JS v5.1 (In-Card Cinematic Edition - 2sn Bekleme)
-   Google Sheets Integration & Slide Engine
+   TV KIOSK - APP.JS v8 (Universal Magic Link & Excel Database)
+   In-Card Cinematic Edition - 2sn Bekleme
    ============================================ */
 
 (function () {
@@ -9,15 +9,15 @@
     // --- Configuration ---
     const CONFIG = {
         SLIDE_INTERVAL: 10000,      // Normal slaytlar için bekleme süresi
-        DATA_REFRESH: 120000,       
+        DATA_REFRESH: 120000,       // 2 dakikada bir Excel'i kontrol eder
         CLOCK_REFRESH: 1000,        
         PROGRESS_STEP: 50,          
         TICKER_CYCLE: 6000,         
         TICKER_SCROLL_SPEED: 70,    
         WEATHER_REFRESH: 600000,    
-        WEATHER_CITY: 'Sultangazi',
-        WEATHER_LAT: 41.1075,
-        WEATHER_LON: 28.8617,
+        WEATHER_CITY: 'Sultangazi', // Excel'den okuyamazsa varsayılan
+        WEATHER_LAT: 41.1075,       // Excel'den okuyamazsa varsayılan
+        WEATHER_LON: 28.8617,       // Excel'den okuyamazsa varsayılan
         NEXT_PREVIEW_SHOW: 3000,    
         RETRY_DELAY: 10000,
         MAX_RETRIES: 5,
@@ -31,21 +31,11 @@
             z-index: 50;
             background: #000;
         }
-        .slide-media::after {
-            transition: opacity 0.5s ease;
-        }
-        .fullscreen-media {
-            width: 100% !important; 
-        }
-        .fullscreen-media::after {
-            opacity: 0 !important; 
-        }
-        .slide-text {
-            transition: opacity 0.5s ease;
-        }
-        .text-hidden {
-            opacity: 0 !important;
-        }
+        .slide-media::after { transition: opacity 0.5s ease; }
+        .fullscreen-media { width: 100% !important; }
+        .fullscreen-media::after { opacity: 0 !important; }
+        .slide-text { transition: opacity 0.5s ease; }
+        .text-hidden { opacity: 0 !important; }
     `;
     document.head.appendChild(dynamicStyle);
 
@@ -62,16 +52,11 @@
     const ytScript = document.createElement('script');
     ytScript.src = "https://www.youtube.com/iframe_api";
     const firstScriptTag = document.getElementsByTagName('script')[0];
-    if (firstScriptTag) {
-        firstScriptTag.parentNode.insertBefore(ytScript, firstScriptTag);
-    } else {
-        document.head.appendChild(ytScript);
-    }
+    if (firstScriptTag) firstScriptTag.parentNode.insertBefore(ytScript, firstScriptTag);
+    else document.head.appendChild(ytScript);
 
     function onPlayerStateChange(event) {
-        if (window.currentYtStateCallback) {
-            window.currentYtStateCallback(event.data);
-        }
+        if (window.currentYtStateCallback) window.currentYtStateCallback(event.data);
     }
 
     // --- Category Mappings ---
@@ -131,50 +116,41 @@
     function init() {
         cacheDom();
         const urlParams = new URLSearchParams(window.location.search);
-        const isDemo = urlParams.has('demo') || localStorage.getItem('kiosk_demo_mode') === 'true';
 
+        // ==========================================
+        // 🌟 SİHİRLİ LİNK KONTROLÜ (MAGIC LINK)
+        // Eğer linkte ?id=... varsa, bunu kalıcı olarak TV'nin hafızasına kaydet
+        if (urlParams.has('id')) {
+            const urlId = urlParams.get('id');
+            if (urlId && urlId.trim() !== '') {
+                localStorage.setItem('kiosk_sheet_id', urlId.trim());
+            }
+        }
+        // ==========================================
+
+        const isDemo = urlParams.has('demo') || localStorage.getItem('kiosk_demo_mode') === 'true';
         if (isDemo) { startDemoMode(); return; }
 
+        // Hafızadaki ID'yi çağır (Linkten kopyaladığı veya daha önce girilmiş olan)
         const sheetId = localStorage.getItem('kiosk_sheet_id');
-        const schoolName = localStorage.getItem('kiosk_school_name');
-        const schoolLogo = localStorage.getItem('kiosk_school_logo');
-        const weatherCity = localStorage.getItem('kiosk_weather_city');
 
+        // Eğer hiçbir ID bulunamadıysa kurulum ekranını göster
         if (!sheetId) { showSetupPrompt(); return; }
 
-        if (schoolName) {
-            els.schoolName.textContent = schoolName;
-            document.title = schoolName + ' — Bilgi Ekranı';
-        }
-
-        if (schoolLogo && els.schoolLogo) {
-            els.schoolLogo.src = schoolLogo;
-            els.schoolLogo.style.display = 'block';
-            if (els.defaultSchoolIcon) els.defaultSchoolIcon.style.display = 'none';
-        }
-
-        if (weatherCity) CONFIG.WEATHER_CITY = weatherCity;
-        
-        const weatherLat = localStorage.getItem('kiosk_weather_lat');
-        const weatherLon = localStorage.getItem('kiosk_weather_lon');
-        if (weatherLat && weatherLon) {
-            CONFIG.WEATHER_LAT = parseFloat(weatherLat);
-            CONFIG.WEATHER_LON = parseFloat(weatherLon);
-        }
-
         startClock();
-        fetchWeather();
-        fetchData(sheetId);
-        setInterval(() => fetchData(sheetId), CONFIG.DATA_REFRESH);
+        
+        // Önce AYARLAR sekmesini, sonra DUYURULAR sekmesini çeken ana fonksiyon
+        fetchSettingsAndData(sheetId);
+        
+        // Zamanlayıcılar
+        setInterval(() => fetchSettingsAndData(sheetId), CONFIG.DATA_REFRESH);
         setInterval(fetchWeather, CONFIG.WEATHER_REFRESH);
     }
 
     function startDemoMode() {
         els.schoolName.textContent = 'Gazi MTAL';
         startClock(); fetchFreeWeather();
-        const demoRows = [{
-            baslik: 'Örnek Duyuru', icerik: 'Sistem demo modunda çalışıyor.', kategori: 'duyuru', tarih: '', aktif: 'evet', bant: 'evet', gorsel: '', video: ''
-        }];
+        const demoRows = [{ baslik: 'Örnek Duyuru', icerik: 'Sistem demo modunda çalışıyor.', kategori: 'duyuru', tarih: '', aktif: 'evet', bant: 'evet', gorsel: '', video: '' }];
         processData(demoRows);
     }
 
@@ -202,7 +178,7 @@
         return sheetId;
     }
 
-    function loadFromCache(failedUrl) {
+    function loadFromCache() {
         if (els.offlineBadge) els.offlineBadge.classList.remove('hidden');
         const cachedData = localStorage.getItem('cachedAnnouncements');
         if (cachedData) {
@@ -210,6 +186,67 @@
         } else {
             showError('İnternet bağlantısı yok.');
         }
+    }
+
+    // ==========================================
+    // EXCEL'DEN AYARLARI VE DUYURULARI ÇEKME
+    // ==========================================
+    function fetchSettingsAndData(sheetId) {
+        const id = getCleanSheetId(sheetId);
+        
+        // 1. AŞAMA: AYARLAR SEKMESİNİ OKU
+        const settingsUrl = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json;responseHandler:parseGoogleSheetSettings&sheet=AYARLAR`;
+        
+        let oldSettingsScript = document.getElementById('jsonp-settings-fetch');
+        if (oldSettingsScript) oldSettingsScript.remove();
+
+        window.parseGoogleSheetSettings = function(json) {
+            try {
+                const rows = json.table.rows;
+                const settings = {};
+                
+                rows.forEach(row => {
+                    if(row.c && row.c[0] && row.c[1]) {
+                        const key = row.c[0].v ? row.c[0].v.toString().trim() : '';
+                        const val = row.c[1].v ? row.c[1].v.toString().trim() : '';
+                        settings[key] = val;
+                    }
+                });
+
+                // Ayarları Ekrana Uygula
+                if (settings['OkulAdi']) {
+                    els.schoolName.textContent = settings['OkulAdi'];
+                    document.title = settings['OkulAdi'] + ' — Bilgi Ekranı';
+                }
+                
+                if (settings['LogoURL'] && els.schoolLogo) {
+                    els.schoolLogo.src = settings['LogoURL'];
+                    els.schoolLogo.style.display = 'block';
+                    if (els.defaultSchoolIcon) els.defaultSchoolIcon.style.display = 'none';
+                } else if (!settings['LogoURL'] && els.schoolLogo) {
+                    els.schoolLogo.style.display = 'none';
+                    if (els.defaultSchoolIcon) els.defaultSchoolIcon.style.display = 'block';
+                }
+
+                // Koordinatları ayarla
+                if (settings['Enlem']) CONFIG.WEATHER_LAT = parseFloat(settings['Enlem'].replace(',', '.'));
+                if (settings['Boylam']) CONFIG.WEATHER_LON = parseFloat(settings['Boylam'].replace(',', '.'));
+                
+                fetchWeather(); // Yeni koordinatlara göre havayı çek
+
+            } catch(e) { console.error("Ayarlar okunamadı, varsayılanlar kullanılacak."); }
+            
+            delete window.parseGoogleSheetSettings;
+
+            // 2. AŞAMA: AYARLAR BİTTİKTEN SONRA DUYURULARI OKU
+            fetchData(sheetId);
+        };
+
+        const scriptSettings = document.createElement('script');
+        scriptSettings.id = 'jsonp-settings-fetch';
+        scriptSettings.src = settingsUrl;
+        scriptSettings.onerror = function() { fetchData(sheetId); }; 
+        document.body.appendChild(scriptSettings);
     }
 
     function fetchData(sheetId) {
@@ -239,7 +276,7 @@
                 });
                 localStorage.setItem('cachedAnnouncements', JSON.stringify(resultData));
                 processData(resultData);
-            } catch(e) { loadFromCache(url); }
+            } catch(e) { loadFromCache(); }
             delete window.parseGoogleSheetData;
         };
         
@@ -248,8 +285,8 @@
         script.src = url;
         script.onerror = function() {
             retryCount++;
-            if (retryCount <= CONFIG.MAX_RETRIES) setTimeout(() => fetchData(sheetId), CONFIG.RETRY_DELAY);
-            else loadFromCache(url);
+            if (retryCount <= CONFIG.MAX_RETRIES) setTimeout(() => fetchSettingsAndData(sheetId), CONFIG.RETRY_DELAY);
+            else loadFromCache();
         };
         document.body.appendChild(script);
     }
@@ -402,7 +439,6 @@
     }
 
     // --- SLIDESHOW ENGINE ---
-
     function startSlideshow() {
         if (slides.length === 0) return;
         scheduleNextPreview();
@@ -475,10 +511,10 @@
         container.classList.remove('fullscreen-media');
         if(textElement) textElement.classList.remove('text-hidden');
         
-        // 4. Adım: Küçülme animasyonunun bitmesini bekle, ardından sonraki habere geç (Bekleme süresi 2 Saniyeye Çıkarıldı)
+        // 4. Adım: Küçülme animasyonunun bitmesini bekle (2 Saniye)
         currentSlideTimeout = setTimeout(() => {
             nextSlide();
-        }, 2000); // <-- 1000'den 2000'e güncellendi
+        }, 2000); 
     }
 
     function nextSlide() {
