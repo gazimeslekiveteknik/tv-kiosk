@@ -1,5 +1,5 @@
 /* ============================================
-   TV KIOSK - APP.JS v5 (In-Card Cinematic Edition)
+   TV KIOSK - APP.JS v5.1 (In-Card Cinematic Edition - 2sn Bekleme)
    Google Sheets Integration & Slide Engine
    ============================================ */
 
@@ -35,10 +35,10 @@
             transition: opacity 0.5s ease;
         }
         .fullscreen-media {
-            width: 100% !important; /* Sadece bulunduğu kartın %100'ünü kaplar, ekranın dışına taşmaz */
+            width: 100% !important; 
         }
         .fullscreen-media::after {
-            opacity: 0 !important; /* Genişleyince sağdaki beyaz gradient silinir */
+            opacity: 0 !important; 
         }
         .slide-text {
             transition: opacity 0.5s ease;
@@ -475,10 +475,10 @@
         container.classList.remove('fullscreen-media');
         if(textElement) textElement.classList.remove('text-hidden');
         
-        // 4. Adım: Küçülme animasyonunun bitmesini (1sn) bekle, ardından sonraki habere geç
+        // 4. Adım: Küçülme animasyonunun bitmesini bekle, ardından sonraki habere geç (Bekleme süresi 2 Saniyeye Çıkarıldı)
         currentSlideTimeout = setTimeout(() => {
             nextSlide();
-        }, 1000);
+        }, 2000); // <-- 1000'den 2000'e güncellendi
     }
 
     function nextSlide() {
