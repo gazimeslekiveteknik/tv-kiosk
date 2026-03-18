@@ -313,6 +313,27 @@
                 if (settings['Enlem']) CONFIG.WEATHER_LAT = parseFloat(settings['Enlem'].replace(',', '.'));
                 if (settings['Boylam']) CONFIG.WEATHER_LON = parseFloat(settings['Boylam'].replace(',', '.'));
                 
+                // Şehir ayarını uygula
+                if (settings['Sehir']) {
+                    CONFIG.WEATHER_CITY = settings['Sehir'];
+                    localStorage.setItem('kiosk_weather_city', settings['Sehir']);
+                }
+
+                // Script URL'yi AYARLAR'dan kaydet (TV kurulumunu basitleştirir)
+                if (settings['ScriptURL']) {
+                    localStorage.setItem('kiosk_script_url', settings['ScriptURL']);
+                }
+
+                // Şifreyi AYARLAR'dan kaydet
+                if (settings['Sifre']) {
+                    localStorage.setItem('kiosk_admin_password', settings['Sifre']);
+                }
+
+                // Okul adını da localStorage'a kaydet
+                if (settings['OkulAdi']) {
+                    localStorage.setItem('kiosk_school_name', settings['OkulAdi']);
+                }
+
                 fetchWeather(); // Yeni koordinatlara göre havayı çek
 
             } catch(e) { console.error("Ayarlar okunamadı, varsayılanlar kullanılacak."); }
