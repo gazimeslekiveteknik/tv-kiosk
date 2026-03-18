@@ -148,9 +148,90 @@
     }
 
     function startDemoMode() {
-        els.schoolName.textContent = 'Gazi MTAL';
+        els.schoolName.textContent = 'Gazi Mesleki ve Teknik Anadolu Lisesi';
         startClock(); fetchFreeWeather();
-        const demoRows = [{ baslik: 'Örnek Duyuru', icerik: 'Sistem demo modunda çalışıyor.', kategori: 'duyuru', tarih: '', aktif: 'evet', bant: 'evet', gorsel: '', video: '' }];
+        const demoRows = [
+            {
+                baslik: '2025-2026 Bahar Dönemi Kayıt Yenileme',
+                icerik: 'Tüm öğrencilerimizin 1-15 Mart tarihleri arasında e-Okul sistemi üzerinden kayıt yenilemelerini tamamlamaları gerekmektedir. Gerekli belgeler okul web sitesinde yayınlanmıştır.',
+                kategori: 'duyuru',
+                tarih: '2026-03-01',
+                aktif: 'evet',
+                bant: 'evet',
+                gorsel: 'https://picsum.photos/id/180/800/600',
+                video: ''
+            },
+            {
+                baslik: 'Bilim ve Teknoloji Şenliği Başlıyor!',
+                icerik: 'Okulumuzun geleneksel Bilim Şenliği 25 Mart\'ta spor salonunda başlıyor. Robotik, yapay zeka ve yenilenebilir enerji alanlarında projeler sergilenecek. Tüm velilerimiz davetlidir!',
+                kategori: 'bilim',
+                tarih: '2026-03-25',
+                aktif: 'evet',
+                bant: 'evet',
+                gorsel: 'https://picsum.photos/id/2/800/600',
+                video: ''
+            },
+            {
+                baslik: 'Yarıyıl Sınavları Programı Açıklandı',
+                icerik: 'İkinci dönem yazılı sınavları 7-18 Nisan tarihleri arasında yapılacaktır. Sınav programı kat panolarına asılmıştır. Öğrencilerimize başarılar dileriz.',
+                kategori: 'sinav',
+                tarih: '2026-04-07',
+                aktif: 'evet',
+                bant: 'hayır',
+                gorsel: '',
+                video: ''
+            },
+            {
+                baslik: '🏆 Okulumuz İl Birincisi!',
+                icerik: 'Bilgisayar Programcılığı bölümü öğrencilerimiz TÜBİTAK proje yarışmasında il birincisi olmuştur! Fatih Yılmaz ve Ayşe Kara\'yı tebrik ediyoruz.',
+                kategori: 'onemli',
+                tarih: '2026-03-15',
+                aktif: 'evet',
+                bant: 'evet',
+                gorsel: 'https://picsum.photos/id/60/800/600',
+                video: ''
+            },
+            {
+                baslik: 'Okul Spor Turnuvaları Devam Ediyor',
+                icerik: 'Sınıflar arası futbol turnuvasında çeyrek final maçları bu hafta oynanacak. Voleybol turnuvası kayıtları da başlamıştır. Beden Eğitimi öğretmenlerine başvurabilirsiniz.',
+                kategori: 'spor',
+                tarih: '2026-03-20',
+                aktif: 'evet',
+                bant: 'hayır',
+                gorsel: 'https://picsum.photos/id/235/800/600',
+                video: ''
+            },
+            {
+                baslik: 'Kariyer Günleri: Sektörden Konuklar',
+                icerik: 'Her Cuma günü farklı sektörlerden profesyoneller okulumuza konuk oluyor. Bu hafta konuğumuz yazılım mühendisi Mehmet Demir. Konferans salonunda, saat 14:00\'te.',
+                kategori: 'etkinlik',
+                tarih: '2026-03-21',
+                aktif: 'evet',
+                bant: 'evet',
+                gorsel: 'https://picsum.photos/id/3/800/600',
+                video: ''
+            },
+            {
+                baslik: 'Kütüphane Yeni Kitaplar Eklendi',
+                icerik: 'Okul kütüphanemize 200 yeni kitap eklendi. Bilim kurgu, tarih ve teknoloji alanlarında zengin bir koleksiyon sizi bekliyor. Kütüphane her gün 08:30 - 17:00 arası açıktır.',
+                kategori: 'duyuru',
+                tarih: '2026-03-18',
+                aktif: 'evet',
+                bant: 'hayır',
+                gorsel: 'https://picsum.photos/id/24/800/600',
+                video: ''
+            },
+            {
+                baslik: 'Deprem Tatbikatı Hatırlatması',
+                icerik: '22 Mart Cuma günü saat 10:00\'da okul genelinde deprem tatbikatı yapılacaktır. Tüm öğrenci ve personelin tatbikat prosedürlerini gözden geçirmesi rica olunur.',
+                kategori: 'onemli',
+                tarih: '2026-03-22',
+                aktif: 'evet',
+                bant: 'evet',
+                gorsel: '',
+                video: ''
+            }
+        ];
         processData(demoRows);
     }
 
@@ -295,12 +376,19 @@
         if (!url) return null;
         const lower = url.toLowerCase();
         if (lower.includes('youtube.com') || lower.includes('youtu.be')) return 'youtube';
+        if (lower.includes('drive.google.com')) return 'drive';
         if (['.mp4', '.webm', '.ogg', '.mov'].some(ext => lower.includes(ext))) return 'video';
         return 'image';
     }
 
     function getYouTubeId(url) {
         const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?#]+)/);
+        return match ? match[1] : null;
+    }
+
+    function getDriveFileId(url) {
+        // Supports: /file/d/FILE_ID/..., ?id=FILE_ID, /d/FILE_ID
+        const match = url.match(/(?:\/file\/d\/|\/d\/|[?&]id=)([a-zA-Z0-9_-]+)/);
         return match ? match[1] : null;
     }
 
@@ -357,6 +445,14 @@
             return `<div class="slide-media yt-container" id="media-container-${index}">
                 <div id="yt-player-${index}" data-vid="${ytId}" style="width:100%;height:100%;pointer-events:none;"></div>
             </div>`;
+        } else if (item.mediaType === 'drive') {
+            const driveId = getDriveFileId(item.mediaUrl);
+            if (!driveId) return '';
+            return `<div class="slide-media drive-container" id="media-container-${index}">
+                <iframe id="drive-player-${index}" src="https://drive.google.com/file/d/${driveId}/preview" 
+                    style="width:100%;height:100%;border:none;pointer-events:none;" 
+                    allow="autoplay" allowfullscreen></iframe>
+            </div>`;
         }
         return '';
     }
@@ -369,7 +465,7 @@
             const hasMedia = item.mediaUrl && item.mediaType;
             const noMediaClass = hasMedia ? '' : 'no-media';
             
-            const progressHtml = (item.mediaType === 'youtube' || item.mediaType === 'video') 
+            const progressHtml = (item.mediaType === 'youtube' || item.mediaType === 'video' || item.mediaType === 'drive') 
                 ? '' 
                 : `<div class="slide-progress" id="progress-${index}"></div>`;
 
@@ -453,7 +549,7 @@
         const item = slides[currentSlideIndex];
         if (!item) return;
 
-        if (item.mediaType === 'youtube' || item.mediaType === 'video') {
+        if (item.mediaType === 'youtube' || item.mediaType === 'video' || item.mediaType === 'drive') {
             handleVideoSlide(item, currentSlideIndex);
         } else {
             startProgress(CONFIG.SLIDE_INTERVAL);
@@ -497,6 +593,13 @@
                     else nextSlide();
                 };
             }
+        } else if (item.mediaType === 'drive') {
+            // Drive video: iframe olarak gösterilir, süre sınırlı (30 saniye)
+            const driveTimeout = 30000;
+            currentSlideTimeout = setTimeout(() => {
+                if (container.classList.contains('fullscreen-media')) endVideoSlide(container, textElement);
+                else nextSlide();
+            }, driveTimeout);
         }
 
         // 1. Adım: 4 saniye normal bekle, sonra bulunduğu kartın içinde %100 genişle
@@ -559,6 +662,14 @@
         } else if (item.mediaType === 'video') {
             const video = document.getElementById(`html-video-${index}`);
             if (video) video.pause();
+        } else if (item.mediaType === 'drive') {
+            // Drive iframe'i durdurmak için src'yi temizleyip geri yükle
+            const iframe = document.getElementById(`drive-player-${index}`);
+            if (iframe) {
+                const src = iframe.src;
+                iframe.src = '';
+                iframe.src = src;
+            }
         }
     }
 
