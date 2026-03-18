@@ -1,5 +1,5 @@
 /* ============================================
-   TV KIOSK - APP.JS v4 (Cinematic Video Edition)
+   TV KIOSK - APP.JS v5 (In-Card Cinematic Edition)
    Google Sheets Integration & Slide Engine
    ============================================ */
 
@@ -8,9 +8,9 @@
 
     // --- Configuration ---
     const CONFIG = {
-        SLIDE_INTERVAL: 10000,      // Normal slaytlar için bekleme süresi (10 saniye)
-        DATA_REFRESH: 120000,       // 2 minutes data refresh
-        CLOCK_REFRESH: 1000,        // 1 second clock update
+        SLIDE_INTERVAL: 10000,      // Normal slaytlar için bekleme süresi
+        DATA_REFRESH: 120000,       
+        CLOCK_REFRESH: 1000,        
         PROGRESS_STEP: 50,          
         TICKER_CYCLE: 6000,         
         TICKER_SCROLL_SPEED: 70,    
@@ -23,27 +23,28 @@
         MAX_RETRIES: 5,
     };
 
-    // --- Dynamic CSS Injection for Fullscreen Effect ---
+    // --- Dynamic CSS Injection for In-Card Fullscreen ---
     const dynamicStyle = document.createElement('style');
     dynamicStyle.innerHTML = `
         .slide-media {
-            transition: all 1s cubic-bezier(0.25, 1, 0.5, 1);
-            transform-origin: center center;
+            transition: width 1s cubic-bezier(0.25, 1, 0.5, 1) !important;
             z-index: 50;
             background: #000;
         }
-        .fullscreen-media {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            z-index: 99999 !important;
-            border-radius: 0 !important;
-            box-shadow: 0 0 50px rgba(0,0,0,0.9);
+        .slide-media::after {
+            transition: opacity 0.5s ease;
         }
-        .fullscreen-media iframe, .fullscreen-media video {
-            object-fit: contain !important;
+        .fullscreen-media {
+            width: 100% !important; /* Sadece bulunduğu kartın %100'ünü kaplar, ekranın dışına taşmaz */
+        }
+        .fullscreen-media::after {
+            opacity: 0 !important; /* Genişleyince sağdaki beyaz gradient silinir */
+        }
+        .slide-text {
+            transition: opacity 0.5s ease;
+        }
+        .text-hidden {
+            opacity: 0 !important;
         }
     `;
     document.head.appendChild(dynamicStyle);
@@ -123,9 +124,6 @@
         els.weatherTemp = document.getElementById('weather-temp');
         els.weatherDesc = document.getElementById('weather-desc');
         els.weatherCity = document.getElementById('weather-city');
-        els.eventBanner = document.getElementById('event-banner');
-        els.eventBannerText = document.getElementById('event-banner-text');
-        els.eventBannerBadge = document.getElementById('event-banner-badge');
         els.nextPreview = document.getElementById('next-slide-preview');
         els.nextPreviewTitle = document.getElementById('next-preview-title');
     }
@@ -334,7 +332,6 @@
             const hasMedia = item.mediaUrl && item.mediaType;
             const noMediaClass = hasMedia ? '' : 'no-media';
             
-            // Progress bar is only added for image/text slides
             const progressHtml = (item.mediaType === 'youtube' || item.mediaType === 'video') 
                 ? '' 
                 : `<div class="slide-progress" id="progress-${index}"></div>`;
@@ -361,7 +358,6 @@
     function initYouTubePlayers() {
         if (!window.ytApiReady) return;
         
-        // Temizlik (Eski playerları hafızadan sil)
         for (let idx in window.ytPlayers) {
             if (!document.getElementById(`yt-player-${idx}`)) {
                 try { window.ytPlayers[idx].destroy(); } catch(e){}
@@ -413,22 +409,6 @@
         playCurrentSlide();
     }
 
-    function toggleFullscreenCSS(enable) {
-        const contentArea = document.querySelector('.content-area');
-        const activeSlide = document.querySelector('.slide.active');
-        const activeCard = activeSlide ? activeSlide.querySelector('.slide-card') : null;
-
-        if (enable) {
-            if(contentArea) { contentArea.style.setProperty('overflow', 'visible', 'important'); contentArea.style.setProperty('z-index', '9999', 'important'); }
-            if(activeSlide) { activeSlide.style.setProperty('transform', 'none', 'important'); activeSlide.style.setProperty('z-index', '9999', 'important'); }
-            if(activeCard) { activeCard.style.setProperty('overflow', 'visible', 'important'); activeCard.style.setProperty('transform', 'none', 'important'); }
-        } else {
-            if(contentArea) { contentArea.style.removeProperty('overflow'); contentArea.style.removeProperty('z-index'); }
-            if(activeSlide) { activeSlide.style.removeProperty('transform'); activeSlide.style.removeProperty('z-index'); }
-            if(activeCard) { activeCard.style.removeProperty('overflow'); activeCard.style.removeProperty('transform'); }
-        }
-    }
-
     function playCurrentSlide() {
         if (currentSlideTimeout) clearTimeout(currentSlideTimeout);
         if (progressTimer) clearInterval(progressTimer);
@@ -440,7 +420,6 @@
         if (item.mediaType === 'youtube' || item.mediaType === 'video') {
             handleVideoSlide(item, currentSlideIndex);
         } else {
-            // Normal Resim/Yazı Slaytı (10 Saniye)
             startProgress(CONFIG.SLIDE_INTERVAL);
             currentSlideTimeout = setTimeout(nextSlide, CONFIG.SLIDE_INTERVAL);
         }
@@ -450,8 +429,11 @@
         const container = document.getElementById(`media-container-${index}`);
         if (!container) { currentSlideTimeout = setTimeout(nextSlide, CONFIG.SLIDE_INTERVAL); return; }
 
+        const textElement = container.closest('.slide-card').querySelector('.slide-text');
+
+        // Temizle
         container.classList.remove('fullscreen-media');
-        toggleFullscreenCSS(false);
+        if(textElement) textElement.classList.remove('text-hidden');
 
         if (item.mediaType === 'youtube') {
             const playerObj = window.ytPlayers[index];
@@ -464,7 +446,7 @@
             window.currentYtStateCallback = (state) => {
                 if (state === 0) { // Video Bitti
                     if (fullscreenTriggerTimer) clearTimeout(fullscreenTriggerTimer);
-                    if (container.classList.contains('fullscreen-media')) endVideoSlide(container);
+                    if (container.classList.contains('fullscreen-media')) endVideoSlide(container, textElement);
                     else nextSlide();
                 }
             };
@@ -475,27 +457,27 @@
                 playerObj.play().catch(e => console.log('Video error:', e));
                 playerObj.onended = () => {
                     if (fullscreenTriggerTimer) clearTimeout(fullscreenTriggerTimer);
-                    if (container.classList.contains('fullscreen-media')) endVideoSlide(container);
+                    if (container.classList.contains('fullscreen-media')) endVideoSlide(container, textElement);
                     else nextSlide();
                 };
             }
         }
 
-        // 1. Adım: 4 saniye normal görünümde bekle, sonra tam ekran yap (2. Adım)
+        // 1. Adım: 4 saniye normal bekle, sonra bulunduğu kartın içinde %100 genişle
         fullscreenTriggerTimer = setTimeout(() => {
-            toggleFullscreenCSS(true);
             container.classList.add('fullscreen-media');
+            if(textElement) textElement.classList.add('text-hidden');
         }, 4000);
     }
 
-    function endVideoSlide(container) {
-        // 3. Adım: Bittiğinde küçült
+    function endVideoSlide(container, textElement) {
+        // 3. Adım: Bittiğinde küçült ve yazıyı geri getir
         container.classList.remove('fullscreen-media');
+        if(textElement) textElement.classList.remove('text-hidden');
         
         // 4. Adım: Küçülme animasyonunun bitmesini (1sn) bekle, ardından sonraki habere geç
         currentSlideTimeout = setTimeout(() => {
-            toggleFullscreenCSS(false);
-            setTimeout(() => { nextSlide(); }, 100);
+            nextSlide();
         }, 1000);
     }
 
@@ -530,8 +512,11 @@
         const item = slides[index];
         if (!item) return;
         const container = document.getElementById(`media-container-${index}`);
-        if(container) container.classList.remove('fullscreen-media');
-        toggleFullscreenCSS(false);
+        if(container) {
+            container.classList.remove('fullscreen-media');
+            const textElement = container.closest('.slide-card').querySelector('.slide-text');
+            if(textElement) textElement.classList.remove('text-hidden');
+        }
 
         if (item.mediaType === 'youtube' && window.ytPlayers[index] && typeof window.ytPlayers[index].pauseVideo === 'function') {
             window.ytPlayers[index].pauseVideo();
@@ -546,7 +531,6 @@
         if (!progressBar) return;
         let elapsed = 0;
         
-        // Animasyonun baştan başlaması için reflow tetikleme
         progressBar.style.transition = 'none';
         progressBar.style.width = '0%';
         void progressBar.offsetWidth; 
@@ -562,7 +546,6 @@
         if (nextPreviewTimer) clearTimeout(nextPreviewTimer);
         if (slides.length <= 1 || !els.nextPreview) return;
 
-        // Normal slaytlar için son 3 saniye kala göster. Videolar için mantıken kapalı tutuyoruz.
         if (slides[currentSlideIndex].mediaType !== 'image' && slides[currentSlideIndex].mediaUrl === '') return;
         
         nextPreviewTimer = setTimeout(() => {
@@ -579,7 +562,7 @@
     function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
     function escapeAttr(text) { return text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
-    // --- Hava Durumu (Ücretsiz API) ---
+    // --- Hava Durumu ---
     function fetchFreeWeather() {
         fetch(`https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.WEATHER_LAT}&longitude=${CONFIG.WEATHER_LON}&current_weather=true`)
             .then(r => r.json())
