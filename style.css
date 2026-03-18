@@ -166,8 +166,6 @@ html, body {
 .setup-card {
     text-align: center;
     background: var(--bg-card);
-    backdrop-filter: blur(40px);
-    -webkit-backdrop-filter: blur(40px);
     border: 1px solid var(--border-light);
     border-radius: var(--radius-xl);
     padding: 64px 88px;
@@ -237,8 +235,6 @@ html, body {
     justify-content: space-between;
     padding: 0 48px;
     background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
     border-bottom: 1px solid rgba(15, 23, 42, 0.06);
     height: 96px;
     flex-shrink: 0;
@@ -547,9 +543,7 @@ html, body {
     display: flex;
     align-items: stretch;
     gap: 0;
-    background: var(--bg-card);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
+    background: rgba(255, 255, 255, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-card);
@@ -859,6 +853,7 @@ html, body {
 
 .ticker-content.scroll-mode {
     animation: tickerScroll var(--ticker-duration, 30s) linear infinite;
+    will-change: transform;
 }
 
 @keyframes tickerScroll {
@@ -939,8 +934,6 @@ html, body {
     gap: 12px;
     padding: 12px 24px;
     background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border-light);
     border-radius: var(--radius-md);
     font-size: 15px;
