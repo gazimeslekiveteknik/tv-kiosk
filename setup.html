@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bilgi Ekranı Yönetim Paneli</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-card: rgba(255, 255, 255, 0.06);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-emerald: #10b981;
+            --gradient-primary: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --radius-md: 20px;
+            --radius-sm: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 40px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.15;
+            z-index: 0;
+        }
+
+        body::before {
+            width: 500px;
+            height: 500px;
+            background: var(--accent-blue);
+            top: -200px;
+            right: -100px;
+        }
+
+        body::after {
+            width: 400px;
+            height: 400px;
+            background: var(--accent-purple);
+            bottom: -150px;
+            left: -100px;
+        }
+
+        .setup-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 660px;
+        }
+
+        .setup-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .setup-header-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .setup-header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .setup-header p {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .setup-form {
+            background: var(--bg-card);
+            backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .form-group select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+        }
+
+        .form-group select option {
+            background: #1e293b;
+            color: white;
+        }
+
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            line-height: 1.6;
+            opacity: 0.7;
+        }
+
+        .btn-save {
+            width: 100%;
+            padding: 16px 32px;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 17px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 8px;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-save:active {
+            transform: translateY(0);
+        }
+
+        .success-message {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: var(--radius-sm);
+            color: #10b981;
+            margin-top: 16px;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid var(--glass-border);
+            margin: 28px 0;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-demo {
+            flex: 1;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #10b981, #06b6d4);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-demo:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-reset {
+            padding: 14px 24px;
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-reset:hover {
+            transform: translateY(-2px);
+            background: rgba(239, 68, 68, 0.25);
+        }
+
+        .help-section {
+            background: var(--bg-card);
+            backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 32px 40px;
+        }
+
+        .help-section h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .help-steps {
+            list-style: none;
+            counter-reset: steps;
+        }
+
+        .help-steps li {
+            counter-increment: steps;
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 12px;
+            padding-left: 36px;
+            position: relative;
+        }
+
+        .help-steps li::before {
+            content: counter(steps);
+            position: absolute;
+            left: 0;
+            width: 24px;
+            height: 24px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: white;
+            text-align: center;
+            line-height: 24px;
+        }
+
+        .help-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            font-size: 13px;
+        }
+
+        .help-table th {
+            text-align: left;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .help-table td {
+            padding: 10px 12px;
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+        }
+
+        .help-table code {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-blue);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .help-table tr td:first-child {
+            white-space: nowrap;
+        }
+
+        .badge-required {
+            display: inline-block;
+            padding: 1px 6px;
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-left: 4px;
+        }
+
+        .badge-optional {
+            display: inline-block;
+            padding: 1px 6px;
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-blue);
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-left: 4px;
+        }
+
+        .setup-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 6px;
+            border-radius: var(--radius-sm);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: transparent;
+            color: var(--text-secondary);
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        #loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 14, 26, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+            color: white;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        #login-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-primary);
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+        }
+
+        .login-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-card h2 {
+            margin-bottom: 24px;
+            font-size: 24px;
+        }
+
+        .login-error {
+            color: #ef4444;
+            font-size: 14px;
+            margin-top: 12px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="setup-container">
+
+        <div id="login-overlay"
+            style="display: none; position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(10,14,26,0.95); z-index: 50; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+            <div class="login-card"
+                style="background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 40px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4);">
+                <h2 style="margin-bottom: 12px; font-size: 24px;">Yönetici Girişi</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 14px;">Kurulum ayarlarına
+                    erişmek için şifre gereklidir.</p>
+                <form id="login-form">
+                    <div class="form-group" style="text-align: left;">
+                        <input type="password" id="login-password" placeholder="Yönetici Şifrenizi Girin" required>
+                    </div>
+                    <div class="btn-group" style="margin-top: 16px;">
+                        <button type="button" class="btn-reset" id="btn-login-cancel" style="flex: 1;">Vazgeç</button>
+                        <button type="submit" class="btn-save" style="margin-top: 0; flex: 1;">Giriş Yap</button>
+                    </div>
+                    <div class="login-error" id="login-error"
+                        style="color: #ef4444; font-size: 14px; margin-top: 12px; display: none;">Hatalı şifre, lütfen
+                        tekrar deneyin.</div>
+                </form>
+            </div>
+        </div>
+
+        <div class="setup-header">
+            <div class="setup-header-icon">📺</div>
+            <h1>Bilgi Ekranı Yönetim Paneli</h1>
+            <p>Sistemi yapılandırın ve içerik ekleyin</p>
+        </div>
+
+        <div class="setup-tabs" id="main-tabs">
+            <button class="tab-btn" data-tab="tab-kurulum">Kurulum Ayarları</button>
+            <button class="tab-btn active" data-tab="tab-icerik">Yeni İçerik Ekle</button>
+            <button class="tab-btn" data-tab="tab-yardim">Yardım</button>
+        </div>
+
+        <div id="tab-kurulum" class="tab-content">
+            <form class="setup-form" id="setup-form" style="position: relative;">
+                <div id="setup-loading"
+                    style="display: none; position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(10,14,26,0.8); z-index: 10; align-items: center; justify-content: center; border-radius: 20px; flex-direction: column;">
+                    <div class="spinner"></div>
+                    <div>Kaydediliyor...</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="admin-password">Yönetici Şifresi (Zorunlu)</label>
+                    <input type="text" id="admin-password" placeholder="Bu panele tekrar girmek için kullanılacak şifre"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label for="school-name">Okul Adı</label>
+                    <input type="text" id="school-name" placeholder="Örn: Gazi Mesleki ve Teknik Anadolu Lisesi"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label for="sheet-id">Google Sheet Linki veya ID</label>
+                    <input type="text" id="sheet-id" placeholder="Sheet linkini veya ID'sini yapıştırın" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="script-url">Google Apps Script URL'si</label>
+                    <input type="text" id="script-url" placeholder="Oluşturduğunuz Web App URL'sini yapıştırın">
+                </div>
+
+                <div class="form-group">
+                    <label for="school-logo-file">Okul Logosu Yükle</label>
+                    <input type="file" id="school-logo-file" accept="image/png, image/jpeg, image/svg+xml">
+                </div>
+
+                <div class="form-group">
+                    <label for="weather-city">Şehir (Hava Durumu)</label>
+                    <select id="weather-city">
+                        <option value="Ankara|39.9334|32.8597">Ankara</option>
+                        <option value="İstanbul|41.0082|28.9784">İstanbul</option>
+                        <option value="İzmir|38.4237|27.1428">İzmir</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-save" id="btn-save">💾 Kaydet ve Başlat</button>
+
+                <div class="success-message" id="success-msg">✅ Ayarlar kaydedildi! Yönlendiriliyorsunuz...</div>
+                <hr class="divider">
+                <div style="text-align: center;">
+                    <div class="btn-group" style="justify-content: center;">
+                        <button type="button" class="btn-demo" id="btn-demo">🔬 Demo Modu Önizleme</button>
+                        <button type="button" class="btn-reset" id="btn-reset">🗑️ Sistemi Sıfırla / Çıkış Yap</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div id="tab-icerik" class="tab-content active">
+            <form class="setup-form" id="content-form" style="position: relative;">
+                <div id="loading-overlay" style="display: none;">
+                    <div class="spinner"></div>
+                    <div id="loading-text">Yükleniyor... Lütfen bekleyin.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="c-baslik">Duyuru / İçerik Başlığı</label>
+                    <input type="text" id="c-baslik" required placeholder="İçerik başlığını girin">
+                </div>
+
+                <div class="form-group">
+                    <label for="c-icerik">Detay / Açıklama</label>
+                    <input type="text" id="c-icerik" placeholder="Varsa açıklama metni girin">
+                </div>
+
+                <div style="display: flex; gap: 16px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="c-kategori">Kategori</label>
+                        <select id="c-kategori">
+                            <option value="duyuru">Duyuru</option>
+                            <option value="etkinlik">Etkinlik</option>
+                            <option value="sinav">Sınav</option>
+                            <option value="onemli">Önemli / Acil</option>
+                            <option value="spor">Spor</option>
+                            <option value="bilim">Bilim</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="c-tarih">Tarih</label>
+                        <input type="date" id="c-tarih">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 16px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="c-aktif">Yayında mı?</label>
+                        <select id="c-aktif">
+                            <option value="EVET">Evet</option>
+                            <option value="HAYIR">Hayır</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="c-bant">Alt Bantta Göster?</label>
+                        <select id="c-bant">
+                            <option value="HAYIR">Hayır</option>
+                            <option value="EVET">Evet</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group"
+                    style="background: rgba(59, 130, 246, 0.05); padding: 15px; border-radius: 8px; border: 1px dashed rgba(59, 130, 246, 0.3);">
+                    <label for="c-video-url" style="color: var(--accent-blue);">📺 YouTube veya Video Linki
+                        (Önerilen)</label>
+                    <input type="text" id="c-video-url" placeholder="Örn: https://www.youtube.com/watch?v=..."
+                        style="background: rgba(0,0,0,0.2);">
+                    <p class="form-hint">Sistemi ve TV'yi yormamak için videoları doğrudan yüklemek yerine YouTube'a
+                        (Liste Dışı) yükleyip linkini buraya yapıştırmanız tavsiye edilir.</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="c-file">Veya Bilgisayardan Dosya Seç (Görsel / Kısa Video)</label>
+                    <input type="file" id="c-file" accept="image/*,video/mp4,video/webm">
+                    <p class="form-hint">Seçtiğiniz dosya otomatik olarak Google Drive klasörüne yüklenecektir. Büyük
+                        boyutlu dosyalar zaman aşımına uğrayabilir.</p>
+                </div>
+
+                <button type="submit" class="btn-save" id="btn-submit-content">🚀 İçeriği Ekle</button>
+                <div class="success-message" id="content-success-msg">✅ İçerik başarıyla tabloya eklendi!</div>
+                <div class="success-message" id="content-error-msg"
+                    style="color: #ef4444; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3);">❌
+                    Hata oluştu.</div>
+            </form>
+        </div>
+
+        <div id="tab-yardim" class="tab-content">
+            <div class="help-section">
+                <h3>📋 Google Sheet Nasıl Hazırlanır?</h3>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        (function () {
+            let isAuthenticated = false;
+            const savedPassword = localStorage.getItem('kiosk_admin_password');
+            const loginOverlay = document.getElementById('login-overlay');
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            function switchTab(tabId) {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                const btn = document.querySelector(`[data-tab="${tabId}"]`);
+                const content = document.getElementById(tabId);
+                if (btn) btn.classList.add('active');
+                if (content) content.classList.add('active');
+            }
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const targetTab = btn.dataset.tab;
+                    document.getElementById('login-error').style.display = 'none';
+                    document.getElementById('login-password').value = '';
+                    if (targetTab === 'tab-kurulum' && savedPassword && !isAuthenticated) {
+                        loginOverlay.style.display = 'flex';
+                    } else {
+                        switchTab(targetTab);
+                    }
+                });
+            });
+
+            if (savedPassword) {
+                switchTab('tab-icerik');
+                document.getElementById('admin-password').value = savedPassword;
+            } else {
+                switchTab('tab-kurulum');
+            }
+
+            document.getElementById('login-form').addEventListener('submit', function (e) {
+                e.preventDefault();
+                const enteredPwd = document.getElementById('login-password').value;
+                if (enteredPwd === savedPassword) {
+                    isAuthenticated = true;
+                    loginOverlay.style.display = 'none';
+                    switchTab('tab-kurulum');
+                } else {
+                    document.getElementById('login-error').style.display = 'block';
+                }
+            });
+
+            document.getElementById('btn-login-cancel').addEventListener('click', function () {
+                loginOverlay.style.display = 'none';
+                const currentlyActive = document.querySelector('.tab-content.active');
+                if (!currentlyActive) switchTab('tab-icerik');
+            });
+
+            // Kurulum ayarları kayıt vs kodları buradaydı... (Öncekiyle aynı mantık)
+
+            // Content Form Logic (Değişen kısım)
+            const contentForm = document.getElementById('content-form');
+            if (contentForm) {
+                contentForm.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+
+                    const scriptUrl = localStorage.getItem('kiosk_script_url');
+                    const sheetIdStr = localStorage.getItem('kiosk_sheet_id');
+
+                    if (!scriptUrl || !sheetIdStr) {
+                        alert('Lütfen önce Kurulum sekmesinden Script URL ve Sheet Linkini kaydedin!');
+                        return;
+                    }
+
+                    let cleanSheetId = sheetIdStr;
+                    if (cleanSheetId.includes('docs.google.com/spreadsheets/d/')) {
+                        const match = cleanSheetId.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                        if (match) cleanSheetId = match[1];
+                    }
+
+                    const btnSubmit = document.getElementById('btn-submit-content');
+                    const overlay = document.getElementById('loading-overlay');
+                    const errorMsg = document.getElementById('content-error-msg');
+                    const successMsg = document.getElementById('content-success-msg');
+
+                    errorMsg.style.display = 'none';
+                    successMsg.style.display = 'none';
+                    overlay.style.display = 'flex';
+                    btnSubmit.disabled = true;
+
+                    try {
+                        const itemData = {
+                            baslik: document.getElementById('c-baslik').value.trim(),
+                            icerik: document.getElementById('c-icerik').value.trim(),
+                            kategori: document.getElementById('c-kategori').value,
+                            tarih: document.getElementById('c-tarih').value,
+                            aktif: document.getElementById('c-aktif').value,
+                            bant: document.getElementById('c-bant').value,
+                            video: document.getElementById('c-video-url').value.trim() // Yeni alan
+                        };
+
+                        const payload = {
+                            sheetId: cleanSheetId,
+                            action: 'addContent',
+                            item: itemData
+                        };
+
+                        const fileInput = document.getElementById('c-file');
+                        if (fileInput.files.length > 0) {
+                            const file = fileInput.files[0];
+                            const reader = new FileReader();
+                            const filePromise = new Promise((resolve, reject) => {
+                                reader.onload = (ev) => resolve(ev.target.result);
+                                reader.onerror = (err) => reject(err);
+                                reader.readAsDataURL(file);
+                            });
+
+                            const base64Data = await filePromise;
+                            payload.file = {
+                                name: file.name,
+                                mimeType: file.type,
+                                content: base64Data
+                            };
+                            document.getElementById('loading-text').textContent = 'Dosya yükleniyor, lütfen bekleyin... (Bu işlem dosya boyutuna göre uzun sürebilir)';
+                        } else {
+                            document.getElementById('loading-text').textContent = 'İçerik kaydediliyor...';
+                        }
+
+                        const fetchPromise = fetch(scriptUrl, {
+                            method: 'POST',
+                            body: JSON.stringify(payload)
+                        });
+
+                        // ZAMAN AŞIMI 30 SANİYEDEN 120 SANİYEYE (2 DAKİKA) ÇIKARILDI
+                        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('İstek zaman aşımına uğradı. Dosyanız çok büyük olabilir.')), 120000));
+
+                        const response = await Promise.race([fetchPromise, timeoutPromise]);
+                        const data = await response.json();
+
+                        if (data.status === 'error') throw new Error(data.message);
+
+                        overlay.style.display = 'none';
+                        btnSubmit.disabled = false;
+
+                        // Form sıfırlama
+                        document.getElementById('c-baslik').value = '';
+                        document.getElementById('c-icerik').value = '';
+                        document.getElementById('c-tarih').value = '';
+                        document.getElementById('c-video-url').value = ''; // Yeni alanı sıfırla
+                        fileInput.value = '';
+
+                        successMsg.style.display = 'block';
+                        setTimeout(() => { successMsg.style.display = 'none'; }, 5000);
+
+                    } catch (error) {
+                        overlay.style.display = 'none';
+                        btnSubmit.disabled = false;
+                        errorMsg.textContent = 'Hata: ' + error.message;
+                        errorMsg.style.display = 'block';
+                    }
+                });
+            }
+        })();
+    </script>
+</body>
+
+</html>
