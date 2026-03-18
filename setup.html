@@ -171,7 +171,82 @@
         #login-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-primary); z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: var(--radius-md); }
         .login-card { background: var(--bg-card); backdrop-filter: blur(40px); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 40px; width: 100%; max-width: 400px; text-align: center; }
         .login-card h2 { margin-bottom: 24px; font-size: 24px; }
+
+        /* QR Code Section */
+        .qr-section {
+            margin-top: 24px;
+            padding: 28px;
+            background: rgba(16, 185, 129, 0.06);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: var(--radius-sm);
+            text-align: center;
+        }
+        .qr-section h3 {
+            font-size: 18px;
+            margin-bottom: 12px;
+            color: var(--accent-emerald);
+        }
+        .qr-section p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+        #qr-canvas {
+            margin: 16px auto;
+            display: block;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .qr-magic-link {
+            margin-top: 12px;
+            padding: 10px 14px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            font-size: 12px;
+            color: var(--accent-blue);
+            word-break: break-all;
+            cursor: pointer;
+            border: 1px dashed rgba(59, 130, 246, 0.3);
+            transition: background 0.2s;
+        }
+        .qr-magic-link:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+        .btn-qr {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 8px;
+        }
+        .btn-qr:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4);
+        }
+
+        /* Video source selector */
+        .video-source-section {
+            background: rgba(139, 92, 246, 0.05);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px dashed rgba(139, 92, 246, 0.25);
+            margin-bottom: 8px;
+        }
+        .video-source-section .form-group {
+            margin-bottom: 12px;
+        }
+        .video-source-section .form-group:last-child {
+            margin-bottom: 0;
+        }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 </head>
 <body>
     <div class="setup-container">
@@ -329,10 +404,18 @@
                 <div class="success-message" id="success-msg">✅ Ayarlar kaydedildi! Yönlendiriliyorsunuz...</div>
                 <hr class="divider">
                 <div style="text-align: center;">
-                    <div class="btn-group" style="justify-content: center;">
+                    <div class="btn-group" style="justify-content: center; flex-wrap: wrap;">
+                        <button type="button" class="btn-qr" id="btn-qr">📱 QR Kod Oluştur</button>
                         <button type="button" class="btn-demo" id="btn-demo">🔬 Demo Modu Önizleme</button>
                         <button type="button" class="btn-reset" id="btn-reset">🗑️ Sistemi Sıfırla / Çıkış Yap</button>
                     </div>
+                </div>
+
+                <div class="qr-section" id="qr-section" style="display: none;">
+                    <h3>📱 Kolay Cihaz Kurulumu</h3>
+                    <p>Bu QR kodu TV'nin tarayıcısında okutun veya aşağıdaki linki açın.<br>Cihaz otomatik olarak yapılandırılacaktır.</p>
+                    <canvas id="qr-canvas"></canvas>
+                    <div class="qr-magic-link" id="qr-magic-link" title="Kopyalamak için tıklayın"></div>
                 </div>
             </form>
         </div>
@@ -389,15 +472,26 @@
                     </div>
                 </div>
 
-                <div class="form-group" style="background: rgba(59, 130, 246, 0.05); padding: 15px; border-radius: 8px; border: 1px dashed rgba(59, 130, 246, 0.3);">
-                    <label for="c-video-url" style="color: var(--accent-blue);">📺 YouTube veya Video Linki (Önerilen)</label>
-                    <input type="text" id="c-video-url" placeholder="Örn: https://www.youtube.com/watch?v=..." style="background: rgba(0,0,0,0.2);">
-                    <p class="form-hint">Sistemi yormamak için videoları doğrudan yüklemek yerine YouTube'a (Liste Dışı) yükleyip linkini buraya yapıştırmanız tavsiye edilir.</p>
-                </div>
-                
                 <div class="form-group">
-                    <label for="c-file">Veya Bilgisayardan Dosya Seç (Görsel / Kısa Video)</label>
-                    <input type="file" id="c-file" accept="image/*,video/mp4,video/webm">
+                    <label for="c-file">🖼️ Görsel Yükle (Opsiyonel)</label>
+                    <input type="file" id="c-file" accept="image/png,image/jpeg,image/gif,image/webp">
+                    <p class="form-hint">Sadece resim dosyaları (PNG, JPG, GIF, WebP) kabul edilir.</p>
+                </div>
+
+                <div class="video-source-section">
+                    <div class="form-group">
+                        <label for="c-video-source">🎬 Video Ekle (Opsiyonel)</label>
+                        <select id="c-video-source">
+                            <option value="none">Video Ekleme</option>
+                            <option value="youtube">YouTube Linki</option>
+                            <option value="drive">Google Drive Linki</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="video-url-group" style="display: none;">
+                        <label for="c-video-url" id="video-url-label">Video Linki</label>
+                        <input type="text" id="c-video-url" placeholder="" style="background: rgba(0,0,0,0.2);">
+                        <p class="form-hint" id="video-url-hint"></p>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn-save" id="btn-submit-content">🚀 İçeriği Ekle</button>
@@ -553,6 +647,74 @@
                 }
             });
 
+            // --- QR Kod Oluşturma ---
+            document.getElementById('btn-qr').addEventListener('click', function() {
+                const sheetIdVal = document.getElementById('sheet-id').value.trim();
+                if (!sheetIdVal) {
+                    alert('Önce Google Sheet Linki veya ID alanını doldurun!');
+                    return;
+                }
+                let cleanId = sheetIdVal;
+                if (cleanId.includes('docs.google.com/spreadsheets/d/')) {
+                    const match = cleanId.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                    if (match) cleanId = match[1];
+                }
+
+                const baseUrl = window.location.origin + window.location.pathname.replace('setup.html', 'index.html');
+                const magicLink = baseUrl + '?id=' + cleanId;
+
+                const qrSection = document.getElementById('qr-section');
+                const qrCanvas = document.getElementById('qr-canvas');
+                const qrLinkEl = document.getElementById('qr-magic-link');
+
+                qrSection.style.display = 'block';
+                qrLinkEl.textContent = magicLink;
+
+                if (typeof QRCode !== 'undefined') {
+                    QRCode.toCanvas(qrCanvas, magicLink, {
+                        width: 280,
+                        margin: 2,
+                        color: { dark: '#1e293b', light: '#ffffff' }
+                    }, function(error) {
+                        if (error) console.error('QR Error:', error);
+                    });
+                }
+
+                qrLinkEl.addEventListener('click', function() {
+                    navigator.clipboard.writeText(magicLink).then(() => {
+                        qrLinkEl.textContent = '✅ Kopyalandı!';
+                        setTimeout(() => { qrLinkEl.textContent = magicLink; }, 2000);
+                    });
+                });
+            });
+
+            // --- Video Kaynak Seçici ---
+            const videoSourceSelect = document.getElementById('c-video-source');
+            const videoUrlGroup = document.getElementById('video-url-group');
+            const videoUrlInput = document.getElementById('c-video-url');
+            const videoUrlLabel = document.getElementById('video-url-label');
+            const videoUrlHint = document.getElementById('video-url-hint');
+
+            if (videoSourceSelect) {
+                videoSourceSelect.addEventListener('change', function() {
+                    const val = this.value;
+                    if (val === 'none') {
+                        videoUrlGroup.style.display = 'none';
+                        videoUrlInput.value = '';
+                    } else if (val === 'youtube') {
+                        videoUrlGroup.style.display = 'block';
+                        videoUrlLabel.textContent = '🎬 YouTube Video Linki';
+                        videoUrlInput.placeholder = 'Örn: https://www.youtube.com/watch?v=...';
+                        videoUrlHint.textContent = 'YouTube videosunun paylaşım linkini yapıştırın. "Liste Dışı" (Unlisted) videolar da desteklenir.';
+                    } else if (val === 'drive') {
+                        videoUrlGroup.style.display = 'block';
+                        videoUrlLabel.textContent = '🎬 Google Drive Video Linki';
+                        videoUrlInput.placeholder = 'Örn: https://drive.google.com/file/d/.../view';
+                        videoUrlHint.textContent = 'Videoyu Google Drive\'a yükleyin, "Bağlantıya sahip herkes görüntüleyebilir" olarak paylaşın ve linki buraya yapıştırın.';
+                    }
+                });
+            }
+
             const contentForm = document.getElementById('content-form');
             if (contentForm) {
                 contentForm.addEventListener('submit', async function(e) {
@@ -618,6 +780,8 @@
                         document.getElementById('c-icerik').value = '';
                         document.getElementById('c-tarih').value = '';
                         document.getElementById('c-video-url').value = '';
+                        document.getElementById('c-video-source').value = 'none';
+                        document.getElementById('video-url-group').style.display = 'none';
                         fileInput.value = '';
                         
                         successMsg.style.display = 'block';
