@@ -1,6 +1,6 @@
 /* ============================================
-   TV KIOSK - APP.JS v8 (Universal Magic Link & Excel Database)
-   In-Card Cinematic Edition - 2sn Bekleme
+   TV KIOSK - APP.JS v5.1 (In-Card Cinematic Edition - 2sn Bekleme)
+   Google Sheets Integration & Slide Engine (Gelişmiş Video Hata Korumalı)
    ============================================ */
 
 (function () {
@@ -9,16 +9,16 @@
     // --- Configuration ---
     const CONFIG = {
         SLIDE_INTERVAL: 10000,      // Normal slaytlar için bekleme süresi
-        DATA_REFRESH: 120000,       // 2 dakikada bir Excel'i kontrol eder
-        CLOCK_REFRESH: 1000,        
-        PROGRESS_STEP: 50,          
-        TICKER_CYCLE: 6000,         
-        TICKER_SCROLL_SPEED: 70,    
-        WEATHER_REFRESH: 600000,    
-        WEATHER_CITY: 'Sultangazi', // Excel'den okuyamazsa varsayılan
-        WEATHER_LAT: 41.1075,       // Excel'den okuyamazsa varsayılan
-        WEATHER_LON: 28.8617,       // Excel'den okuyamazsa varsayılan
-        NEXT_PREVIEW_SHOW: 3000,    
+        DATA_REFRESH: 120000,
+        CLOCK_REFRESH: 1000,
+        PROGRESS_STEP: 50,
+        TICKER_CYCLE: 6000,
+        TICKER_SCROLL_SPEED: 70,
+        WEATHER_REFRESH: 600000,
+        WEATHER_CITY: 'Sultangazi',
+        WEATHER_LAT: 41.1075,
+        WEATHER_LON: 28.8617,
+        NEXT_PREVIEW_SHOW: 3000,
         RETRY_DELAY: 10000,
         MAX_RETRIES: 5,
     };
@@ -31,11 +31,21 @@
             z-index: 50;
             background: #000;
         }
-        .slide-media::after { transition: opacity 0.5s ease; }
-        .fullscreen-media { width: 100% !important; }
-        .fullscreen-media::after { opacity: 0 !important; }
-        .slide-text { transition: opacity 0.5s ease; }
-        .text-hidden { opacity: 0 !important; }
+        .slide-media::after {
+            transition: opacity 0.5s ease;
+        }
+        .fullscreen-media {
+            width: 100% !important; 
+        }
+        .fullscreen-media::after {
+            opacity: 0 !important; 
+        }
+        .slide-text {
+            transition: opacity 0.5s ease;
+        }
+        .text-hidden {
+            opacity: 0 !important;
+        }
     `;
     document.head.appendChild(dynamicStyle);
 
@@ -44,7 +54,7 @@
     window.ytPlayers = {};
     window.currentYtStateCallback = null;
 
-    window.onYouTubeIframeAPIReady = function() {
+    window.onYouTubeIframeAPIReady = function () {
         window.ytApiReady = true;
         initYouTubePlayers();
     };
@@ -52,27 +62,38 @@
     const ytScript = document.createElement('script');
     ytScript.src = "https://www.youtube.com/iframe_api";
     const firstScriptTag = document.getElementsByTagName('script')[0];
-    if (firstScriptTag) firstScriptTag.parentNode.insertBefore(ytScript, firstScriptTag);
-    else document.head.appendChild(ytScript);
+    if (firstScriptTag) {
+        firstScriptTag.parentNode.insertBefore(ytScript, firstScriptTag);
+    } else {
+        document.head.appendChild(ytScript);
+    }
 
     function onPlayerStateChange(event) {
-        if (window.currentYtStateCallback) window.currentYtStateCallback(event.data);
+        if (window.currentYtStateCallback) {
+            window.currentYtStateCallback(event.data);
+        }
+    }
+
+    function onPlayerError(event) {
+        if (window.currentYtErrorCallback) {
+            window.currentYtErrorCallback(event.data);
+        }
     }
 
     // --- Category Mappings ---
     const CATEGORY_MAP = {
-        'duyuru':     { icon: '📋', class: 'cat-duyuru',   label: 'Duyuru' },
-        'etkinlik':   { icon: '🎉', class: 'cat-etkinlik', label: 'Etkinlik' },
-        'sinav':      { icon: '📝', class: 'cat-sinav',    label: 'Sınav' },
-        'sınav':      { icon: '📝', class: 'cat-sinav',    label: 'Sınav' },
-        'onemli':     { icon: '🔴', class: 'cat-onemli',   label: 'Önemli' },
-        'önemli':     { icon: '🔴', class: 'cat-onemli',   label: 'Önemli' },
-        'acil':       { icon: '🚨', class: 'cat-onemli',   label: 'Acil' },
-        'spor':       { icon: '⚽', class: 'cat-etkinlik', label: 'Spor' },
-        'bilim':      { icon: '🔬', class: 'cat-etkinlik', label: 'Bilim' },
-        'teknoloji':  { icon: '💻', class: 'cat-etkinlik', label: 'Teknoloji' },
-        'toplantı':   { icon: '👥', class: 'cat-duyuru',   label: 'Toplantı' },
-        'kutlama':    { icon: '🎊', class: 'cat-etkinlik', label: 'Kutlama' },
+        'duyuru': { icon: '📋', class: 'cat-duyuru', label: 'Duyuru' },
+        'etkinlik': { icon: '🎉', class: 'cat-etkinlik', label: 'Etkinlik' },
+        'sinav': { icon: '📝', class: 'cat-sinav', label: 'Sınav' },
+        'sınav': { icon: '📝', class: 'cat-sinav', label: 'Sınav' },
+        'onemli': { icon: '🔴', class: 'cat-onemli', label: 'Önemli' },
+        'önemli': { icon: '🔴', class: 'cat-onemli', label: 'Önemli' },
+        'acil': { icon: '🚨', class: 'cat-onemli', label: 'Acil' },
+        'spor': { icon: '⚽', class: 'cat-etkinlik', label: 'Spor' },
+        'bilim': { icon: '🔬', class: 'cat-etkinlik', label: 'Bilim' },
+        'teknoloji': { icon: '💻', class: 'cat-etkinlik', label: 'Teknoloji' },
+        'toplantı': { icon: '👥', class: 'cat-duyuru', label: 'Toplantı' },
+        'kutlama': { icon: '🎊', class: 'cat-etkinlik', label: 'Kutlama' },
     };
     const DEFAULT_CATEGORY = { icon: '📌', class: 'cat-default', label: 'Bilgi' };
 
@@ -116,122 +137,50 @@
     function init() {
         cacheDom();
         const urlParams = new URLSearchParams(window.location.search);
-
-        // ==========================================
-        // 🌟 SİHİRLİ LİNK KONTROLÜ (MAGIC LINK)
-        // Eğer linkte ?id=... varsa, bunu kalıcı olarak TV'nin hafızasına kaydet
-        if (urlParams.has('id')) {
-            const urlId = urlParams.get('id');
-            if (urlId && urlId.trim() !== '') {
-                localStorage.setItem('kiosk_sheet_id', urlId.trim());
-            }
-        }
-        // ==========================================
-
         const isDemo = urlParams.has('demo') || localStorage.getItem('kiosk_demo_mode') === 'true';
+
         if (isDemo) { startDemoMode(); return; }
 
-        // Hafızadaki ID'yi çağır (Linkten kopyaladığı veya daha önce girilmiş olan)
         const sheetId = localStorage.getItem('kiosk_sheet_id');
+        const schoolName = localStorage.getItem('kiosk_school_name');
+        const schoolLogo = localStorage.getItem('kiosk_school_logo');
+        const weatherCity = localStorage.getItem('kiosk_weather_city');
 
-        // Eğer hiçbir ID bulunamadıysa kurulum ekranını göster
         if (!sheetId) { showSetupPrompt(); return; }
 
+        if (schoolName) {
+            els.schoolName.textContent = schoolName;
+            document.title = schoolName + ' — Bilgi Ekranı';
+        }
+
+        if (schoolLogo && els.schoolLogo) {
+            els.schoolLogo.src = schoolLogo;
+            els.schoolLogo.style.display = 'block';
+            if (els.defaultSchoolIcon) els.defaultSchoolIcon.style.display = 'none';
+        }
+
+        if (weatherCity) CONFIG.WEATHER_CITY = weatherCity;
+
+        const weatherLat = localStorage.getItem('kiosk_weather_lat');
+        const weatherLon = localStorage.getItem('kiosk_weather_lon');
+        if (weatherLat && weatherLon) {
+            CONFIG.WEATHER_LAT = parseFloat(weatherLat);
+            CONFIG.WEATHER_LON = parseFloat(weatherLon);
+        }
+
         startClock();
-        
-        // Önce AYARLAR sekmesini, sonra DUYURULAR sekmesini çeken ana fonksiyon
-        fetchSettingsAndData(sheetId);
-        
-        // Zamanlayıcılar
-        setInterval(() => fetchSettingsAndData(sheetId), CONFIG.DATA_REFRESH);
+        fetchWeather();
+        fetchData(sheetId);
+        setInterval(() => fetchData(sheetId), CONFIG.DATA_REFRESH);
         setInterval(fetchWeather, CONFIG.WEATHER_REFRESH);
     }
 
     function startDemoMode() {
-        els.schoolName.textContent = 'Gazi Mesleki ve Teknik Anadolu Lisesi';
+        els.schoolName.textContent = 'Gazi MTAL';
         startClock(); fetchFreeWeather();
-        const demoRows = [
-            {
-                baslik: '2025-2026 Bahar Dönemi Kayıt Yenileme',
-                icerik: 'Tüm öğrencilerimizin 1-15 Mart tarihleri arasında e-Okul sistemi üzerinden kayıt yenilemelerini tamamlamaları gerekmektedir. Gerekli belgeler okul web sitesinde yayınlanmıştır.',
-                kategori: 'duyuru',
-                tarih: '2026-03-01',
-                aktif: 'evet',
-                bant: 'evet',
-                gorsel: 'https://picsum.photos/id/180/800/600',
-                video: ''
-            },
-            {
-                baslik: 'Bilim ve Teknoloji Şenliği Başlıyor!',
-                icerik: 'Okulumuzun geleneksel Bilim Şenliği 25 Mart\'ta spor salonunda başlıyor. Robotik, yapay zeka ve yenilenebilir enerji alanlarında projeler sergilenecek. Tüm velilerimiz davetlidir!',
-                kategori: 'bilim',
-                tarih: '2026-03-25',
-                aktif: 'evet',
-                bant: 'evet',
-                gorsel: 'https://picsum.photos/id/2/800/600',
-                video: ''
-            },
-            {
-                baslik: 'Yarıyıl Sınavları Programı Açıklandı',
-                icerik: 'İkinci dönem yazılı sınavları 7-18 Nisan tarihleri arasında yapılacaktır. Sınav programı kat panolarına asılmıştır. Öğrencilerimize başarılar dileriz.',
-                kategori: 'sinav',
-                tarih: '2026-04-07',
-                aktif: 'evet',
-                bant: 'hayır',
-                gorsel: '',
-                video: ''
-            },
-            {
-                baslik: '🏆 Okulumuz İl Birincisi!',
-                icerik: 'Bilgisayar Programcılığı bölümü öğrencilerimiz TÜBİTAK proje yarışmasında il birincisi olmuştur! Fatih Yılmaz ve Ayşe Kara\'yı tebrik ediyoruz.',
-                kategori: 'onemli',
-                tarih: '2026-03-15',
-                aktif: 'evet',
-                bant: 'evet',
-                gorsel: 'https://picsum.photos/id/60/800/600',
-                video: ''
-            },
-            {
-                baslik: 'Okul Spor Turnuvaları Devam Ediyor',
-                icerik: 'Sınıflar arası futbol turnuvasında çeyrek final maçları bu hafta oynanacak. Voleybol turnuvası kayıtları da başlamıştır. Beden Eğitimi öğretmenlerine başvurabilirsiniz.',
-                kategori: 'spor',
-                tarih: '2026-03-20',
-                aktif: 'evet',
-                bant: 'hayır',
-                gorsel: 'https://picsum.photos/id/235/800/600',
-                video: ''
-            },
-            {
-                baslik: 'Kariyer Günleri: Sektörden Konuklar',
-                icerik: 'Her Cuma günü farklı sektörlerden profesyoneller okulumuza konuk oluyor. Bu hafta konuğumuz yazılım mühendisi Mehmet Demir. Konferans salonunda, saat 14:00\'te.',
-                kategori: 'etkinlik',
-                tarih: '2026-03-21',
-                aktif: 'evet',
-                bant: 'evet',
-                gorsel: 'https://picsum.photos/id/3/800/600',
-                video: ''
-            },
-            {
-                baslik: 'Kütüphane Yeni Kitaplar Eklendi',
-                icerik: 'Okul kütüphanemize 200 yeni kitap eklendi. Bilim kurgu, tarih ve teknoloji alanlarında zengin bir koleksiyon sizi bekliyor. Kütüphane her gün 08:30 - 17:00 arası açıktır.',
-                kategori: 'duyuru',
-                tarih: '2026-03-18',
-                aktif: 'evet',
-                bant: 'hayır',
-                gorsel: 'https://picsum.photos/id/24/800/600',
-                video: ''
-            },
-            {
-                baslik: 'Deprem Tatbikatı Hatırlatması',
-                icerik: '22 Mart Cuma günü saat 10:00\'da okul genelinde deprem tatbikatı yapılacaktır. Tüm öğrenci ve personelin tatbikat prosedürlerini gözden geçirmesi rica olunur.',
-                kategori: 'onemli',
-                tarih: '2026-03-22',
-                aktif: 'evet',
-                bant: 'evet',
-                gorsel: '',
-                video: ''
-            }
-        ];
+        const demoRows = [{
+            baslik: 'Örnek Duyuru', icerik: 'Sistem demo modunda çalışıyor.', kategori: 'duyuru', tarih: '', aktif: 'evet', bant: 'evet', gorsel: '', video: ''
+        }];
         processData(demoRows);
     }
 
@@ -259,7 +208,7 @@
         return sheetId;
     }
 
-    function loadFromCache() {
+    function loadFromCache(failedUrl) {
         if (els.offlineBadge) els.offlineBadge.classList.remove('hidden');
         const cachedData = localStorage.getItem('cachedAnnouncements');
         if (cachedData) {
@@ -269,97 +218,15 @@
         }
     }
 
-    // ==========================================
-    // EXCEL'DEN AYARLARI VE DUYURULARI ÇEKME
-    // ==========================================
-    function fetchSettingsAndData(sheetId) {
-        const id = getCleanSheetId(sheetId);
-        
-        // 1. AŞAMA: AYARLAR SEKMESİNİ OKU
-        const settingsUrl = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json;responseHandler:parseGoogleSheetSettings&sheet=AYARLAR`;
-        
-        let oldSettingsScript = document.getElementById('jsonp-settings-fetch');
-        if (oldSettingsScript) oldSettingsScript.remove();
-
-        window.parseGoogleSheetSettings = function(json) {
-            try {
-                const rows = json.table.rows;
-                const settings = {};
-                
-                rows.forEach(row => {
-                    if(row.c && row.c[0] && row.c[1]) {
-                        const key = row.c[0].v ? row.c[0].v.toString().trim() : '';
-                        const val = row.c[1].v ? row.c[1].v.toString().trim() : '';
-                        settings[key] = val;
-                    }
-                });
-
-                // Ayarları Ekrana Uygula
-                if (settings['OkulAdi']) {
-                    els.schoolName.textContent = settings['OkulAdi'];
-                    document.title = settings['OkulAdi'] + ' — Bilgi Ekranı';
-                }
-                
-                if (settings['LogoURL'] && els.schoolLogo) {
-                    els.schoolLogo.src = settings['LogoURL'];
-                    els.schoolLogo.style.display = 'block';
-                    if (els.defaultSchoolIcon) els.defaultSchoolIcon.style.display = 'none';
-                } else if (!settings['LogoURL'] && els.schoolLogo) {
-                    els.schoolLogo.style.display = 'none';
-                    if (els.defaultSchoolIcon) els.defaultSchoolIcon.style.display = 'block';
-                }
-
-                // Koordinatları ayarla
-                if (settings['Enlem']) CONFIG.WEATHER_LAT = parseFloat(settings['Enlem'].replace(',', '.'));
-                if (settings['Boylam']) CONFIG.WEATHER_LON = parseFloat(settings['Boylam'].replace(',', '.'));
-                
-                // Şehir ayarını uygula
-                if (settings['Sehir']) {
-                    CONFIG.WEATHER_CITY = settings['Sehir'];
-                    localStorage.setItem('kiosk_weather_city', settings['Sehir']);
-                }
-
-                // Script URL'yi AYARLAR'dan kaydet (TV kurulumunu basitleştirir)
-                if (settings['ScriptURL']) {
-                    localStorage.setItem('kiosk_script_url', settings['ScriptURL']);
-                }
-
-                // Şifreyi AYARLAR'dan kaydet
-                if (settings['Sifre']) {
-                    localStorage.setItem('kiosk_admin_password', settings['Sifre']);
-                }
-
-                // Okul adını da localStorage'a kaydet
-                if (settings['OkulAdi']) {
-                    localStorage.setItem('kiosk_school_name', settings['OkulAdi']);
-                }
-
-                fetchWeather(); // Yeni koordinatlara göre havayı çek
-
-            } catch(e) { console.error("Ayarlar okunamadı, varsayılanlar kullanılacak."); }
-            
-            delete window.parseGoogleSheetSettings;
-
-            // 2. AŞAMA: AYARLAR BİTTİKTEN SONRA DUYURULARI OKU
-            fetchData(sheetId);
-        };
-
-        const scriptSettings = document.createElement('script');
-        scriptSettings.id = 'jsonp-settings-fetch';
-        scriptSettings.src = settingsUrl;
-        scriptSettings.onerror = function() { fetchData(sheetId); }; 
-        document.body.appendChild(scriptSettings);
-    }
-
     function fetchData(sheetId) {
         const id = getCleanSheetId(sheetId);
         const url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json;responseHandler:parseGoogleSheetData&sheet=DUYURULAR`;
         const scriptId = 'jsonp-sheet-fetch';
-        
+
         let oldScript = document.getElementById(scriptId);
         if (oldScript) oldScript.remove();
-        
-        window.parseGoogleSheetData = function(json) {
+
+        window.parseGoogleSheetData = function (json) {
             if (els.offlineBadge) els.offlineBadge.classList.add('hidden');
             retryCount = 0;
             try {
@@ -378,17 +245,17 @@
                 });
                 localStorage.setItem('cachedAnnouncements', JSON.stringify(resultData));
                 processData(resultData);
-            } catch(e) { loadFromCache(); }
+            } catch (e) { loadFromCache(url); }
             delete window.parseGoogleSheetData;
         };
-        
+
         const script = document.createElement('script');
         script.id = scriptId;
         script.src = url;
-        script.onerror = function() {
+        script.onerror = function () {
             retryCount++;
-            if (retryCount <= CONFIG.MAX_RETRIES) setTimeout(() => fetchSettingsAndData(sheetId), CONFIG.RETRY_DELAY);
-            else loadFromCache();
+            if (retryCount <= CONFIG.MAX_RETRIES) setTimeout(() => fetchData(sheetId), CONFIG.RETRY_DELAY);
+            else loadFromCache(url);
         };
         document.body.appendChild(script);
     }
@@ -397,19 +264,12 @@
         if (!url) return null;
         const lower = url.toLowerCase();
         if (lower.includes('youtube.com') || lower.includes('youtu.be')) return 'youtube';
-        if (lower.includes('drive.google.com')) return 'drive';
         if (['.mp4', '.webm', '.ogg', '.mov'].some(ext => lower.includes(ext))) return 'video';
         return 'image';
     }
 
     function getYouTubeId(url) {
         const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?#]+)/);
-        return match ? match[1] : null;
-    }
-
-    function getDriveFileId(url) {
-        // Supports: /file/d/FILE_ID/..., ?id=FILE_ID, /d/FILE_ID
-        const match = url.match(/(?:\/file\/d\/|\/d\/|[?&]id=)([a-zA-Z0-9_-]+)/);
         return match ? match[1] : null;
     }
 
@@ -466,14 +326,6 @@
             return `<div class="slide-media yt-container" id="media-container-${index}">
                 <div id="yt-player-${index}" data-vid="${ytId}" style="width:100%;height:100%;pointer-events:none;"></div>
             </div>`;
-        } else if (item.mediaType === 'drive') {
-            const driveId = getDriveFileId(item.mediaUrl);
-            if (!driveId) return '';
-            return `<div class="slide-media drive-container" id="media-container-${index}">
-                <iframe id="drive-player-${index}" src="https://drive.google.com/file/d/${driveId}/preview" 
-                    style="width:100%;height:100%;border:none;pointer-events:none;" 
-                    allow="autoplay" allowfullscreen></iframe>
-            </div>`;
         }
         return '';
     }
@@ -485,9 +337,9 @@
             slideEl.className = `slide ${index === 0 ? 'active' : ''}`;
             const hasMedia = item.mediaUrl && item.mediaType;
             const noMediaClass = hasMedia ? '' : 'no-media';
-            
-            const progressHtml = (item.mediaType === 'youtube' || item.mediaType === 'video' || item.mediaType === 'drive') 
-                ? '' 
+
+            const progressHtml = (item.mediaType === 'youtube' || item.mediaType === 'video')
+                ? ''
                 : `<div class="slide-progress" id="progress-${index}"></div>`;
 
             slideEl.innerHTML = `
@@ -504,17 +356,17 @@
             `;
             els.slidesContainer.appendChild(slideEl);
         });
-        
+
         initYouTubePlayers();
         currentSlideIndex = 0;
     }
 
     function initYouTubePlayers() {
         if (!window.ytApiReady) return;
-        
+
         for (let idx in window.ytPlayers) {
             if (!document.getElementById(`yt-player-${idx}`)) {
-                try { window.ytPlayers[idx].destroy(); } catch(e){}
+                try { window.ytPlayers[idx].destroy(); } catch (e) { }
                 delete window.ytPlayers[idx];
             }
         }
@@ -527,7 +379,10 @@
             window.ytPlayers[idx] = new YT.Player(el.id, {
                 videoId: vid,
                 playerVars: { autoplay: 0, controls: 0, modestbranding: 1, rel: 0, mute: 1, showinfo: 0, disablekb: 1 },
-                events: { 'onStateChange': onPlayerStateChange }
+                events: {
+                    'onStateChange': onPlayerStateChange,
+                    'onError': onPlayerError
+                }
             });
         });
     }
@@ -549,13 +404,14 @@
         els.tickerContent.className = 'ticker-content scroll-mode';
         const buildItems = () => displayItems.map(item => `<span class="ticker-item"><span class="ticker-item-icon">${item.icon}</span> ${escapeHtml(item.text)}</span>`).join('<span class="ticker-separator">●</span>');
         els.tickerContent.innerHTML = buildItems() + '<span class="ticker-separator">●</span>' + buildItems();
-        
+
         requestAnimationFrame(() => {
             els.tickerContent.style.setProperty('--ticker-duration', `${(els.tickerContent.scrollWidth / 2) / CONFIG.TICKER_SCROLL_SPEED}s`);
         });
     }
 
     // --- SLIDESHOW ENGINE ---
+
     function startSlideshow() {
         if (slides.length === 0) return;
         scheduleNextPreview();
@@ -570,7 +426,7 @@
         const item = slides[currentSlideIndex];
         if (!item) return;
 
-        if (item.mediaType === 'youtube' || item.mediaType === 'video' || item.mediaType === 'drive') {
+        if (item.mediaType === 'youtube' || item.mediaType === 'video') {
             handleVideoSlide(item, currentSlideIndex);
         } else {
             startProgress(CONFIG.SLIDE_INTERVAL);
@@ -586,7 +442,10 @@
 
         // Temizle
         container.classList.remove('fullscreen-media');
-        if(textElement) textElement.classList.remove('text-hidden');
+        if (textElement) textElement.classList.remove('text-hidden');
+
+        // YENİ: Sistemin takılı kalmasını önleyecek güvenlik zamanlayıcısı
+        let fallbackTimer;
 
         if (item.mediaType === 'youtube') {
             const playerObj = window.ytPlayers[index];
@@ -594,71 +453,86 @@
                 currentSlideTimeout = setTimeout(nextSlide, CONFIG.SLIDE_INTERVAL); return;
             }
 
-            // Watchdog: Video asla başlamazsa sistemi kilitlenmekten kurtar
-            let watchdogTimer = setTimeout(() => {
-                if (playerObj.getPlayerState() !== 1) nextSlide();
-            }, 8000);
+            // Video 10 saniye içinde hiç başlamazsa diğer habere atla
+            fallbackTimer = setTimeout(() => { nextSlide(); }, 10000);
+
+            playerObj.seekTo(0);
+            playerObj.playVideo();
+
+            // YENİ: Video bozuksa/gizliyse anında atla
+            window.currentYtErrorCallback = (err) => {
+                clearTimeout(fallbackTimer);
+                nextSlide();
+            };
 
             window.currentYtStateCallback = (state) => {
-                if (state === 1) clearTimeout(watchdogTimer);
-                
-                if (state === 0) { // Video Bitti
+                if (state === 1) { // 1: Oynuyor
+                    clearTimeout(fallbackTimer); // Video başladı, zamanlayıcıyı durdur
+                }
+                if (state === 3) { // 3: Arabelleğe alınıyor (Buffering) - İnternet yavaşlar/koparsa
+                    clearTimeout(fallbackTimer);
+                    fallbackTimer = setTimeout(() => { nextSlide(); }, 15000); // 15sn içinde kurtaramazsa atla
+                }
+                if (state === 0) { // 0: Video Bitti
+                    clearTimeout(fallbackTimer);
                     if (fullscreenTriggerTimer) clearTimeout(fullscreenTriggerTimer);
                     if (container.classList.contains('fullscreen-media')) endVideoSlide(container, textElement);
                     else nextSlide();
                 }
             };
-            
-            playerObj.seekTo(0);
-            playerObj.playVideo();
-
         } else if (item.mediaType === 'video') {
             const playerObj = document.getElementById(`html-video-${index}`);
             if (playerObj) {
-                playerObj.muted = true; // Eski haline getirildi, TV için zorunlu sessiz
-                playerObj.currentTime = 0;
-                
-                let watchdogTimer = setTimeout(() => nextSlide(), 8000);
+                // HTML5 Video için ilk başlama zamanlayıcısı
+                fallbackTimer = setTimeout(() => { nextSlide(); }, 10000);
 
+                playerObj.currentTime = 0;
                 playerObj.play().then(() => {
-                    clearTimeout(watchdogTimer);
+                    clearTimeout(fallbackTimer); // Başarıyla oynarsa iptal et
                 }).catch(e => {
                     console.log('Video error:', e);
-                    clearTimeout(watchdogTimer);
-                    currentSlideTimeout = setTimeout(nextSlide, 5000);
+                    clearTimeout(fallbackTimer);
+                    nextSlide(); // Oynatma engellenirse veya bozuksa atla
                 });
 
+                // Video ortasında internet koparsa (yükleme yapamazsa)
+                playerObj.onwaiting = () => {
+                    clearTimeout(fallbackTimer);
+                    fallbackTimer = setTimeout(() => { nextSlide(); }, 15000);
+                };
+
+                playerObj.onplaying = () => { clearTimeout(fallbackTimer); };
+
                 playerObj.onended = () => {
+                    clearTimeout(fallbackTimer);
                     if (fullscreenTriggerTimer) clearTimeout(fullscreenTriggerTimer);
                     if (container.classList.contains('fullscreen-media')) endVideoSlide(container, textElement);
                     else nextSlide();
                 };
+
+                playerObj.onerror = () => {
+                    clearTimeout(fallbackTimer);
+                    nextSlide();
+                };
             }
-        } else if (item.mediaType === 'drive') {
-            // Drive video: iframe olarak gösterilir, süre sınırlı (30 saniye)
-            const driveTimeout = 30000;
-            currentSlideTimeout = setTimeout(() => {
-                if (container.classList.contains('fullscreen-media')) endVideoSlide(container, textElement);
-                else nextSlide();
-            }, driveTimeout);
         }
 
         // 1. Adım: 4 saniye normal bekle, sonra bulunduğu kartın içinde %100 genişle
         fullscreenTriggerTimer = setTimeout(() => {
             container.classList.add('fullscreen-media');
-            if(textElement) textElement.classList.add('text-hidden');
+            if (textElement) textElement.classList.add('text-hidden');
         }, 4000);
     }
 
     function endVideoSlide(container, textElement) {
         // 3. Adım: Bittiğinde küçült ve yazıyı geri getir
         container.classList.remove('fullscreen-media');
-        if(textElement) textElement.classList.remove('text-hidden');
-        
-        // 4. Adım: Küçülme animasyonunun bitmesini bekle (2 Saniye)
+        if (textElement) textElement.classList.remove('text-hidden');
+
+        // 4. Adım: Küçülme animasyonunun bitmesini bekle, ardından sonraki habere geç
         currentSlideTimeout = setTimeout(() => {
             nextSlide();
-        }, 2000); 
+        }, 2000);
     }
 
     function nextSlide() {
@@ -692,10 +566,10 @@
         const item = slides[index];
         if (!item) return;
         const container = document.getElementById(`media-container-${index}`);
-        if(container) {
+        if (container) {
             container.classList.remove('fullscreen-media');
             const textElement = container.closest('.slide-card').querySelector('.slide-text');
-            if(textElement) textElement.classList.remove('text-hidden');
+            if (textElement) textElement.classList.remove('text-hidden');
         }
 
         if (item.mediaType === 'youtube' && window.ytPlayers[index] && typeof window.ytPlayers[index].pauseVideo === 'function') {
@@ -703,14 +577,6 @@
         } else if (item.mediaType === 'video') {
             const video = document.getElementById(`html-video-${index}`);
             if (video) video.pause();
-        } else if (item.mediaType === 'drive') {
-            // Drive iframe'i durdurmak için src'yi temizleyip geri yükle
-            const iframe = document.getElementById(`drive-player-${index}`);
-            if (iframe) {
-                const src = iframe.src;
-                iframe.src = '';
-                iframe.src = src;
-            }
         }
     }
 
@@ -718,10 +584,10 @@
         const progressBar = document.getElementById(`progress-${currentSlideIndex}`);
         if (!progressBar) return;
         let elapsed = 0;
-        
+
         progressBar.style.transition = 'none';
         progressBar.style.width = '0%';
-        void progressBar.offsetWidth; 
+        void progressBar.offsetWidth;
 
         progressTimer = setInterval(() => {
             elapsed += CONFIG.PROGRESS_STEP;
@@ -735,7 +601,7 @@
         if (slides.length <= 1 || !els.nextPreview) return;
 
         if (slides[currentSlideIndex].mediaType !== 'image' && slides[currentSlideIndex].mediaUrl === '') return;
-        
+
         nextPreviewTimer = setTimeout(() => {
             els.nextPreviewTitle.textContent = slides[(currentSlideIndex + 1) % slides.length].baslik;
             els.nextPreview.classList.add('visible');
@@ -761,17 +627,9 @@
                     if (els.weatherCity) els.weatherCity.textContent = CONFIG.WEATHER_CITY;
                     if (els.weatherDesc) els.weatherDesc.textContent = 'Güncel';
                 }
-            }).catch(() => {});
+            }).catch(() => { });
     }
     function fetchWeather() { fetchFreeWeather(); }
-
-    // --- TV Universal Scaling ---
-    function updateScale() {
-        const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
-        document.documentElement.style.setProperty('--tv-scale', scale);
-    }
-    window.addEventListener('resize', updateScale);
-    updateScale();
 
     document.addEventListener('DOMContentLoaded', init);
 })();
