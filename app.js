@@ -458,7 +458,7 @@
             </div>`;
         } else if (item.mediaType === 'video') {
             return `<div class="slide-media video-container" id="media-container-${index}">
-                <video id="html-video-${index}" src="${escapeAttr(item.mediaUrl)}" playsinline style="width:100%;height:100%;object-fit:cover;"></video>
+                <video id="html-video-${index}" src="${escapeAttr(item.mediaUrl)}" muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>
             </div>`;
         } else if (item.mediaType === 'youtube') {
             const ytId = getYouTubeId(item.mediaUrl);
@@ -526,7 +526,7 @@
 
             window.ytPlayers[idx] = new YT.Player(el.id, {
                 videoId: vid,
-                playerVars: { autoplay: 0, controls: 0, modestbranding: 1, rel: 0, mute: 0, showinfo: 0, disablekb: 1 },
+                playerVars: { autoplay: 0, controls: 0, modestbranding: 1, rel: 0, mute: 1, showinfo: 0, disablekb: 1 },
                 events: { 'onStateChange': onPlayerStateChange }
             });
         });
@@ -597,6 +597,9 @@
             playerObj.playVideo();
 
             window.currentYtStateCallback = (state) => {
+                if (state === 1) { // Video Oynatılıyor
+                    playerObj.unMute(); // Tarayıcı engellemesini aşmak için oynarken sesi aç
+                }
                 if (state === 0) { // Video Bitti
                     if (fullscreenTriggerTimer) clearTimeout(fullscreenTriggerTimer);
                     if (container.classList.contains('fullscreen-media')) endVideoSlide(container, textElement);
@@ -606,8 +609,15 @@
         } else if (item.mediaType === 'video') {
             const playerObj = document.getElementById(`html-video-${index}`);
             if (playerObj) {
+                playerObj.muted = true; // Engellemeyi aşmak için önce sessiz
                 playerObj.currentTime = 0;
-                playerObj.play().catch(e => console.log('Video error:', e));
+                playerObj.play().then(() => {
+                    playerObj.muted = false; // Başladıktan sonra sesi aç
+                }).catch(e => {
+                    console.log('Video error:', e);
+                    // Video hiç açılmazsa sonsuz beklemesin, 5sn sonra geç
+                    currentSlideTimeout = setTimeout(nextSlide, 5000);
+                });
                 playerObj.onended = () => {
                     if (fullscreenTriggerTimer) clearTimeout(fullscreenTriggerTimer);
                     if (container.classList.contains('fullscreen-media')) endVideoSlide(container, textElement);
@@ -744,6 +754,14 @@
             }).catch(() => {});
     }
     function fetchWeather() { fetchFreeWeather(); }
+
+    // --- TV Universal Scaling ---
+    function updateScale() {
+        const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        document.documentElement.style.setProperty('--tv-scale', scale);
+    }
+    window.addEventListener('resize', updateScale);
+    updateScale();
 
     document.addEventListener('DOMContentLoaded', init);
 })();
