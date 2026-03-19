@@ -1,5 +1,5 @@
 /* ============================================
-   TV KIOSK - APP.JS v5.1 (In-Card Cinematic Edition - 2sn Bekleme)
+   TV KIOSK - APP.JS v5.2 (Magic Link & Cinematic Edition)
    Google Sheets Integration & Slide Engine (Gelişmiş Video Hata Korumalı)
    ============================================ */
 
@@ -8,7 +8,7 @@
 
     // --- Configuration ---
     const CONFIG = {
-        SLIDE_INTERVAL: 10000,      // Normal slaytlar için bekleme süresi
+        SLIDE_INTERVAL: 10000,      
         DATA_REFRESH: 120000,
         CLOCK_REFRESH: 1000,
         PROGRESS_STEP: 50,
@@ -100,6 +100,15 @@
     const TR_MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
     const TR_DAYS = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
 
+    const CITY_DATA = {
+        "Ankara": [39.9334, 32.8597], "İstanbul": [41.0082, 28.9784], "İzmir": [38.4237, 27.1428],
+        "Bursa": [40.1826, 29.0665], "Antalya": [36.8969, 30.7133], "Adana": [37.0000, 35.3213],
+        "Konya": [37.8746, 32.4932], "Gaziantep": [37.0660, 37.3781], "Mersin": [36.8121, 34.6415],
+        "Kayseri": [38.7312, 35.4787], "Eskişehir": [39.7668, 30.5256], "Diyarbakır": [37.9144, 40.2306],
+        "Samsun": [41.2928, 36.3313], "Trabzon": [41.0027, 39.7168], "Erzurum": [39.9055, 41.2658],
+        "Malatya": [38.3554, 38.3335], "Van": [38.4956, 43.3832], "Denizli": [37.7765, 29.0864]
+    };
+
     // --- State ---
     let slides = [];
     let tickerItems = [];
@@ -134,8 +143,93 @@
         els.nextPreviewTitle = document.getElementById('next-preview-title');
     }
 
+    // --- BOOT PROCESS ---
     function init() {
         cacheDom();
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // 1. URL'de Magic ID var mı kontrol et
+        const magicId = urlParams.get('id');
+        if (magicId) {
+            runMagicBoot(magicId);
+            return; // Normal başlatmayı durdur, Magic Boot halledecek
+        }
+
+        // 2. ID yoksa normal sistem başlangıcı
+        continueInit();
+    }
+
+    // Sihirli Kurulum - AYARLAR sekmesini okur ve sistemi başlatır
+    function runMagicBoot(sheetId) {
+        let cleanId = sheetId;
+        if (cleanId.includes('docs.google.com')) {
+            const match = cleanId.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            if (match) cleanId = match[1];
+        }
+
+        localStorage.setItem('kiosk_sheet_id', cleanId);
+        localStorage.removeItem('kiosk_demo_mode');
+
+        if (els.loadingSlide) {
+            const p = els.loadingSlide.querySelector('.slide-content');
+            if (p) p.textContent = 'Sihirli Link doğrulandı, sistem ayarları çekiliyor...';
+        }
+
+        const url = `https://docs.google.com/spreadsheets/d/${cleanId}/gviz/tq?tqx=out:json;responseHandler:magicAppCallback&sheet=AYARLAR`;
+        const scriptId = 'jsonp-magic-app';
+
+        let oldScript = document.getElementById(scriptId);
+        if (oldScript) oldScript.remove();
+
+        window.magicAppCallback = function(json) {
+            try {
+                const rows = json.table.rows;
+                let settings = {};
+                rows.forEach(row => {
+                    if (row.c && row.c[0] && row.c[1]) {
+                        settings[(row.c[0].v || '').toString().trim()] = (row.c[1].v || '').toString().trim();
+                    }
+                });
+
+                if (settings['Okul Adı']) localStorage.setItem('kiosk_school_name', settings['Okul Adı']);
+                if (settings['App Script URL']) localStorage.setItem('kiosk_script_url', settings['App Script URL']);
+                if (settings['Logo URL']) localStorage.setItem('kiosk_school_logo', settings['Logo URL']);
+                if (settings['Yönetici Şifresi']) localStorage.setItem('kiosk_admin_password', settings['Yönetici Şifresi']);
+                
+                let city = settings['Hava Durumu Şehri'];
+                if (city) {
+                    localStorage.setItem('kiosk_weather_city', city);
+                    if (CITY_DATA[city]) {
+                        localStorage.setItem('kiosk_weather_lat', CITY_DATA[city][0]);
+                        localStorage.setItem('kiosk_weather_lon', CITY_DATA[city][1]);
+                    }
+                }
+            } catch(e) {
+                console.log('AYARLAR sekmesi okunamadı, varsayılanlarla devam edilecek.');
+            }
+            
+            delete window.magicAppCallback;
+            
+            // Parametreyi URL'den temizle (Sayfa yenilendiğinde tekrar ayar çekmekle vakit kaybetmesin)
+            if (window.history && window.history.replaceState) {
+                const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                window.history.replaceState({}, document.title, cleanUrl);
+            }
+
+            continueInit();
+        };
+
+        const script = document.createElement('script');
+        script.id = scriptId;
+        script.src = url;
+        script.onerror = function() {
+            // Hata olursa (internet yavaşsa vb.) direkt DUYURULAR tablosuna geç
+            continueInit();
+        };
+        document.body.appendChild(script);
+    }
+
+    function continueInit() {
         const urlParams = new URLSearchParams(window.location.search);
         const isDemo = urlParams.has('demo') || localStorage.getItem('kiosk_demo_mode') === 'true';
 
@@ -379,7 +473,7 @@
             window.ytPlayers[idx] = new YT.Player(el.id, {
                 videoId: vid,
                 playerVars: { autoplay: 0, controls: 0, modestbranding: 1, rel: 0, mute: 1, showinfo: 0, disablekb: 1 },
-                events: {
+                events: { 
                     'onStateChange': onPlayerStateChange,
                     'onError': onPlayerError
                 }
@@ -444,7 +538,6 @@
         container.classList.remove('fullscreen-media');
         if (textElement) textElement.classList.remove('text-hidden');
 
-        // YENİ: Sistemin takılı kalmasını önleyecek güvenlik zamanlayıcısı
         let fallbackTimer;
 
         if (item.mediaType === 'youtube') {
@@ -459,15 +552,14 @@
             playerObj.seekTo(0);
             playerObj.playVideo();
 
-            // YENİ: Video bozuksa/gizliyse anında atla
             window.currentYtErrorCallback = (err) => {
                 clearTimeout(fallbackTimer);
-                nextSlide();
+                nextSlide(); 
             };
 
             window.currentYtStateCallback = (state) => {
                 if (state === 1) { // 1: Oynuyor
-                    clearTimeout(fallbackTimer); // Video başladı, zamanlayıcıyı durdur
+                    clearTimeout(fallbackTimer); 
                 }
                 if (state === 3) { // 3: Arabelleğe alınıyor (Buffering) - İnternet yavaşlar/koparsa
                     clearTimeout(fallbackTimer);
@@ -483,24 +575,22 @@
         } else if (item.mediaType === 'video') {
             const playerObj = document.getElementById(`html-video-${index}`);
             if (playerObj) {
-                // HTML5 Video için ilk başlama zamanlayıcısı
                 fallbackTimer = setTimeout(() => { nextSlide(); }, 10000);
 
                 playerObj.currentTime = 0;
                 playerObj.play().then(() => {
-                    clearTimeout(fallbackTimer); // Başarıyla oynarsa iptal et
+                    clearTimeout(fallbackTimer); 
                 }).catch(e => {
                     console.log('Video error:', e);
                     clearTimeout(fallbackTimer);
-                    nextSlide(); // Oynatma engellenirse veya bozuksa atla
+                    nextSlide(); 
                 });
 
-                // Video ortasında internet koparsa (yükleme yapamazsa)
                 playerObj.onwaiting = () => {
                     clearTimeout(fallbackTimer);
                     fallbackTimer = setTimeout(() => { nextSlide(); }, 15000);
                 };
-
+                
                 playerObj.onplaying = () => { clearTimeout(fallbackTimer); };
 
                 playerObj.onended = () => {
@@ -509,7 +599,7 @@
                     if (container.classList.contains('fullscreen-media')) endVideoSlide(container, textElement);
                     else nextSlide();
                 };
-
+                
                 playerObj.onerror = () => {
                     clearTimeout(fallbackTimer);
                     nextSlide();
@@ -532,7 +622,7 @@
         // 4. Adım: Küçülme animasyonunun bitmesini bekle, ardından sonraki habere geç
         currentSlideTimeout = setTimeout(() => {
             nextSlide();
-        }, 2000);
+        }, 2000); 
     }
 
     function nextSlide() {
