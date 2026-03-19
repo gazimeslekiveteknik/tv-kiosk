@@ -458,7 +458,7 @@
             </div>`;
         } else if (item.mediaType === 'video') {
             return `<div class="slide-media video-container" id="media-container-${index}">
-                <video id="html-video-${index}" src="${escapeAttr(item.mediaUrl)}" muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>
+                <video id="html-video-${index}" src="${escapeAttr(item.mediaUrl)}" playsinline style="width:100%;height:100%;object-fit:cover;"></video>
             </div>`;
         } else if (item.mediaType === 'youtube') {
             const ytId = getYouTubeId(item.mediaUrl);
@@ -526,7 +526,7 @@
 
             window.ytPlayers[idx] = new YT.Player(el.id, {
                 videoId: vid,
-                playerVars: { autoplay: 0, controls: 0, modestbranding: 1, rel: 0, mute: 1, showinfo: 0, disablekb: 1 },
+                playerVars: { autoplay: 0, controls: 0, modestbranding: 1, rel: 0, mute: 0, showinfo: 0, disablekb: 1 },
                 events: { 'onStateChange': onPlayerStateChange }
             });
         });
