@@ -56,8 +56,8 @@
 }
 
 html, body {
-    width: 1920px;
-    height: 1080px;
+    width: 100vw;
+    height: 100vh;
     overflow: hidden;
     font-family: var(--font-main);
     background: var(--bg-primary);
@@ -220,12 +220,16 @@ html, body {
 
 /* --- Main Display Layout --- */
 .main-display {
-    position: relative;
-    z-index: 1;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(var(--tv-scale, 1));
+    transform-origin: center center;
     width: 1920px;
     height: 1080px;
     display: flex;
     flex-direction: column;
+    z-index: 1;
 }
 
 /* --- Top Header Bar --- */
@@ -978,15 +982,4 @@ html, body {
     animation: fadeInUp 0.6s ease-out forwards;
 }
 
-/* --- Responsive (preview on smaller screen) --- */
-@media (max-width: 1920px) {
-    html, body {
-        width: 100vw;
-        height: 100vh;
-    }
-
-    .main-display {
-        width: 100vw;
-        height: 100vh;
-    }
-}
+/* Removed @media query for TV universal scale compatibility */
