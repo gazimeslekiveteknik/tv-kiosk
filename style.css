@@ -1,7 +1,7 @@
 /* ============================================
    TV KIOSK BILGI EKRANI - v4 CINEMATIC LIGHT
    Light Cinematic Theme with Vibrant Accents
-   Optimized for 1920x1080 TV Display
+   Optimized for 1920x1080 TV Display (Smart TV Performance Edition)
    ============================================ */
 
 /* --- CSS Variables (Design Tokens) --- */
@@ -100,8 +100,8 @@ html, body {
 .bg-orb {
     position: absolute;
     border-radius: 50%;
-    filter: blur(160px);
-    mix-blend-mode: multiply;
+    opacity: 0.3; 
+    filter: blur(40px); /* TV performansı için bulanıklık düşürüldü */
 }
 
 .bg-orb-1 {
@@ -859,11 +859,17 @@ html, body {
 
 .ticker-content.scroll-mode {
     animation: tickerScroll var(--ticker-duration, 30s) linear infinite;
+    will-change: transform;
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    perspective: 1000;
+    text-rendering: optimizeSpeed;
 }
 
 @keyframes tickerScroll {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
+    0% { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(-50%, 0, 0); }
 }
 
 .ticker-item {
