@@ -46,358 +46,97 @@
             opacity: 0.15;
             z-index: 0;
         }
-        body::before {
-            width: 500px; height: 500px;
-            background: var(--accent-blue);
-            top: -200px; right: -100px;
-        }
-        body::after {
-            width: 400px; height: 400px;
-            background: var(--accent-purple);
-            bottom: -150px; left: -100px;
-        }
+        body::before { width: 500px; height: 500px; background: var(--accent-blue); top: -200px; right: -100px; }
+        body::after { width: 400px; height: 400px; background: var(--accent-purple); bottom: -150px; left: -100px; }
 
-        .setup-container {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            max-width: 660px;
-        }
+        .setup-container { position: relative; z-index: 1; width: 100%; max-width: 660px; }
 
-        .setup-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .setup-header-icon {
-            font-size: 64px;
-            margin-bottom: 16px;
-        }
-
+        .setup-header { text-align: center; margin-bottom: 40px; }
+        .setup-header-icon { font-size: 64px; margin-bottom: 16px; }
         .setup-header h1 {
-            font-size: 32px;
-            font-weight: 800;
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 8px;
+            font-size: 32px; font-weight: 800; margin-bottom: 8px;
+            background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
-
-        .setup-header p {
-            color: var(--text-secondary);
-            font-size: 16px;
-        }
+        .setup-header p { color: var(--text-secondary); font-size: 16px; }
 
         .setup-form {
-            background: var(--bg-card);
-            backdrop-filter: blur(40px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-md);
-            padding: 40px;
+            background: var(--bg-card); backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 40px;
         }
 
-        .form-group {
-            margin-bottom: 24px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-        }
-
+        .form-group { margin-bottom: 24px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1.5px; }
         .form-group input, .form-group select {
-            width: 100%;
-            padding: 14px 18px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-sm);
-            color: var(--text-primary);
-            font-size: 15px;
-            font-family: inherit;
-            outline: none;
-            transition: border-color 0.3s, box-shadow 0.3s;
+            width: 100%; padding: 14px 18px; background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+            color: var(--text-primary); font-size: 15px; font-family: inherit; outline: none; transition: all 0.3s;
         }
-
         .form-group select {
-            cursor: pointer;
-            appearance: none;
+            cursor: pointer; appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 16px center;
+            background-repeat: no-repeat; background-position: right 16px center;
         }
+        .form-group select option { background: #1e293b; color: white; }
+        .form-group input::placeholder { color: rgba(255, 255, 255, 0.2); }
+        .form-group input:focus, .form-group select:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
 
-        .form-group select option {
-            background: #1e293b;
-            color: white;
-        }
+        .form-hint { font-size: 12px; color: var(--text-secondary); margin-top: 8px; line-height: 1.6; opacity: 0.7; }
 
-        .form-group input::placeholder {
-            color: rgba(255, 255, 255, 0.2);
+        .media-section {
+            background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: var(--radius-sm); margin-bottom: 24px; border: 1px dashed rgba(255,255,255,0.1);
         }
-
-        .form-group input:focus, .form-group select:focus {
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-        }
-
-        .form-hint {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-top: 8px;
-            line-height: 1.6;
-            opacity: 0.7;
-        }
+        .media-section-title { font-size: 13px; font-weight: 700; color: #cbd5e1; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
 
         .btn-save {
-            width: 100%;
-            padding: 16px 32px;
-            background: var(--gradient-primary);
-            color: white;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-size: 17px;
-            font-weight: 700;
-            font-family: inherit;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            margin-top: 8px;
+            width: 100%; padding: 16px 32px; background: var(--gradient-primary); color: white;
+            border: none; border-radius: var(--radius-sm); font-size: 17px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 8px;
         }
-
-        .btn-save:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
-        }
-
-        .btn-save:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-            transform: none;
-        }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4); }
+        .btn-save:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
 
         .success-message {
-            display: none;
-            text-align: center;
-            padding: 20px;
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            border-radius: var(--radius-sm);
-            color: #10b981;
-            margin-top: 16px;
-            font-weight: 600;
-            font-size: 15px;
+            display: none; text-align: center; padding: 20px; background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-sm); color: #10b981; margin-top: 16px; font-weight: 600;
         }
 
-        .divider {
-            border: none;
-            border-top: 1px solid var(--glass-border);
-            margin: 28px 0;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 12px;
-        }
-
-        .btn-demo {
-            flex: 1;
-            padding: 14px 24px;
-            background: linear-gradient(135deg, #10b981, #06b6d4);
-            color: white;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-size: 15px;
-            font-weight: 600;
-            font-family: inherit;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .btn-demo:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4);
-        }
-
-        .btn-reset {
-            padding: 14px 24px;
-            background: rgba(239, 68, 68, 0.15);
-            color: #ef4444;
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            border-radius: var(--radius-sm);
-            font-size: 15px;
-            font-weight: 600;
-            font-family: inherit;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .btn-reset:hover {
-            transform: translateY(-2px);
-            background: rgba(239, 68, 68, 0.25);
-        }
-
-        .help-section {
-            background: var(--bg-card);
-            backdrop-filter: blur(40px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-md);
-            padding: 32px 40px;
-        }
-
-        .help-section h3 {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            color: var(--text-primary);
-        }
-
-        .help-steps {
-            list-style: none;
-            counter-reset: steps;
-        }
-
-        .help-steps li {
-            counter-increment: steps;
-            font-size: 14px;
-            color: var(--text-secondary);
-            line-height: 1.7;
-            margin-bottom: 12px;
-            padding-left: 36px;
-            position: relative;
-        }
-
-        .help-steps li::before {
-            content: counter(steps);
-            position: absolute;
-            left: 0;
-            width: 24px;
-            height: 24px;
-            background: var(--gradient-primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: 700;
-            color: white;
-            text-align: center;
-            line-height: 24px;
-        }
+        .divider { border: none; border-top: 1px solid var(--glass-border); margin: 28px 0; }
+        .btn-group { display: flex; gap: 12px; }
+        .btn-demo { flex: 1; padding: 14px 24px; background: linear-gradient(135deg, #10b981, #06b6d4); color: white; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-demo:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4); }
+        .btn-reset { padding: 14px 24px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-reset:hover { transform: translateY(-2px); background: rgba(239, 68, 68, 0.25); }
 
         /* Tabs */
-        .setup-tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 24px;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 6px;
-            border-radius: var(--radius-sm);
-        }
+        .setup-tabs { display: flex; gap: 8px; margin-bottom: 24px; background: rgba(0, 0, 0, 0.2); padding: 6px; border-radius: var(--radius-sm); }
+        .tab-btn { flex: 1; padding: 12px; background: transparent; color: var(--text-secondary); border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .tab-btn:hover { color: var(--text-primary); }
+        .tab-btn.active { background: var(--bg-card); color: var(--text-primary); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
-        .tab-btn {
-            flex: 1;
-            padding: 12px;
-            background: transparent;
-            color: var(--text-secondary);
-            border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .tab-btn:hover {
-            color: var(--text-primary);
-        }
-
-        .tab-btn.active {
-            background: var(--bg-card);
-            color: var(--text-primary);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-        
         #loading-overlay, #setup-loading {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(10, 14, 26, 0.8);
-            backdrop-filter: blur(4px);
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border-radius: var(--radius-md);
-            color: white;
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 14, 26, 0.8); backdrop-filter: blur(4px);
+            z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: var(--radius-md); color: white;
         }
-        
-        .spinner {
-            width: 40px; height: 40px;
-            border: 4px solid rgba(255,255,255,0.1);
-            border-left-color: var(--accent-blue);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 16px;
-        }
-        
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
         /* Login Overlay */
         #login-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: var(--bg-primary);
-            z-index: 20;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border-radius: var(--radius-md);
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10,14,26,0.95);
+            z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px);
         }
-        
-        .login-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(40px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-md);
-            padding: 40px;
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-
-        .login-card h2 {
-            margin-bottom: 24px;
-            font-size: 24px;
-        }
-        
-        .login-error {
-            color: #ef4444;
-            font-size: 14px;
-            margin-top: 12px;
-            display: none;
-        }
+        .login-card { background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 40px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+        .login-card h2 { margin-bottom: 12px; font-size: 24px; }
+        .login-error { color: #ef4444; font-size: 14px; margin-top: 12px; display: none; }
     </style>
 </head>
 <body>
     <div class="setup-container">
         
-        <div id="login-overlay" style="display: none; position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(10,14,26,0.95); z-index: 50; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
-            <div class="login-card" style="background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 40px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4);">
-                <h2 style="margin-bottom: 12px; font-size: 24px;">Yönetici Girişi</h2>
+        <div id="login-overlay" style="display: none;">
+            <div class="login-card">
+                <h2>Yönetici Girişi</h2>
                 <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 14px;">Kurulum ayarlarına erişmek için şifre gereklidir.</p>
                 <form id="login-form">
                     <div class="form-group" style="text-align: left;">
@@ -407,7 +146,7 @@
                         <button type="button" class="btn-reset" id="btn-login-cancel" style="flex: 1;">Vazgeç</button>
                         <button type="submit" class="btn-save" style="margin-top: 0; flex: 1;">Giriş Yap</button>
                     </div>
-                    <div class="login-error" id="login-error" style="color: #ef4444; font-size: 14px; margin-top: 12px; display: none;">Hatalı şifre, lütfen tekrar deneyin.</div>
+                    <div class="login-error" id="login-error">Hatalı şifre, lütfen tekrar deneyin.</div>
                 </form>
             </div>
         </div>
@@ -421,47 +160,45 @@
         <div class="setup-tabs" id="main-tabs">
             <button class="tab-btn" data-tab="tab-kurulum">Kurulum</button>
             <button class="tab-btn active" data-tab="tab-icerik">Yeni İçerik Ekle</button>
-            <button class="tab-btn" data-tab="tab-yardim">Yardım</button>
         </div>
 
         <div id="tab-kurulum" class="tab-content">
             <form class="setup-form" id="setup-form" style="position: relative;">
                 <div id="setup-loading" style="display: none;">
                     <div class="spinner"></div>
-                    <div>Sihirli Kurulum Yapılıyor... Tablo okunuyor.</div>
+                    <div id="setup-loading-text">Bağlantı Kuruluyor...</div>
                 </div>
 
                 <div class="form-group" style="text-align: center; margin-bottom: 30px;">
                     <div style="font-size: 48px; margin-bottom: 10px;">✨</div>
-                    <h3 style="color: var(--accent-blue); font-size: 20px; margin-bottom: 10px;">Sihirli Kurulum</h3>
+                    <h3 style="color: var(--accent-blue); font-size: 20px; margin-bottom: 10px;">Google Sheet Bağlantısı</h3>
                     <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
-                        TV kumandasıyla uzun uzun yazmanıza gerek yok.<br>
-                        Google Sheet linkinizi yapıştırın; Okul Adı, Şifre, Script URL ve Hava Durumu ayarları tablodan otomatik çekilsin.
+                        Google Sheet Linkinizi yapıştırın; AppScript, Şifre ve diğer tüm ayarlar otomatik çekilsin.
                     </p>
                 </div>
 
                 <div class="form-group">
-                    <label for="sheet-id">Sihirli Link (Google Sheet URL)</label>
-                    <input type="text" id="sheet-id" placeholder="Google Sheet linkini veya ID'sini buraya yapıştırın" required>
-                    <p class="form-hint">Google Sheets → Paylaş → "Bağlantıya sahip olan herkes görüntüleyebilir" şeklinde olmalıdır.</p>
+                    <label for="sheet-id">Sihirli Link (Google Sheet URL / ID)</label>
+                    <input type="text" id="sheet-id" placeholder="Google Sheet linkini buraya yapıştırın" required>
                 </div>
 
-                <button type="submit" class="btn-save" id="btn-save">🪄 Kurulumu Başlat</button>
+                <button type="submit" class="btn-save" id="btn-save">🪄 Bağlantıyı Sağla</button>
 
                 <div class="success-message" id="success-msg">
-                    ✅ Ayarlar tablodan başarıyla çekildi! Yönlendiriliyorsunuz...
+                    ✅ Ayarlar tablodan başarıyla çekildi! Sisteme yönlendiriliyorsunuz...
                 </div>
 
                 <hr class="divider">
-
                 <div style="text-align: center;">
                     <div class="btn-group" style="justify-content: center;">
-                        <button type="button" class="btn-demo" id="btn-demo">🔬 Demo Modu</button>
-                        <button type="button" class="btn-reset" id="btn-reset">🗑️ Çıkış Yap / Sıfırla</button>
+                        <button type="button" class="btn-demo" id="btn-demo">Kiosku Aç</button>
+                        <button type="button" class="btn-reset" id="btn-reset">Cihazı Sıfırla</button>
                     </div>
                 </div>
             </form>
-        </div><div id="tab-icerik" class="tab-content active">
+        </div>
+
+        <div id="tab-icerik" class="tab-content active">
             <form class="setup-form" id="content-form" style="position: relative;">
                 <div id="loading-overlay" style="display: none;">
                     <div class="spinner"></div>
@@ -513,46 +250,43 @@
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="c-file">Görsel / Video Dosyası Seç</label>
-                    <input type="file" id="c-file" accept="image/*,video/mp4,video/webm">
-                    <p class="form-hint">Seçtiğiniz dosya otomatik olarak Google Drive klasörüne yüklenecektir.</p>
+                <div class="media-section">
+                    <div class="media-section-title">🎬 Medya Ekleme (Sadece birini tercih edin)</div>
+                    
+                    <div class="form-group">
+                        <label for="c-video-url" style="color:#60a5fa;">▶️ Video Linki (YouTube, Drive, mp4)</label>
+                        <input type="text" id="c-video-url" placeholder="Örn: https://youtube.com/watch?v=...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="c-gorsel-url" style="color:#34d399;">🖼️ İnternetten Görsel Linki</label>
+                        <input type="text" id="c-gorsel-url" placeholder="Örn: https://site.com/resim.jpg">
+                    </div>
+
+                    <div style="text-align:center; color:rgba(255,255,255,0.3); font-size:12px; margin-bottom:12px;">-- VEYA BİLGİSAYARDAN YÜKLE --</div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="c-file">📁 Dosya Seç (Resim / Video)</label>
+                        <input type="file" id="c-file" accept="image/*,video/mp4,video/webm">
+                        <p class="form-hint">Seçtiğiniz dosya otomatik olarak Google Drive klasörüne yüklenecektir.</p>
+                    </div>
                 </div>
 
-                <button type="submit" class="btn-save" id="btn-submit-content">🚀 İçeriği Ekle</button>
+                <button type="submit" class="btn-save" id="btn-submit-content">🚀 İçeriği Tabloya Ekle</button>
                 <div class="success-message" id="content-success-msg">
-                    ✅ İçerik ve dosya başarıyla tabloya eklendi!
+                    ✅ İçerik başarıyla eklendi!
                 </div>
                 <div class="success-message" id="content-error-msg" style="color: #ef4444; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3);">
-                    ❌ Yükleme sırasında bir hata oluştu.
+                    ❌ Bir hata oluştu.
                 </div>
             </form>
-        </div><div id="tab-yardim" class="tab-content">
-            <div class="help-section">
-                <h3>📋 Google Sheet Nasıl Hazırlanır?</h3>
-                <ol class="help-steps">
-                    <li>Sistemdeki Google Sheet dosyanızda <strong>AYARLAR</strong> ve <strong>DUYURULAR</strong> adında iki sekme olduğundan emin olun.</li>
-                    <li><strong>AYARLAR</strong> sekmesinde A sütununa "Ayar Adı", B sütununa "Değer" yazın.</li>
-                    <li>Şu değerleri alt alta girin: <code>Yönetici Şifresi</code>, <code>Okul Adı</code>, <code>App Script URL</code>, <code>Hava Durumu Şehri</code>. İsteğe bağlı olarak <code>Logo URL</code> de ekleyebilirsiniz.</li>
-                    <li>Ekran Kurulumu sayfasında (bu sayfada) sadece bu Sheet linkini yapıştırmanız tüm sistemi aktif edecektir.</li>
-                </ol>
-            </div>
-        </div></div>
+        </div>
+    </div>
 
     <script>
         (function() {
-            // Şehir koordinatları veritabanı (Open-Meteo için gerekli)
-            const cityData = {
-                "Ankara": ["39.9334", "32.8597"], "İstanbul": ["41.0082", "28.9784"], "İzmir": ["38.4237", "27.1428"],
-                "Bursa": ["40.1826", "29.0665"], "Antalya": ["36.8969", "30.7133"], "Adana": ["37.0000", "35.3213"],
-                "Konya": ["37.8746", "32.4932"], "Gaziantep": ["37.0660", "37.3781"], "Mersin": ["36.8121", "34.6415"],
-                "Kayseri": ["38.7312", "35.4787"], "Eskişehir": ["39.7668", "30.5256"], "Diyarbakır": ["37.9144", "40.2306"],
-                "Samsun": ["41.2928", "36.3313"], "Trabzon": ["41.0027", "39.7168"], "Erzurum": ["39.9055", "41.2658"],
-                "Malatya": ["38.3554", "38.3335"], "Van": ["38.4956", "43.3832"], "Denizli": ["37.7765", "29.0864"]
-            };
-
             let isAuthenticated = false;
-            const savedPassword = localStorage.getItem('kiosk_admin_password');
+            let savedPassword = localStorage.getItem('kiosk_admin_password');
             const loginOverlay = document.getElementById('login-overlay');
             const tabBtns = document.querySelectorAll('.tab-btn');
             const tabContents = document.querySelectorAll('.tab-content');
@@ -583,14 +317,7 @@
                 });
             });
 
-            // Initial Defaults on Load
-            if (savedPassword) {
-                switchTab('tab-icerik');
-            } else {
-                switchTab('tab-kurulum');
-            }
-
-            // Login Logic Submit
+            // Login Logic
             document.getElementById('login-form').addEventListener('submit', function(e) {
                 e.preventDefault();
                 const enteredPwd = document.getElementById('login-password').value;
@@ -598,7 +325,7 @@
                     isAuthenticated = true;
                     loginOverlay.style.display = 'none';
                     switchTab('tab-kurulum');
-                    // Mevcut sheet ID'yi forma doldur
+                    
                     const existingSheet = localStorage.getItem('kiosk_sheet_id');
                     if (existingSheet) document.getElementById('sheet-id').value = existingSheet;
                 } else {
@@ -606,7 +333,6 @@
                 }
             });
 
-            // Login Cancel
             document.getElementById('btn-login-cancel').addEventListener('click', function() {
                 loginOverlay.style.display = 'none';
                 const currentlyActive = document.querySelector('.tab-content.active');
@@ -615,13 +341,33 @@
                 }
             });
 
-            // Sihirli Kurulum (Fetch settings via JSONP)
+            // Magic Link Boot Checker
+            const urlParams = new URLSearchParams(window.location.search);
+            const magicId = urlParams.get('id');
+            const localSheetId = localStorage.getItem('kiosk_sheet_id');
+
+            if (magicId) {
+                // Sihirli Link İle Girildiyse
+                document.getElementById('sheet-id').value = magicId;
+                runMagicSetup(magicId, true);
+            } else if (localSheetId) {
+                // Cihaz zaten kurulmuşsa içerik eklemeye git
+                switchTab('tab-icerik');
+            } else {
+                // İlk defa giriliyorsa kurulum ekranını göster
+                switchTab('tab-kurulum');
+            }
+
+            // Normal Kurulum Formu Submit
             document.getElementById('setup-form').addEventListener('submit', function(e) {
                 e.preventDefault();
-
                 const sheetInput = document.getElementById('sheet-id').value.trim();
                 if (!sheetInput) return;
+                runMagicSetup(sheetInput, false);
+            });
 
+            // Sihirli Kurulum Motoru
+            function runMagicSetup(sheetInput, isMagicLink) {
                 let cleanSheetId = sheetInput;
                 if (cleanSheetId.includes('docs.google.com/spreadsheets/d/')) {
                     const match = cleanSheetId.match(/\/d\/([a-zA-Z0-9_-]+)/);
@@ -631,10 +377,10 @@
                 const setupLoading = document.getElementById('setup-loading');
                 const btn = document.getElementById('btn-save');
                 
-                setupLoading.style.display = 'flex';
+                if(!isMagicLink) setupLoading.style.display = 'flex';
                 btn.disabled = true;
 
-                // Tablodaki AYARLAR sekmesinden veri çek
+                // Yeni AYARLAR sekmesindeki başlıklara göre okuma
                 const url = `https://docs.google.com/spreadsheets/d/${cleanSheetId}/gviz/tq?tqx=out:json;responseHandler:magicSetupCallback&sheet=AYARLAR`;
                 const scriptId = 'jsonp-magic-setup';
                 
@@ -653,36 +399,37 @@
                             }
                         });
 
-                        // Değerleri kaydet
                         localStorage.setItem('kiosk_sheet_id', cleanSheetId);
                         localStorage.removeItem('kiosk_demo_mode');
                         
-                        if (settings['Yönetici Şifresi']) localStorage.setItem('kiosk_admin_password', settings['Yönetici Şifresi']);
-                        if (settings['Okul Adı']) localStorage.setItem('kiosk_school_name', settings['Okul Adı']);
-                        if (settings['App Script URL']) localStorage.setItem('kiosk_script_url', settings['App Script URL']);
-                        if (settings['Logo URL']) localStorage.setItem('kiosk_school_logo', settings['Logo URL']);
+                        // Tablo Datalarını Kaydet (Yeni başlıklara uyumlu)
+                        if (settings['Sifre']) {
+                            localStorage.setItem('kiosk_admin_password', settings['Sifre']);
+                            savedPassword = settings['Sifre'];
+                        }
+                        if (settings['OkulAdi']) localStorage.setItem('kiosk_school_name', settings['OkulAdi']);
+                        if (settings['ScriptURL']) localStorage.setItem('kiosk_script_url', settings['ScriptURL']);
+                        if (settings['LogoURL']) localStorage.setItem('kiosk_school_logo', settings['LogoURL']);
+                        if (settings['Sehir']) localStorage.setItem('kiosk_weather_city', settings['Sehir']);
+                        if (settings['Enlem']) localStorage.setItem('kiosk_weather_lat', settings['Enlem'].replace(',', '.'));
+                        if (settings['Boylam']) localStorage.setItem('kiosk_weather_lon', settings['Boylam'].replace(',', '.'));
 
-                        let city = settings['Hava Durumu Şehri'];
-                        if (city) {
-                            localStorage.setItem('kiosk_weather_city', city);
-                            if (cityData[city]) {
-                                localStorage.setItem('kiosk_weather_lat', cityData[city][0]);
-                                localStorage.setItem('kiosk_weather_lon', cityData[city][1]);
+                        if(!isMagicLink) {
+                            setupLoading.style.display = 'none';
+                            document.getElementById('success-msg').style.display = 'block';
+                            btn.textContent = '✅ Ayarlar Kaydedildi!';
+                            setTimeout(() => { switchTab('tab-icerik'); }, 1500);
+                        } else {
+                            // Sihirli linkle geldiyse temiz bir şekilde İçerik tabını aç
+                            switchTab('tab-icerik');
+                            if (window.history && window.history.replaceState) {
+                                const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                                window.history.replaceState({}, document.title, cleanUrl);
                             }
                         }
-
-                        // Başarı mesajı göster ve yönlendir
-                        setupLoading.style.display = 'none';
-                        document.getElementById('success-msg').style.display = 'block';
-                        btn.textContent = '✅ Kurulum Tamamlandı!';
-
-                        setTimeout(function() {
-                            window.location.href = 'index.html';
-                        }, 1500);
-
                     } catch (e) {
-                        alert("Hata! Tablonuzda 'AYARLAR' adında bir sekme bulunamadı veya içindeki veriler (Ayar Adı, Değer) eksik. Lütfen tabloyu kontrol edin.");
-                        setupLoading.style.display = 'none';
+                        alert("Hata! Tablonuzda 'AYARLAR' sekmesi bulunamadı veya veriler okunamadı.");
+                        if(!isMagicLink) setupLoading.style.display = 'none';
                         btn.disabled = false;
                     }
                     delete window.magicSetupCallback;
@@ -692,26 +439,25 @@
                 script.id = scriptId;
                 script.src = url;
                 script.onerror = function() {
-                    alert("Google Sheets'e bağlanılamadı. Linkin Paylaşım ayarlarından 'Bağlantıya sahip olan herkes görüntüleyebilir' olduğundan emin olun.");
-                    setupLoading.style.display = 'none';
+                    alert("Google Sheets'e bağlanılamadı. Linkin erişime açık olduğundan emin olun.");
+                    if(!isMagicLink) setupLoading.style.display = 'none';
                     btn.disabled = false;
                 };
                 document.body.appendChild(script);
-            });
+            }
 
             document.getElementById('btn-demo').addEventListener('click', function() {
-                localStorage.setItem('kiosk_demo_mode', 'true');
-                window.location.href = 'index.html?demo';
+                window.location.href = 'index.html';
             });
 
             document.getElementById('btn-reset').addEventListener('click', function() {
-                if (confirm('Tüm cihaz ayarları sıfırlansın mı? Bu işlem geri alınamaz.')) {
+                if (confirm('Tüm cihaz ayarları sıfırlansın mı?')) {
                     localStorage.clear();
                     window.location.reload();
                 }
             });
 
-            // İçerik Form Logic
+            // İçerik Ekleme Form Logic
             const contentForm = document.getElementById('content-form');
             if (contentForm) {
                 contentForm.addEventListener('submit', async function(e) {
@@ -721,7 +467,7 @@
                     const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
                     
                     if (!scriptUrl || !cleanSheetId) {
-                        alert('Lütfen önce Kurulum sekmesinden sistemi kurun veya AYARLAR sekmesinde App Script URL bilgisinin olduğundan emin olun!');
+                        alert('Lütfen önce Kurulumu tamamlayın. Ayarlarda AppScript URL eksik!');
                         return;
                     }
                     
@@ -742,7 +488,9 @@
                             kategori: document.getElementById('c-kategori').value,
                             tarih: document.getElementById('c-tarih').value,
                             aktif: document.getElementById('c-aktif').value,
-                            bant: document.getElementById('c-bant').value
+                            bant: document.getElementById('c-bant').value,
+                            gorsel: document.getElementById('c-gorsel-url').value.trim(),
+                            video: document.getElementById('c-video-url').value.trim()
                         };
                         
                         const payload = {
@@ -769,9 +517,9 @@
                                 content: base64Data
                             };
                             
-                            document.getElementById('loading-text').textContent = 'Dosya yükleniyor, lütfen bekleyin...';
+                            document.getElementById('loading-text').textContent = 'Dosya Drive\'a yükleniyor, lütfen bekleyin...';
                         } else {
-                            document.getElementById('loading-text').textContent = 'Metin kaydediliyor...';
+                            document.getElementById('loading-text').textContent = 'Duyuru tabloya kaydediliyor...';
                         }
                         
                         const fetchPromise = fetch(scriptUrl, {
@@ -789,9 +537,12 @@
                         overlay.style.display = 'none';
                         btnSubmit.disabled = false;
                         
+                        // Formu Temizle
                         document.getElementById('c-baslik').value = '';
                         document.getElementById('c-icerik').value = '';
                         document.getElementById('c-tarih').value = '';
+                        document.getElementById('c-gorsel-url').value = '';
+                        document.getElementById('c-video-url').value = '';
                         fileInput.value = '';
                         
                         successMsg.style.display = 'block';
