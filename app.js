@@ -593,32 +593,72 @@
             if (!window.ytApiReady || !playerObj || typeof playerObj.playVideo !== 'function') {
                 currentSlideTimeout = setTimeout(nextSlide, CONFIG.SLIDE_INTERVAL); return;
             }
-            playerObj.seekTo(0);
-            playerObj.playVideo();
+
+            // Watchdog: Eğer video API tarafından engellenir ve 8 saniye boyunca hiç başlamazsa atla
+            let watchdogTimer = setTimeout(() => {
+                if (playerObj.getPlayerState() !== 1) {
+                    console.warn('YouTube video blocked by TV browser, skipping...');
+                    nextSlide();
+                }
+            }, 8000);
+
+            let didSetDuration = false;
 
             window.currentYtStateCallback = (state) => {
                 if (state === 1) { // Video Oynatılıyor
-                    playerObj.unMute(); // Tarayıcı engellemesini aşmak için oynarken sesi aç
+                    clearTimeout(watchdogTimer);
+                    playerObj.unMute(); 
+                    
+                    // Sonsuz oynamayı önlemek için maksimum bir bitiş süresi garantile
+                    if (!didSetDuration) {
+                        didSetDuration = true;
+                        let duration = playerObj.getDuration() || 60; // Bilinmiyorsa 60 sn
+                        currentSlideTimeout = setTimeout(() => {
+                            if (container.classList.contains('fullscreen-media')) endVideoSlide(container, textElement);
+                            else nextSlide();
+                        }, (duration + 2) * 1000); // videonun kendi süresi + 2 sn tolerans
+                    }
                 }
                 if (state === 0) { // Video Bitti
+                    clearTimeout(currentSlideTimeout);
                     if (fullscreenTriggerTimer) clearTimeout(fullscreenTriggerTimer);
                     if (container.classList.contains('fullscreen-media')) endVideoSlide(container, textElement);
                     else nextSlide();
                 }
             };
+            
+            playerObj.seekTo(0);
+            playerObj.playVideo();
+
         } else if (item.mediaType === 'video') {
             const playerObj = document.getElementById(`html-video-${index}`);
             if (playerObj) {
-                playerObj.muted = true; // Engellemeyi aşmak için önce sessiz
+                playerObj.muted = true; // Engellemeyi aşmak için
                 playerObj.currentTime = 0;
+                
+                // Watchdog for HTML video (in case promise hangs)
+                let watchdogTimer = setTimeout(() => {
+                    nextSlide();
+                }, 8000);
+
                 playerObj.play().then(() => {
-                    playerObj.muted = false; // Başladıktan sonra sesi aç
+                    clearTimeout(watchdogTimer);
+                    playerObj.muted = false; // Başarılıysa sesi aç
+                    
+                    let duration = playerObj.duration || 60;
+                    currentSlideTimeout = setTimeout(() => {
+                        if (container.classList.contains('fullscreen-media')) endVideoSlide(container, textElement);
+                        else nextSlide();
+                    }, (duration + 2) * 1000);
+
                 }).catch(e => {
                     console.log('Video error:', e);
-                    // Video hiç açılmazsa sonsuz beklemesin, 5sn sonra geç
+                    clearTimeout(watchdogTimer);
                     currentSlideTimeout = setTimeout(nextSlide, 5000);
                 });
+
                 playerObj.onended = () => {
+                    clearTimeout(currentSlideTimeout);
                     if (fullscreenTriggerTimer) clearTimeout(fullscreenTriggerTimer);
                     if (container.classList.contains('fullscreen-media')) endVideoSlide(container, textElement);
                     else nextSlide();
