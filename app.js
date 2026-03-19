@@ -594,33 +594,15 @@
                 currentSlideTimeout = setTimeout(nextSlide, CONFIG.SLIDE_INTERVAL); return;
             }
 
-            // Watchdog: Eğer video API tarafından engellenir ve 8 saniye boyunca hiç başlamazsa atla
+            // Watchdog: Video asla başlamazsa sistemi kilitlenmekten kurtar
             let watchdogTimer = setTimeout(() => {
-                if (playerObj.getPlayerState() !== 1) {
-                    console.warn('YouTube video blocked by TV browser, skipping...');
-                    nextSlide();
-                }
+                if (playerObj.getPlayerState() !== 1) nextSlide();
             }, 8000);
 
-            let didSetDuration = false;
-
             window.currentYtStateCallback = (state) => {
-                if (state === 1) { // Video Oynatılıyor
-                    clearTimeout(watchdogTimer);
-                    playerObj.unMute(); 
-                    
-                    // Sonsuz oynamayı önlemek için maksimum bir bitiş süresi garantile
-                    if (!didSetDuration) {
-                        didSetDuration = true;
-                        let duration = playerObj.getDuration() || 60; // Bilinmiyorsa 60 sn
-                        currentSlideTimeout = setTimeout(() => {
-                            if (container.classList.contains('fullscreen-media')) endVideoSlide(container, textElement);
-                            else nextSlide();
-                        }, (duration + 2) * 1000); // videonun kendi süresi + 2 sn tolerans
-                    }
-                }
+                if (state === 1) clearTimeout(watchdogTimer);
+                
                 if (state === 0) { // Video Bitti
-                    clearTimeout(currentSlideTimeout);
                     if (fullscreenTriggerTimer) clearTimeout(fullscreenTriggerTimer);
                     if (container.classList.contains('fullscreen-media')) endVideoSlide(container, textElement);
                     else nextSlide();
@@ -633,24 +615,13 @@
         } else if (item.mediaType === 'video') {
             const playerObj = document.getElementById(`html-video-${index}`);
             if (playerObj) {
-                playerObj.muted = true; // Engellemeyi aşmak için
+                playerObj.muted = true; // Eski haline getirildi, TV için zorunlu sessiz
                 playerObj.currentTime = 0;
                 
-                // Watchdog for HTML video (in case promise hangs)
-                let watchdogTimer = setTimeout(() => {
-                    nextSlide();
-                }, 8000);
+                let watchdogTimer = setTimeout(() => nextSlide(), 8000);
 
                 playerObj.play().then(() => {
                     clearTimeout(watchdogTimer);
-                    playerObj.muted = false; // Başarılıysa sesi aç
-                    
-                    let duration = playerObj.duration || 60;
-                    currentSlideTimeout = setTimeout(() => {
-                        if (container.classList.contains('fullscreen-media')) endVideoSlide(container, textElement);
-                        else nextSlide();
-                    }, (duration + 2) * 1000);
-
                 }).catch(e => {
                     console.log('Video error:', e);
                     clearTimeout(watchdogTimer);
@@ -658,7 +629,6 @@
                 });
 
                 playerObj.onended = () => {
-                    clearTimeout(currentSlideTimeout);
                     if (fullscreenTriggerTimer) clearTimeout(fullscreenTriggerTimer);
                     if (container.classList.contains('fullscreen-media')) endVideoSlide(container, textElement);
                     else nextSlide();
