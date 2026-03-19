@@ -341,7 +341,7 @@
                 }
             });
 
-            // Sihirli Kurulum Motoru (Akıllı Eşleştirme)
+            // Sihirli Kurulum Motoru (Gelişmiş Hücre Ayrıştırma)
             function runMagicSetup(sheetInput, isSilentLoad) {
                 let cleanSheetId = sheetInput;
                 if (cleanSheetId.includes('docs.google.com/spreadsheets/d/')) {
@@ -355,7 +355,8 @@
                 if(!isSilentLoad) setupLoading.style.display = 'flex';
                 if(btn) btn.disabled = true;
 
-                const url = `https://docs.google.com/spreadsheets/d/${cleanSheetId}/gviz/tq?tqx=out:json;responseHandler:magicSetupCallback&sheet=AYARLAR`;
+                // "&headers=0" parametresi eklendi: Google'ın ilk satırı başlık zannedip yutmasını engeller.
+                const url = `https://docs.google.com/spreadsheets/d/${cleanSheetId}/gviz/tq?tqx=out:json;responseHandler:magicSetupCallback&sheet=AYARLAR&headers=0`;
                 const scriptId = 'jsonp-magic-setup';
                 
                 let oldScript = document.getElementById(scriptId);
@@ -364,28 +365,21 @@
                 window.magicSetupCallback = function(json) {
                     try {
                         const rows = json.table.rows;
-                        rows.forEach(row => {
-                            if (row.c && row.c[0] && row.c[1]) {
-                                // Gelişmiş Eşleştirme: Tüm boşlukları sil ve küçük harfe çevir
-                                let rawKey = (row.c[0].v || '').toString();
-                                let cleanKey = rawKey.replace(/\\s+/g, '').toLowerCase();
-                                let val = (row.c[1].v || '').toString().trim();
+                        let settings = {};
 
-                                if (cleanKey.includes('scripturl') || cleanKey.includes('appscript')) {
-                                    localStorage.setItem('kiosk_script_url', val);
-                                } else if (cleanKey.includes('okuladi') || cleanKey.includes('okuladı')) {
-                                    localStorage.setItem('kiosk_school_name', val);
-                                } else if (cleanKey.includes('sifre') || cleanKey.includes('şifre')) {
-                                    localStorage.setItem('kiosk_admin_password', val);
-                                    savedPassword = val;
-                                } else if (cleanKey.includes('logourl')) {
-                                    localStorage.setItem('kiosk_school_logo', val);
-                                } else if (cleanKey.includes('sehir') || cleanKey.includes('şehir')) {
-                                    localStorage.setItem('kiosk_weather_city', val);
-                                } else if (cleanKey.includes('enlem')) {
-                                    localStorage.setItem('kiosk_weather_lat', val.replace(',', '.'));
-                                } else if (cleanKey.includes('boylam')) {
-                                    localStorage.setItem('kiosk_weather_lon', val.replace(',', '.'));
+                        // Satırları güvenli bir şekilde döngüye al (Boş hücre korumalı)
+                        rows.forEach(row => {
+                            if (row.c && row.c.length >= 2) {
+                                let c0 = row.c[0];
+                                let c1 = row.c[1];
+                                
+                                let rawKey = c0 ? (c0.f || c0.v || '').toString() : '';
+                                let val = c1 ? (c1.f || c1.v || '').toString().trim() : '';
+                                
+                                // Boşlukları yok et, tüm karakterleri küçült
+                                let cleanKey = rawKey.replace(/\s+/g, '').toLowerCase();
+                                if(cleanKey) {
+                                    settings[cleanKey] = val;
                                 }
                             }
                         });
@@ -393,13 +387,40 @@
                         localStorage.setItem('kiosk_sheet_id', cleanSheetId);
                         localStorage.removeItem('kiosk_demo_mode');
 
+                        let scriptFound = false;
+
+                        // Tablo Datalarını Kaydet (Akıllı eşleştirme)
+                        for (let key in settings) {
+                            let val = settings[key];
+                            if (key.includes('scripturl') || key.includes('appscript')) {
+                                localStorage.setItem('kiosk_script_url', val);
+                                scriptFound = true;
+                            } else if (key.includes('okuladi') || key.includes('okuladı')) {
+                                localStorage.setItem('kiosk_school_name', val);
+                            } else if (key.includes('sifre') || key.includes('şifre')) {
+                                localStorage.setItem('kiosk_admin_password', val);
+                                savedPassword = val;
+                            } else if (key.includes('logourl')) {
+                                localStorage.setItem('kiosk_school_logo', val);
+                            } else if (key.includes('sehir') || key.includes('şehir')) {
+                                localStorage.setItem('kiosk_weather_city', val);
+                            } else if (key.includes('enlem')) {
+                                localStorage.setItem('kiosk_weather_lat', val.replace(',', '.'));
+                            } else if (key.includes('boylam')) {
+                                localStorage.setItem('kiosk_weather_lon', val.replace(',', '.'));
+                            }
+                        }
+
                         if(!isSilentLoad) {
                             setupLoading.style.display = 'none';
-                            document.getElementById('success-msg').style.display = 'block';
+                            if (!scriptFound) {
+                                alert("BAŞARILI! Ancak tablonuzda 'ScriptURL' satırı bulunamadığı için sadece ayarlar çekilebildi. İçerik ekleyebilmek için lütfen tablonuza ScriptURL değerini giriniz.");
+                            } else {
+                                document.getElementById('success-msg').style.display = 'block';
+                            }
                             btn.textContent = '✅ Ayarlar Kaydedildi!';
                             setTimeout(() => { switchTab('tab-icerik'); }, 1500);
                         } else {
-                            // Sihirli linkle veya sessiz geldiyse URL'i temizle ve içeriği aç
                             switchTab('tab-icerik');
                             if (window.history && window.history.replaceState && window.location.search.includes('id=')) {
                                 const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
@@ -407,6 +428,7 @@
                             }
                         }
                     } catch (e) {
+                        console.error(e);
                         if(!isSilentLoad) {
                             alert("Hata! Tablonuzda 'AYARLAR' sekmesi bulunamadı veya veriler okunamadı.");
                             setupLoading.style.display = 'none';
@@ -423,7 +445,7 @@
                     if(!isSilentLoad) {
                         alert("Google Sheets'e bağlanılamadı. Linkin erişime açık olduğundan emin olun.");
                         setupLoading.style.display = 'none';
-                        btn.disabled = false;
+                        if(btn) btn.disabled = false;
                     }
                 };
                 document.body.appendChild(script);
@@ -442,9 +464,8 @@
                 // Eskiden girilmişse hem İçerik tabını aç, hem de arkada ayarları GÜNCELLE
                 document.getElementById('sheet-id').value = localSheetId;
                 switchTab('tab-icerik');
-                runMagicSetup(localSheetId, true); // Arka planda ScriptURL vb. her ihtimale karşı güncellenir
+                runMagicSetup(localSheetId, true); 
             } else {
-                // Hiçbiri yoksa Kurulum ekranı
                 switchTab('tab-kurulum');
             }
 
@@ -476,8 +497,8 @@
                     const scriptUrl = localStorage.getItem('kiosk_script_url');
                     const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
                     
-                    if (!scriptUrl || scriptUrl === 'undefined') {
-                        alert('HATA: Google Sheet tablonuzun "AYARLAR" sekmesindeki "ScriptURL" okunamadı. Lütfen tablonuzu kontrol edip bu sayfayı yenileyin.');
+                    if (!scriptUrl || scriptUrl === 'undefined' || scriptUrl === '') {
+                        alert('HATA: Google Sheet tablonuzun "AYARLAR" sekmesindeki "ScriptURL" okunamadı. Lütfen tablonuzu kontrol edip bu sayfayı yenileyin veya Kurulum sekmesinden tekrar bağlanın.');
                         return;
                     }
                     if (!cleanSheetId) {
