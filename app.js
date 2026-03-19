@@ -1,6 +1,6 @@
 /* ============================================
-   TV KIOSK - APP.JS v5.3 (Magic Link + Auto Scale Fit)
-   Google Sheets Integration & Slide Engine (Gelişmiş Video Hata Korumalı)
+   TV KIOSK - APP.JS v5.4 (Smart Data Refresh & Memory Cleanup)
+   Google Sheets Integration & Slide Engine
    ============================================ */
 
 (function () {
@@ -9,7 +9,7 @@
     // --- Configuration ---
     const CONFIG = {
         SLIDE_INTERVAL: 10000,      
-        DATA_REFRESH: 120000,
+        DATA_REFRESH: 120000, // 2 dakikada bir kontrol eder
         CLOCK_REFRESH: 1000,
         PROGRESS_STEP: 50,
         TICKER_CYCLE: 6000,
@@ -109,15 +109,20 @@
         "Malatya": [38.3554, 38.3335], "Van": [38.4956, 43.3832], "Denizli": [37.7765, 29.0864]
     };
 
-    // --- State ---
+    // --- State Variables ---
     let slides = [];
     let tickerItems = [];
     let currentSlideIndex = 0;
+    
+    // Zamanlayıcıları Global Yapıyoruz (Temizleyebilmek için)
     let currentSlideTimeout = null;
     let progressTimer = null;
     let nextPreviewTimer = null;
     let fullscreenTriggerTimer = null;
+    let fallbackTimer = null; 
+    
     let retryCount = 0;
+    let currentDataString = null; // Veri değişikliğini takip eden kimlik
 
     const els = {};
 
@@ -143,9 +148,26 @@
         els.nextPreviewTitle = document.getElementById('next-preview-title');
     }
 
-    // --- OTO ÖLÇEKLENDİRME (TV'LERDE TAŞMAYI ENEGELLER) ---
+    // --- TEMİZLİK MOTORU (MEMORY LEAK ÖNLEYİCİ) ---
+    function clearAllTimers() {
+        if (currentSlideTimeout) clearTimeout(currentSlideTimeout);
+        if (progressTimer) clearInterval(progressTimer);
+        if (nextPreviewTimer) clearTimeout(nextPreviewTimer);
+        if (fullscreenTriggerTimer) clearTimeout(fullscreenTriggerTimer);
+        if (fallbackTimer) clearTimeout(fallbackTimer);
+    }
+
+    function destroyAllPlayers() {
+        for (let idx in window.ytPlayers) {
+            if (window.ytPlayers[idx] && typeof window.ytPlayers[idx].destroy === 'function') {
+                try { window.ytPlayers[idx].destroy(); } catch (e) { }
+            }
+        }
+        window.ytPlayers = {};
+    }
+
+    // --- OTO ÖLÇEKLENDİRME ---
     function applyAutoScaling() {
-        // TV tarayıcılarını serbest bırakıyoruz
         let viewport = document.querySelector('meta[name="viewport"]');
         if (viewport) {
             viewport.content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
@@ -174,10 +196,8 @@
         function resizeKiosk() {
             const winW = window.innerWidth;
             const winH = window.innerHeight;
-            // Ekrana tam sığdırmak için en uygun oranı bulur
             const scale = Math.min(winW / 1920, winH / 1080);
             
-            // Ekranı bozmadan donanım ivmesiyle küçült/büyüt
             if (els.mainDisplay) els.mainDisplay.style.transform = `translate(-50%, -50%) scale(${scale})`;
             if (els.setupPrompt) els.setupPrompt.style.transform = `translate(-50%, -50%) scale(${scale})`;
         }
@@ -189,22 +209,19 @@
     // --- BOOT PROCESS ---
     function init() {
         cacheDom();
-        applyAutoScaling(); // Ekran sığdırma motorunu başlat
+        applyAutoScaling(); 
         
         const urlParams = new URLSearchParams(window.location.search);
         
-        // 1. URL'de Magic ID var mı kontrol et
         const magicId = urlParams.get('id');
         if (magicId) {
             runMagicBoot(magicId);
-            return; // Normal başlatmayı durdur, Magic Boot halledecek
+            return; 
         }
 
-        // 2. ID yoksa normal sistem başlangıcı
         continueInit();
     }
 
-    // Sihirli Kurulum - AYARLAR sekmesini okur ve sistemi başlatır
     function runMagicBoot(sheetId) {
         let cleanId = sheetId;
         if (cleanId.includes('docs.google.com')) {
@@ -255,7 +272,6 @@
             
             delete window.magicAppCallback;
             
-            // Parametreyi URL'den temizle (Sayfa yenilendiğinde tekrar ayar çekmekle vakit kaybetmesin)
             if (window.history && window.history.replaceState) {
                 const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
                 window.history.replaceState({}, document.title, cleanUrl);
@@ -268,7 +284,6 @@
         script.id = scriptId;
         script.src = url;
         script.onerror = function() {
-            // Hata olursa (internet yavaşsa vb.) direkt DUYURULAR tablosuna geç
             continueInit();
         };
         document.body.appendChild(script);
@@ -310,6 +325,8 @@
         startClock();
         fetchWeather();
         fetchData(sheetId);
+        
+        // 2 dakikada bir kontrol eder
         setInterval(() => fetchData(sheetId), CONFIG.DATA_REFRESH);
         setInterval(fetchWeather, CONFIG.WEATHER_REFRESH);
     }
@@ -413,6 +430,21 @@
     }
 
     function processData(rows) {
+        // YENİ: Veri Değişiklik Kontrolü
+        const newDataString = JSON.stringify(rows);
+        
+        // Eğer tabloda bir değişiklik yoksa, çalışan slaytı bozma!
+        if (currentDataString === newDataString && slides.length > 0) {
+            if (els.loadingSlide) els.loadingSlide.style.display = 'none';
+            return; 
+        }
+        
+        // Değişiklik varsa hafızayı yeni veriye eşitle
+        currentDataString = newDataString;
+
+        // Geçmiş işlemleri durdur ve hafızayı temizle
+        clearAllTimers();
+
         slides = []; tickerItems = [];
         rows.forEach(row => {
             const normalized = {};
@@ -470,7 +502,10 @@
     }
 
     function renderSlides() {
+        // Ekranı temizlemeden önce RAM'deki YouTube hafızasını tamamen yok et
+        destroyAllPlayers();
         els.slidesContainer.innerHTML = '';
+        
         slides.forEach((item, index) => {
             const slideEl = document.createElement('div');
             slideEl.className = `slide ${index === 0 ? 'active' : ''}`;
@@ -503,16 +538,10 @@
     function initYouTubePlayers() {
         if (!window.ytApiReady) return;
 
-        for (let idx in window.ytPlayers) {
-            if (!document.getElementById(`yt-player-${idx}`)) {
-                try { window.ytPlayers[idx].destroy(); } catch (e) { }
-                delete window.ytPlayers[idx];
-            }
-        }
-
         document.querySelectorAll('[id^="yt-player-"]').forEach(el => {
             let vid = el.getAttribute('data-vid');
             let idx = el.id.replace('yt-player-', '');
+            
             if (window.ytPlayers[idx]) return;
 
             window.ytPlayers[idx] = new YT.Player(el.id, {
@@ -520,251 +549,4 @@
                 playerVars: { autoplay: 0, controls: 0, modestbranding: 1, rel: 0, mute: 1, showinfo: 0, disablekb: 1 },
                 events: { 
                     'onStateChange': onPlayerStateChange,
-                    'onError': onPlayerError
-                }
-            });
-        });
-    }
-
-    function renderDots() {
-        els.slideDots.innerHTML = '';
-        slides.forEach((_, index) => {
-            const dot = document.createElement('div');
-            dot.className = `slide-dot ${index === 0 ? 'active' : ''}`;
-            els.slideDots.appendChild(dot);
-        });
-    }
-
-    function renderTicker() {
-        let items = tickerItems.length > 0 ? tickerItems : slides;
-        let displayItems = items.map(s => ({ icon: s.catInfo.icon, text: s.baslik + (s.icerik ? '  —  ' + s.icerik : '') }));
-        if (displayItems.length === 0) { els.tickerContent.textContent = 'Henüz duyuru bulunmuyor'; return; }
-
-        els.tickerContent.className = 'ticker-content scroll-mode';
-        const buildItems = () => displayItems.map(item => `<span class="ticker-item"><span class="ticker-item-icon">${item.icon}</span> ${escapeHtml(item.text)}</span>`).join('<span class="ticker-separator">●</span>');
-        els.tickerContent.innerHTML = buildItems() + '<span class="ticker-separator">●</span>' + buildItems();
-
-        requestAnimationFrame(() => {
-            els.tickerContent.style.setProperty('--ticker-duration', `${(els.tickerContent.scrollWidth / 2) / CONFIG.TICKER_SCROLL_SPEED}s`);
-        });
-    }
-
-    // --- SLIDESHOW ENGINE ---
-
-    function startSlideshow() {
-        if (slides.length === 0) return;
-        scheduleNextPreview();
-        playCurrentSlide();
-    }
-
-    function playCurrentSlide() {
-        if (currentSlideTimeout) clearTimeout(currentSlideTimeout);
-        if (progressTimer) clearInterval(progressTimer);
-        document.querySelectorAll('.slide-progress').forEach(bar => { bar.style.width = '0%'; bar.style.transition = 'none'; });
-
-        const item = slides[currentSlideIndex];
-        if (!item) return;
-
-        if (item.mediaType === 'youtube' || item.mediaType === 'video') {
-            handleVideoSlide(item, currentSlideIndex);
-        } else {
-            startProgress(CONFIG.SLIDE_INTERVAL);
-            currentSlideTimeout = setTimeout(nextSlide, CONFIG.SLIDE_INTERVAL);
-        }
-    }
-
-    function handleVideoSlide(item, index) {
-        const container = document.getElementById(`media-container-${index}`);
-        if (!container) { currentSlideTimeout = setTimeout(nextSlide, CONFIG.SLIDE_INTERVAL); return; }
-
-        const textElement = container.closest('.slide-card').querySelector('.slide-text');
-
-        // Temizle
-        container.classList.remove('fullscreen-media');
-        if (textElement) textElement.classList.remove('text-hidden');
-
-        let fallbackTimer;
-
-        if (item.mediaType === 'youtube') {
-            const playerObj = window.ytPlayers[index];
-            if (!window.ytApiReady || !playerObj || typeof playerObj.playVideo !== 'function') {
-                currentSlideTimeout = setTimeout(nextSlide, CONFIG.SLIDE_INTERVAL); return;
-            }
-
-            // Video 10 saniye içinde hiç başlamazsa diğer habere atla
-            fallbackTimer = setTimeout(() => { nextSlide(); }, 10000);
-
-            playerObj.seekTo(0);
-            playerObj.playVideo();
-
-            window.currentYtErrorCallback = (err) => {
-                clearTimeout(fallbackTimer);
-                nextSlide(); 
-            };
-
-            window.currentYtStateCallback = (state) => {
-                if (state === 1) { // 1: Oynuyor
-                    clearTimeout(fallbackTimer); 
-                }
-                if (state === 3) { // 3: Arabelleğe alınıyor (Buffering) - İnternet yavaşlar/koparsa
-                    clearTimeout(fallbackTimer);
-                    fallbackTimer = setTimeout(() => { nextSlide(); }, 15000); // 15sn içinde kurtaramazsa atla
-                }
-                if (state === 0) { // 0: Video Bitti
-                    clearTimeout(fallbackTimer);
-                    if (fullscreenTriggerTimer) clearTimeout(fullscreenTriggerTimer);
-                    if (container.classList.contains('fullscreen-media')) endVideoSlide(container, textElement);
-                    else nextSlide();
-                }
-            };
-        } else if (item.mediaType === 'video') {
-            const playerObj = document.getElementById(`html-video-${index}`);
-            if (playerObj) {
-                fallbackTimer = setTimeout(() => { nextSlide(); }, 10000);
-
-                playerObj.currentTime = 0;
-                playerObj.play().then(() => {
-                    clearTimeout(fallbackTimer); 
-                }).catch(e => {
-                    console.log('Video error:', e);
-                    clearTimeout(fallbackTimer);
-                    nextSlide(); 
-                });
-
-                playerObj.onwaiting = () => {
-                    clearTimeout(fallbackTimer);
-                    fallbackTimer = setTimeout(() => { nextSlide(); }, 15000);
-                };
-                
-                playerObj.onplaying = () => { clearTimeout(fallbackTimer); };
-
-                playerObj.onended = () => {
-                    clearTimeout(fallbackTimer);
-                    if (fullscreenTriggerTimer) clearTimeout(fullscreenTriggerTimer);
-                    if (container.classList.contains('fullscreen-media')) endVideoSlide(container, textElement);
-                    else nextSlide();
-                };
-                
-                playerObj.onerror = () => {
-                    clearTimeout(fallbackTimer);
-                    nextSlide();
-                };
-            }
-        }
-
-        // 1. Adım: 4 saniye normal bekle, sonra bulunduğu kartın içinde %100 genişle
-        fullscreenTriggerTimer = setTimeout(() => {
-            container.classList.add('fullscreen-media');
-            if (textElement) textElement.classList.add('text-hidden');
-        }, 4000);
-    }
-
-    function endVideoSlide(container, textElement) {
-        // 3. Adım: Bittiğinde küçült ve yazıyı geri getir
-        container.classList.remove('fullscreen-media');
-        if (textElement) textElement.classList.remove('text-hidden');
-
-        // 4. Adım: Küçülme animasyonunun bitmesini bekle, ardından sonraki habere geç
-        currentSlideTimeout = setTimeout(() => {
-            nextSlide();
-        }, 2000); 
-    }
-
-    function nextSlide() {
-        if (currentSlideTimeout) clearTimeout(currentSlideTimeout);
-        stopSlideMedia(currentSlideIndex);
-
-        if (slides.length > 1) {
-            const allSlides = els.slidesContainer.querySelectorAll('.slide');
-            const allDots = els.slideDots.querySelectorAll('.slide-dot');
-
-            allSlides[currentSlideIndex].classList.remove('active');
-            allSlides[currentSlideIndex].classList.add('exit-left');
-            if (allDots[currentSlideIndex]) allDots[currentSlideIndex].classList.remove('active');
-
-            const prevIndex = currentSlideIndex;
-            setTimeout(() => { if (allSlides[prevIndex]) allSlides[prevIndex].classList.remove('exit-left'); }, 900);
-
-            currentSlideIndex = (currentSlideIndex + 1) % slides.length;
-
-            allSlides[currentSlideIndex].classList.remove('exit-left');
-            allSlides[currentSlideIndex].classList.add('active');
-            if (allDots[currentSlideIndex]) allDots[currentSlideIndex].classList.add('active');
-        }
-
-        if (els.slideCounter) els.slideCounter.innerHTML = `<span class="current">${currentSlideIndex + 1}</span> / ${slides.length}`;
-        scheduleNextPreview();
-        playCurrentSlide();
-    }
-
-    function stopSlideMedia(index) {
-        const item = slides[index];
-        if (!item) return;
-        const container = document.getElementById(`media-container-${index}`);
-        if (container) {
-            container.classList.remove('fullscreen-media');
-            const textElement = container.closest('.slide-card').querySelector('.slide-text');
-            if (textElement) textElement.classList.remove('text-hidden');
-        }
-
-        if (item.mediaType === 'youtube' && window.ytPlayers[index] && typeof window.ytPlayers[index].pauseVideo === 'function') {
-            window.ytPlayers[index].pauseVideo();
-        } else if (item.mediaType === 'video') {
-            const video = document.getElementById(`html-video-${index}`);
-            if (video) video.pause();
-        }
-    }
-
-    function startProgress(duration) {
-        const progressBar = document.getElementById(`progress-${currentSlideIndex}`);
-        if (!progressBar) return;
-        let elapsed = 0;
-
-        progressBar.style.transition = 'none';
-        progressBar.style.width = '0%';
-        void progressBar.offsetWidth;
-
-        progressTimer = setInterval(() => {
-            elapsed += CONFIG.PROGRESS_STEP;
-            progressBar.style.width = `${Math.min((elapsed / duration) * 100, 100)}%`;
-            progressBar.style.transition = `width ${CONFIG.PROGRESS_STEP}ms linear`;
-        }, CONFIG.PROGRESS_STEP);
-    }
-
-    function scheduleNextPreview() {
-        if (nextPreviewTimer) clearTimeout(nextPreviewTimer);
-        if (slides.length <= 1 || !els.nextPreview) return;
-
-        if (slides[currentSlideIndex].mediaType !== 'image' && slides[currentSlideIndex].mediaUrl === '') return;
-
-        nextPreviewTimer = setTimeout(() => {
-            els.nextPreviewTitle.textContent = slides[(currentSlideIndex + 1) % slides.length].baslik;
-            els.nextPreview.classList.add('visible');
-            setTimeout(() => els.nextPreview.classList.remove('visible'), 2800);
-        }, CONFIG.SLIDE_INTERVAL - CONFIG.NEXT_PREVIEW_SHOW);
-    }
-
-    function showError(message) {
-        els.slidesContainer.innerHTML = `<div class="slide active"><div class="slide-card cat-onemli no-media"><div class="slide-text"><div class="slide-icon">⚠️</div><h2 class="slide-title">Bilgi Ekranı</h2><p class="slide-content">${escapeHtml(message)}</p></div></div></div>`;
-    }
-
-    function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
-    function escapeAttr(text) { return text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-
-    // --- Hava Durumu ---
-    function fetchFreeWeather() {
-        fetch(`https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.WEATHER_LAT}&longitude=${CONFIG.WEATHER_LON}&current_weather=true`)
-            .then(r => r.json())
-            .then(data => {
-                if (data.current_weather) {
-                    const temp = Math.round(data.current_weather.temperature);
-                    if (els.weatherTemp) els.weatherTemp.textContent = `${temp}°C`;
-                    if (els.weatherCity) els.weatherCity.textContent = CONFIG.WEATHER_CITY;
-                    if (els.weatherDesc) els.weatherDesc.textContent = 'Güncel';
-                }
-            }).catch(() => { });
-    }
-    function fetchWeather() { fetchFreeWeather(); }
-
-    document.addEventListener('DOMContentLoaded', init);
-})();
+                    '
