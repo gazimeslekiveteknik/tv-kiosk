@@ -341,20 +341,110 @@
                 }
             });
 
-            // Magic Link Boot Checker
+            // Sihirli Kurulum Motoru (Akıllı Eşleştirme)
+            function runMagicSetup(sheetInput, isSilentLoad) {
+                let cleanSheetId = sheetInput;
+                if (cleanSheetId.includes('docs.google.com/spreadsheets/d/')) {
+                    const match = cleanSheetId.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                    if (match) cleanSheetId = match[1];
+                }
+
+                const setupLoading = document.getElementById('setup-loading');
+                const btn = document.getElementById('btn-save');
+                
+                if(!isSilentLoad) setupLoading.style.display = 'flex';
+                if(btn) btn.disabled = true;
+
+                const url = `https://docs.google.com/spreadsheets/d/${cleanSheetId}/gviz/tq?tqx=out:json;responseHandler:magicSetupCallback&sheet=AYARLAR`;
+                const scriptId = 'jsonp-magic-setup';
+                
+                let oldScript = document.getElementById(scriptId);
+                if (oldScript) oldScript.remove();
+
+                window.magicSetupCallback = function(json) {
+                    try {
+                        const rows = json.table.rows;
+                        rows.forEach(row => {
+                            if (row.c && row.c[0] && row.c[1]) {
+                                // Gelişmiş Eşleştirme: Tüm boşlukları sil ve küçük harfe çevir
+                                let rawKey = (row.c[0].v || '').toString();
+                                let cleanKey = rawKey.replace(/\\s+/g, '').toLowerCase();
+                                let val = (row.c[1].v || '').toString().trim();
+
+                                if (cleanKey.includes('scripturl') || cleanKey.includes('appscript')) {
+                                    localStorage.setItem('kiosk_script_url', val);
+                                } else if (cleanKey.includes('okuladi') || cleanKey.includes('okuladı')) {
+                                    localStorage.setItem('kiosk_school_name', val);
+                                } else if (cleanKey.includes('sifre') || cleanKey.includes('şifre')) {
+                                    localStorage.setItem('kiosk_admin_password', val);
+                                    savedPassword = val;
+                                } else if (cleanKey.includes('logourl')) {
+                                    localStorage.setItem('kiosk_school_logo', val);
+                                } else if (cleanKey.includes('sehir') || cleanKey.includes('şehir')) {
+                                    localStorage.setItem('kiosk_weather_city', val);
+                                } else if (cleanKey.includes('enlem')) {
+                                    localStorage.setItem('kiosk_weather_lat', val.replace(',', '.'));
+                                } else if (cleanKey.includes('boylam')) {
+                                    localStorage.setItem('kiosk_weather_lon', val.replace(',', '.'));
+                                }
+                            }
+                        });
+
+                        localStorage.setItem('kiosk_sheet_id', cleanSheetId);
+                        localStorage.removeItem('kiosk_demo_mode');
+
+                        if(!isSilentLoad) {
+                            setupLoading.style.display = 'none';
+                            document.getElementById('success-msg').style.display = 'block';
+                            btn.textContent = '✅ Ayarlar Kaydedildi!';
+                            setTimeout(() => { switchTab('tab-icerik'); }, 1500);
+                        } else {
+                            // Sihirli linkle veya sessiz geldiyse URL'i temizle ve içeriği aç
+                            switchTab('tab-icerik');
+                            if (window.history && window.history.replaceState && window.location.search.includes('id=')) {
+                                const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                                window.history.replaceState({}, document.title, cleanUrl);
+                            }
+                        }
+                    } catch (e) {
+                        if(!isSilentLoad) {
+                            alert("Hata! Tablonuzda 'AYARLAR' sekmesi bulunamadı veya veriler okunamadı.");
+                            setupLoading.style.display = 'none';
+                        }
+                    }
+                    if(btn) btn.disabled = false;
+                    delete window.magicSetupCallback;
+                };
+
+                const script = document.createElement('script');
+                script.id = scriptId;
+                script.src = url;
+                script.onerror = function() {
+                    if(!isSilentLoad) {
+                        alert("Google Sheets'e bağlanılamadı. Linkin erişime açık olduğundan emin olun.");
+                        setupLoading.style.display = 'none';
+                        btn.disabled = false;
+                    }
+                };
+                document.body.appendChild(script);
+            }
+
+            // Sayfa İlk Yüklendiğinde Kontroller
             const urlParams = new URLSearchParams(window.location.search);
             const magicId = urlParams.get('id');
             const localSheetId = localStorage.getItem('kiosk_sheet_id');
 
             if (magicId) {
-                // Sihirli Link İle Girildiyse
+                // Linkte ID varsa hemen ayarları çek ve İçerik'e geç
                 document.getElementById('sheet-id').value = magicId;
                 runMagicSetup(magicId, true);
             } else if (localSheetId) {
-                // Cihaz zaten kurulmuşsa içerik eklemeye git
+                // Eskiden girilmişse hem İçerik tabını aç, hem de arkada ayarları GÜNCELLE
+                document.getElementById('sheet-id').value = localSheetId;
                 switchTab('tab-icerik');
+                runMagicSetup(localSheetId, true); // Arka planda ScriptURL vb. her ihtimale karşı güncellenir
             } else {
-                // İlk defa giriliyorsa kurulum ekranını göster
+                // Hiçbiri yoksa Kurulum ekranı
                 switchTab('tab-kurulum');
             }
 
@@ -365,86 +455,6 @@
                 if (!sheetInput) return;
                 runMagicSetup(sheetInput, false);
             });
-
-            // Sihirli Kurulum Motoru
-            function runMagicSetup(sheetInput, isMagicLink) {
-                let cleanSheetId = sheetInput;
-                if (cleanSheetId.includes('docs.google.com/spreadsheets/d/')) {
-                    const match = cleanSheetId.match(/\/d\/([a-zA-Z0-9_-]+)/);
-                    if (match) cleanSheetId = match[1];
-                }
-
-                const setupLoading = document.getElementById('setup-loading');
-                const btn = document.getElementById('btn-save');
-                
-                if(!isMagicLink) setupLoading.style.display = 'flex';
-                btn.disabled = true;
-
-                // Yeni AYARLAR sekmesindeki başlıklara göre okuma
-                const url = `https://docs.google.com/spreadsheets/d/${cleanSheetId}/gviz/tq?tqx=out:json;responseHandler:magicSetupCallback&sheet=AYARLAR`;
-                const scriptId = 'jsonp-magic-setup';
-                
-                let oldScript = document.getElementById(scriptId);
-                if (oldScript) oldScript.remove();
-
-                window.magicSetupCallback = function(json) {
-                    try {
-                        const rows = json.table.rows;
-                        let settings = {};
-                        rows.forEach(row => {
-                            if (row.c && row.c[0] && row.c[1]) {
-                                let key = (row.c[0].v || '').toString().trim();
-                                let val = (row.c[1].v || '').toString().trim();
-                                settings[key] = val;
-                            }
-                        });
-
-                        localStorage.setItem('kiosk_sheet_id', cleanSheetId);
-                        localStorage.removeItem('kiosk_demo_mode');
-                        
-                        // Tablo Datalarını Kaydet (Yeni başlıklara uyumlu)
-                        if (settings['Sifre']) {
-                            localStorage.setItem('kiosk_admin_password', settings['Sifre']);
-                            savedPassword = settings['Sifre'];
-                        }
-                        if (settings['OkulAdi']) localStorage.setItem('kiosk_school_name', settings['OkulAdi']);
-                        if (settings['ScriptURL']) localStorage.setItem('kiosk_script_url', settings['ScriptURL']);
-                        if (settings['LogoURL']) localStorage.setItem('kiosk_school_logo', settings['LogoURL']);
-                        if (settings['Sehir']) localStorage.setItem('kiosk_weather_city', settings['Sehir']);
-                        if (settings['Enlem']) localStorage.setItem('kiosk_weather_lat', settings['Enlem'].replace(',', '.'));
-                        if (settings['Boylam']) localStorage.setItem('kiosk_weather_lon', settings['Boylam'].replace(',', '.'));
-
-                        if(!isMagicLink) {
-                            setupLoading.style.display = 'none';
-                            document.getElementById('success-msg').style.display = 'block';
-                            btn.textContent = '✅ Ayarlar Kaydedildi!';
-                            setTimeout(() => { switchTab('tab-icerik'); }, 1500);
-                        } else {
-                            // Sihirli linkle geldiyse temiz bir şekilde İçerik tabını aç
-                            switchTab('tab-icerik');
-                            if (window.history && window.history.replaceState) {
-                                const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-                                window.history.replaceState({}, document.title, cleanUrl);
-                            }
-                        }
-                    } catch (e) {
-                        alert("Hata! Tablonuzda 'AYARLAR' sekmesi bulunamadı veya veriler okunamadı.");
-                        if(!isMagicLink) setupLoading.style.display = 'none';
-                        btn.disabled = false;
-                    }
-                    delete window.magicSetupCallback;
-                };
-
-                const script = document.createElement('script');
-                script.id = scriptId;
-                script.src = url;
-                script.onerror = function() {
-                    alert("Google Sheets'e bağlanılamadı. Linkin erişime açık olduğundan emin olun.");
-                    if(!isMagicLink) setupLoading.style.display = 'none';
-                    btn.disabled = false;
-                };
-                document.body.appendChild(script);
-            }
 
             document.getElementById('btn-demo').addEventListener('click', function() {
                 window.location.href = 'index.html';
@@ -466,8 +476,12 @@
                     const scriptUrl = localStorage.getItem('kiosk_script_url');
                     const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
                     
-                    if (!scriptUrl || !cleanSheetId) {
-                        alert('Lütfen önce Kurulumu tamamlayın. Ayarlarda AppScript URL eksik!');
+                    if (!scriptUrl || scriptUrl === 'undefined') {
+                        alert('HATA: Google Sheet tablonuzun "AYARLAR" sekmesindeki "ScriptURL" okunamadı. Lütfen tablonuzu kontrol edip bu sayfayı yenileyin.');
+                        return;
+                    }
+                    if (!cleanSheetId) {
+                        alert('Lütfen önce Kurulum sekmesinden bağlantı yapın.');
                         return;
                     }
                     
