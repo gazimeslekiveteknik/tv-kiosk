@@ -56,8 +56,8 @@
 }
 
 html, body {
-    width: 100vw;
-    height: 100vh;
+    width: 1920px;
+    height: 1080px;
     overflow: hidden;
     font-family: var(--font-main);
     background: var(--bg-primary);
@@ -166,6 +166,8 @@ html, body {
 .setup-card {
     text-align: center;
     background: var(--bg-card);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
     border: 1px solid var(--border-light);
     border-radius: var(--radius-xl);
     padding: 64px 88px;
@@ -220,16 +222,12 @@ html, body {
 
 /* --- Main Display Layout --- */
 .main-display {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(var(--tv-scale, 1));
-    transform-origin: center center;
+    position: relative;
+    z-index: 1;
     width: 1920px;
     height: 1080px;
     display: flex;
     flex-direction: column;
-    z-index: 1;
 }
 
 /* --- Top Header Bar --- */
@@ -239,6 +237,8 @@ html, body {
     justify-content: space-between;
     padding: 0 48px;
     background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     border-bottom: 1px solid rgba(15, 23, 42, 0.06);
     height: 96px;
     flex-shrink: 0;
@@ -547,7 +547,9 @@ html, body {
     display: flex;
     align-items: stretch;
     gap: 0;
-    background: rgba(255, 255, 255, 0.95);
+    background: var(--bg-card);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
     border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-card);
@@ -857,7 +859,6 @@ html, body {
 
 .ticker-content.scroll-mode {
     animation: tickerScroll var(--ticker-duration, 30s) linear infinite;
-    will-change: transform;
 }
 
 @keyframes tickerScroll {
@@ -938,6 +939,8 @@ html, body {
     gap: 12px;
     padding: 12px 24px;
     background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border-light);
     border-radius: var(--radius-md);
     font-size: 15px;
@@ -982,4 +985,15 @@ html, body {
     animation: fadeInUp 0.6s ease-out forwards;
 }
 
-/* Removed @media query for TV universal scale compatibility */
+/* --- Responsive (preview on smaller screen) --- */
+@media (max-width: 1920px) {
+    html, body {
+        width: 100vw;
+        height: 100vh;
+    }
+
+    .main-display {
+        width: 100vw;
+        height: 100vh;
+    }
+}
