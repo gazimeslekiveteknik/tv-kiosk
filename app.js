@@ -1,5 +1,5 @@
 /* ============================================
-   TV KIOSK - APP.JS v5.2 (Magic Link & Cinematic Edition)
+   TV KIOSK - APP.JS v5.3 (Magic Link + Auto Scale Fit)
    Google Sheets Integration & Slide Engine (Gelişmiş Video Hata Korumalı)
    ============================================ */
 
@@ -143,9 +143,54 @@
         els.nextPreviewTitle = document.getElementById('next-preview-title');
     }
 
+    // --- OTO ÖLÇEKLENDİRME (TV'LERDE TAŞMAYI ENEGELLER) ---
+    function applyAutoScaling() {
+        // TV tarayıcılarını serbest bırakıyoruz
+        let viewport = document.querySelector('meta[name="viewport"]');
+        if (viewport) {
+            viewport.content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
+        }
+
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.width = '100vw';
+        document.body.style.height = '100vh';
+        document.body.style.margin = '0';
+        document.body.style.padding = '0';
+        document.body.style.overflow = 'hidden';
+
+        function setFixedCanvas(el) {
+            if (!el) return;
+            el.style.width = '1920px';
+            el.style.height = '1080px';
+            el.style.position = 'absolute';
+            el.style.top = '50%';
+            el.style.left = '50%';
+            el.style.transformOrigin = 'center center';
+        }
+
+        setFixedCanvas(els.mainDisplay);
+        setFixedCanvas(els.setupPrompt);
+
+        function resizeKiosk() {
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            // Ekrana tam sığdırmak için en uygun oranı bulur
+            const scale = Math.min(winW / 1920, winH / 1080);
+            
+            // Ekranı bozmadan donanım ivmesiyle küçült/büyüt
+            if (els.mainDisplay) els.mainDisplay.style.transform = `translate(-50%, -50%) scale(${scale})`;
+            if (els.setupPrompt) els.setupPrompt.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        }
+
+        window.addEventListener('resize', resizeKiosk);
+        resizeKiosk();
+    }
+
     // --- BOOT PROCESS ---
     function init() {
         cacheDom();
+        applyAutoScaling(); // Ekran sığdırma motorunu başlat
+        
         const urlParams = new URLSearchParams(window.location.search);
         
         // 1. URL'de Magic ID var mı kontrol et
