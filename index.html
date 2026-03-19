@@ -11,14 +11,12 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Animated Background -->
     <div class="bg-animation">
         <div class="bg-orb bg-orb-1"></div>
         <div class="bg-orb bg-orb-2"></div>
         <div class="bg-orb bg-orb-3"></div>
     </div>
 
-    <!-- Setup Prompt -->
     <div id="setup-prompt" class="setup-prompt hidden">
         <div class="setup-card">
             <div class="setup-icon">⚙️</div>
@@ -28,64 +26,53 @@
         </div>
     </div>
 
-    <!-- Main Display -->
     <div id="main-display" class="main-display">
-        <!-- Top Header Bar -->
         <header class="top-bar">
             <div class="top-bar-left">
-                <img id="school-logo" src="" alt="Okul Logosu" class="school-logo-img" style="display: none; width: 60px; height: 60px; object-fit: contain; margin-right: 15px;">
-                <div class="school-logo" id="default-school-icon">🏫</div>
-                <div class="school-info">
+                <div class="school-logo">
+                    <img id="school-logo" src="" alt="Okul Logo" style="display:none; max-height:64px; border-radius:8px;">
+                    <span id="default-school-icon">🏫</span>
+                </div>
+                <div>
                     <h1 id="school-name" class="school-name">Okul Bilgi Ekranı</h1>
-                    <p class="school-subtitle">Duyuru & Bilgilendirme Sistemi</p>
+                    <div class="school-subtitle">Duyuru & Bilgilendirme Sistemi</div>
                 </div>
             </div>
+            
             <div class="top-bar-right">
-                <div id="weather-widget" class="weather-widget">
+                <div id="offline-badge" class="offline-badge hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+                        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+                        <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+                        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+                        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                        <line x1="12" y1="20" x2="12.01" y2="20"></line>
+                    </svg>
+                </div>
+
+                <div class="weather-widget">
                     <div class="weather-icon" id="weather-icon">🌤️</div>
                     <div class="weather-info">
                         <div class="weather-temp" id="weather-temp">--°C</div>
-                        <div class="weather-desc" id="weather-desc">Yükleniyor...</div>
-                        <div class="weather-city" id="weather-city">Sultangazi</div>
+                        <div class="weather-city" id="weather-city">Bekleniyor</div>
+                        <div class="weather-desc" id="weather-desc">Hava Durumu</div>
                     </div>
                 </div>
                 <div class="divider-v"></div>
                 <div class="datetime-widget">
-                    <div class="time-wrapper">
-                        <div id="offline-badge" class="offline-icon-subtle hidden" title="Bağlantı Yok">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="2" y1="2" x2="22" y2="22"></line>
-                                <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
-                                <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
-                                <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
-                                <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
-                                <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
-                                <line x1="12" y1="20" x2="12.01" y2="20"></line>
-                            </svg>
-                        </div>
-                        <div id="time" class="time">00:00</div>
-                    </div>
-                    <div id="date" class="date">1 Ocak 2026, Perşembe</div>
+                    <div id="time" class="time">--:--</div>
+                    <div id="date" class="date">-- -- ----</div>
                 </div>
             </div>
         </header>
 
-        <!-- Event Banner -->
-        <div id="event-banner" class="event-banner hidden">
-            <div class="event-banner-content">
-                <span class="event-banner-icon">🔬</span>
-                <span class="event-banner-text" id="event-banner-text">Bilim Şenliği • Spor Salonu</span>
-                <span class="event-banner-badge" id="event-banner-badge">DEVAM EDİYOR</span>
-            </div>
-        </div>
-
-        <!-- Slide Nav -->
         <div class="slide-nav">
-            <div id="slide-dots" class="slide-dots"></div>
-            <div id="slide-counter" class="slide-counter"></div>
+            <div class="slide-dots" id="slide-dots"></div>
+            <div class="slide-counter" id="slide-counter"><span class="current">0</span> / 0</div>
         </div>
 
-        <!-- Main Content Area -->
         <main class="content-area">
             <div id="slides-container" class="slides-container">
                 <div class="slide active" id="loading-slide">
@@ -93,20 +80,18 @@
                         <div class="slide-text">
                             <div class="slide-icon loading-pulse">📡</div>
                             <h2 class="slide-title">Veriler Yükleniyor...</h2>
-                            <p class="slide-content">Google Sheets'ten veriler alınıyor</p>
+                            <p class="slide-content">Sistem başlatılıyor, lütfen bekleyin</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Next Slide Preview -->
             <div id="next-slide-preview" class="next-slide-preview">
                 <span class="next-label">Sıradaki ▸</span>
                 <span id="next-preview-title" class="next-title">—</span>
             </div>
         </main>
 
-        <!-- Bottom Ticker Bar -->
         <footer class="ticker-bar">
             <div class="ticker-label">
                 <span class="ticker-label-icon">📢</span>
@@ -120,8 +105,7 @@
         </footer>
     </div>
 
-    <!-- PapaParse CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
     <script src="app.js"></script>
 </body>
 </html>
