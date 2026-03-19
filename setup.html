@@ -37,14 +37,8 @@
             overflow-x: hidden;
         }
 
-        /* Background orbs */
         body::before, body::after {
-            content: '';
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(120px);
-            opacity: 0.15;
-            z-index: 0;
+            content: ''; position: fixed; border-radius: 50%; filter: blur(120px); opacity: 0.15; z-index: 0;
         }
         body::before { width: 500px; height: 500px; background: var(--accent-blue); top: -200px; right: -100px; }
         body::after { width: 400px; height: 400px; background: var(--accent-purple); bottom: -150px; left: -100px; }
@@ -93,6 +87,9 @@
         }
         .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4); }
         .btn-save:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+        
+        .btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .btn-warning:hover { box-shadow: 0 8px 30px rgba(245, 158, 11, 0.4); }
 
         .success-message {
             display: none; text-align: center; padding: 20px; background: rgba(16, 185, 129, 0.1);
@@ -107,8 +104,8 @@
         .btn-reset:hover { transform: translateY(-2px); background: rgba(239, 68, 68, 0.25); }
 
         /* Tabs */
-        .setup-tabs { display: flex; gap: 8px; margin-bottom: 24px; background: rgba(0, 0, 0, 0.2); padding: 6px; border-radius: var(--radius-sm); }
-        .tab-btn { flex: 1; padding: 12px; background: transparent; color: var(--text-secondary); border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .setup-tabs { display: flex; gap: 8px; margin-bottom: 24px; background: rgba(0, 0, 0, 0.2); padding: 6px; border-radius: var(--radius-sm); overflow-x: auto; }
+        .tab-btn { flex: 1; padding: 12px; background: transparent; color: var(--text-secondary); border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; white-space: nowrap; }
         .tab-btn:hover { color: var(--text-primary); }
         .tab-btn.active { background: var(--bg-card); color: var(--text-primary); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
         .tab-content { display: none; }
@@ -158,8 +155,9 @@
         </div>
         
         <div class="setup-tabs" id="main-tabs">
-            <button class="tab-btn" data-tab="tab-kurulum">Kurulum</button>
+            <button class="tab-btn" data-tab="tab-kurulum">Bağlantı</button>
             <button class="tab-btn active" data-tab="tab-icerik">Yeni İçerik Ekle</button>
+            <button class="tab-btn" data-tab="tab-ayarlar">Sistem Ayarları</button>
         </div>
 
         <div id="tab-kurulum" class="tab-content">
@@ -281,6 +279,59 @@
                 </div>
             </form>
         </div>
+
+        <div id="tab-ayarlar" class="tab-content">
+            <form class="setup-form" id="settings-form" style="position: relative;">
+                <div id="settings-loading-overlay" style="display: none; position: absolute; top:0; left:0; right:0; bottom:0; background:rgba(10,14,26,0.8); backdrop-filter:blur(4px); z-index:10; flex-direction:column; align-items:center; justify-content:center; border-radius:var(--radius-md); color:white;">
+                    <div class="spinner"></div>
+                    <div>Ayarlar Tabloya Yazılıyor...</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Okul Adı</label>
+                    <input type="text" id="s-okuladi" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Yönetici Şifresi</label>
+                    <input type="text" id="s-sifre" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>App Script URL</label>
+                    <input type="text" id="s-scripturl" required>
+                </div>
+
+                <div style="display: flex; gap: 16px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Şehir</label>
+                        <input type="text" id="s-sehir" required>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Enlem</label>
+                        <input type="text" id="s-enlem" required>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Boylam</label>
+                        <input type="text" id="s-boylam" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Okul Logo URL</label>
+                    <input type="text" id="s-logourl" placeholder="Logo linkini buraya yapıştırın">
+                </div>
+
+                <button type="submit" class="btn-save btn-warning" id="btn-submit-settings">💾 Ayarları Doğrudan Tabloya Kaydet</button>
+                <div class="success-message" id="settings-success-msg">
+                    ✅ Ayarlarınız hem cihaza hem de Google Sheet tablosuna başarıyla kaydedildi!
+                </div>
+                <div class="success-message" id="settings-error-msg" style="color: #ef4444; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3);">
+                    ❌ Bir hata oluştu.
+                </div>
+            </form>
+        </div>
+
     </div>
 
     <script>
@@ -299,6 +350,17 @@
                 const content = document.getElementById(tabId);
                 if (btn) btn.classList.add('active');
                 if (content) content.classList.add('active');
+
+                // Eğer Ayarlar sekmesine geçiliyorsa inputları doldur
+                if(tabId === 'tab-ayarlar') {
+                    document.getElementById('s-okuladi').value = localStorage.getItem('kiosk_school_name') || '';
+                    document.getElementById('s-sifre').value = localStorage.getItem('kiosk_admin_password') || '';
+                    document.getElementById('s-scripturl').value = localStorage.getItem('kiosk_script_url') || '';
+                    document.getElementById('s-sehir').value = localStorage.getItem('kiosk_weather_city') || 'Istanbul';
+                    document.getElementById('s-enlem').value = localStorage.getItem('kiosk_weather_lat') || '41.1075';
+                    document.getElementById('s-boylam').value = localStorage.getItem('kiosk_weather_lon') || '28.8617';
+                    document.getElementById('s-logourl').value = localStorage.getItem('kiosk_school_logo') || '';
+                }
             }
 
             // Tabs Logic
@@ -308,8 +370,9 @@
                     document.getElementById('login-error').style.display = 'none';
                     document.getElementById('login-password').value = '';
 
-                    // Eğer şifre varsa ve Kurulum'a tıklanıyorsa
-                    if (targetTab === 'tab-kurulum' && savedPassword && !isAuthenticated) {
+                    // Eğer şifre varsa ve Kurulum veya Ayarlar'a tıklanıyorsa onay iste
+                    if ((targetTab === 'tab-kurulum' || targetTab === 'tab-ayarlar') && savedPassword && !isAuthenticated) {
+                        loginOverlay.dataset.targetTab = targetTab; // Hangi sekmeye gitmek istediğini kaydet
                         loginOverlay.style.display = 'flex';
                     } else {
                         switchTab(targetTab);
@@ -324,10 +387,11 @@
                 if (enteredPwd === savedPassword) {
                     isAuthenticated = true;
                     loginOverlay.style.display = 'none';
-                    switchTab('tab-kurulum');
+                    const targetTab = loginOverlay.dataset.targetTab || 'tab-kurulum';
+                    switchTab(targetTab);
                     
                     const existingSheet = localStorage.getItem('kiosk_sheet_id');
-                    if (existingSheet) document.getElementById('sheet-id').value = existingSheet;
+                    if (existingSheet && targetTab === 'tab-kurulum') document.getElementById('sheet-id').value = existingSheet;
                 } else {
                     document.getElementById('login-error').style.display = 'block';
                 }
@@ -355,7 +419,6 @@
                 if(!isSilentLoad) setupLoading.style.display = 'flex';
                 if(btn) btn.disabled = true;
 
-                // "&headers=0" parametresi eklendi: Google'ın ilk satırı başlık zannedip yutmasını engeller.
                 const url = `https://docs.google.com/spreadsheets/d/${cleanSheetId}/gviz/tq?tqx=out:json;responseHandler:magicSetupCallback&sheet=AYARLAR&headers=0`;
                 const scriptId = 'jsonp-magic-setup';
                 
@@ -367,7 +430,6 @@
                         const rows = json.table.rows;
                         let settings = {};
 
-                        // Satırları güvenli bir şekilde döngüye al (Boş hücre korumalı)
                         rows.forEach(row => {
                             if (row.c && row.c.length >= 2) {
                                 let c0 = row.c[0];
@@ -376,7 +438,6 @@
                                 let rawKey = c0 ? (c0.f || c0.v || '').toString() : '';
                                 let val = c1 ? (c1.f || c1.v || '').toString().trim() : '';
                                 
-                                // Boşlukları yok et, tüm karakterleri küçült
                                 let cleanKey = rawKey.replace(/\s+/g, '').toLowerCase();
                                 if(cleanKey) {
                                     settings[cleanKey] = val;
@@ -389,7 +450,6 @@
 
                         let scriptFound = false;
 
-                        // Tablo Datalarını Kaydet (Akıllı eşleştirme)
                         for (let key in settings) {
                             let val = settings[key];
                             if (key.includes('scripturl') || key.includes('appscript')) {
@@ -457,11 +517,9 @@
             const localSheetId = localStorage.getItem('kiosk_sheet_id');
 
             if (magicId) {
-                // Linkte ID varsa hemen ayarları çek ve İçerik'e geç
                 document.getElementById('sheet-id').value = magicId;
                 runMagicSetup(magicId, true);
             } else if (localSheetId) {
-                // Eskiden girilmişse hem İçerik tabını aç, hem de arkada ayarları GÜNCELLE
                 document.getElementById('sheet-id').value = localSheetId;
                 switchTab('tab-icerik');
                 runMagicSetup(localSheetId, true); 
@@ -469,7 +527,6 @@
                 switchTab('tab-kurulum');
             }
 
-            // Normal Kurulum Formu Submit
             document.getElementById('setup-form').addEventListener('submit', function(e) {
                 e.preventDefault();
                 const sheetInput = document.getElementById('sheet-id').value.trim();
@@ -488,6 +545,90 @@
                 }
             });
 
+            // --- YENİ: AYARLARI KAYDETME MANTIĞI ---
+            const settingsForm = document.getElementById('settings-form');
+            if (settingsForm) {
+                settingsForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    if (!confirm("Dikkat! Bu işlem Google Sheet tablonuzdaki ayarları tamamen değiştirecektir. Onaylıyor musunuz?")) {
+                        return;
+                    }
+
+                    // İşlemi yapacak olan MEVCUT script linki
+                    const currentScriptUrl = localStorage.getItem('kiosk_script_url');
+                    const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
+                    
+                    if (!currentScriptUrl || !cleanSheetId) {
+                        alert('Ayarları değiştirebilmek için sistemin AppScript ağına daha önce bağlanmış olması gerekir.');
+                        return;
+                    }
+
+                    const btnSubmit = document.getElementById('btn-submit-settings');
+                    const overlay = document.getElementById('settings-loading-overlay');
+                    const errorMsg = document.getElementById('settings-error-msg');
+                    const successMsg = document.getElementById('settings-success-msg');
+                    
+                    errorMsg.style.display = 'none';
+                    successMsg.style.display = 'none';
+                    overlay.style.display = 'flex';
+                    btnSubmit.disabled = true;
+
+                    try {
+                        // Yeni değerleri topla
+                        const newSettings = {
+                            OkulAdi: document.getElementById('s-okuladi').value.trim(),
+                            Sifre: document.getElementById('s-sifre').value.trim(),
+                            ScriptURL: document.getElementById('s-scripturl').value.trim(),
+                            Sehir: document.getElementById('s-sehir').value.trim(),
+                            Enlem: document.getElementById('s-enlem').value.trim(),
+                            Boylam: document.getElementById('s-boylam').value.trim(),
+                            LogoURL: document.getElementById('s-logourl').value.trim()
+                        };
+
+                        const payload = {
+                            sheetId: cleanSheetId,
+                            action: 'updateSettings',
+                            settings: newSettings
+                        };
+
+                        const fetchPromise = fetch(currentScriptUrl, {
+                            method: 'POST',
+                            body: JSON.stringify(payload)
+                        });
+                        
+                        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('İstek zaman aşımına uğradı.')), 15000));
+                        
+                        const response = await Promise.race([fetchPromise, timeoutPromise]);
+                        const data = await response.json();
+                        
+                        if (data.status === 'error') throw new Error(data.message);
+                        
+                        // Başarılıysa LocalStorage'ı da hemen güncelle
+                        localStorage.setItem('kiosk_school_name', newSettings.OkulAdi);
+                        localStorage.setItem('kiosk_admin_password', newSettings.Sifre);
+                        savedPassword = newSettings.Sifre;
+                        localStorage.setItem('kiosk_script_url', newSettings.ScriptURL);
+                        localStorage.setItem('kiosk_weather_city', newSettings.Sehir);
+                        localStorage.setItem('kiosk_weather_lat', newSettings.Enlem);
+                        localStorage.setItem('kiosk_weather_lon', newSettings.Boylam);
+                        localStorage.setItem('kiosk_school_logo', newSettings.LogoURL);
+
+                        overlay.style.display = 'none';
+                        btnSubmit.disabled = false;
+                        
+                        successMsg.style.display = 'block';
+                        setTimeout(() => { successMsg.style.display = 'none'; }, 6000);
+
+                    } catch(error) {
+                        overlay.style.display = 'none';
+                        btnSubmit.disabled = false;
+                        errorMsg.textContent = 'Hata: ' + error.message;
+                        errorMsg.style.display = 'block';
+                    }
+                });
+            }
+
             // İçerik Ekleme Form Logic
             const contentForm = document.getElementById('content-form');
             if (contentForm) {
@@ -498,7 +639,7 @@
                     const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
                     
                     if (!scriptUrl || scriptUrl === 'undefined' || scriptUrl === '') {
-                        alert('HATA: Google Sheet tablonuzun "AYARLAR" sekmesindeki "ScriptURL" okunamadı. Lütfen tablonuzu kontrol edip bu sayfayı yenileyin veya Kurulum sekmesinden tekrar bağlanın.');
+                        alert('HATA: Ayarlarda "App Script URL" eksik! Lütfen Sistem Ayarları sekmesinden Script URL\'nizi girin.');
                         return;
                     }
                     if (!cleanSheetId) {
@@ -572,7 +713,6 @@
                         overlay.style.display = 'none';
                         btnSubmit.disabled = false;
                         
-                        // Formu Temizle
                         document.getElementById('c-baslik').value = '';
                         document.getElementById('c-icerik').value = '';
                         document.getElementById('c-tarih').value = '';
