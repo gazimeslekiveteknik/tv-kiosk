@@ -269,12 +269,12 @@
                     }
                 });
 
-                if (settings['Okul Adı']) localStorage.setItem('kiosk_school_name', settings['Okul Adı']);
-                if (settings['App Script URL']) localStorage.setItem('kiosk_script_url', settings['App Script URL']);
-                if (settings['Logo URL']) localStorage.setItem('kiosk_school_logo', settings['Logo URL']);
-                if (settings['Yönetici Şifresi']) localStorage.setItem('kiosk_admin_password', settings['Yönetici Şifresi']);
+                if (settings['Okul Adı'] || settings['OkulAdi']) localStorage.setItem('kiosk_school_name', settings['Okul Adı'] || settings['OkulAdi']);
+                if (settings['App Script URL'] || settings['ScriptURL']) localStorage.setItem('kiosk_script_url', settings['App Script URL'] || settings['ScriptURL']);
+                if (settings['Logo URL'] || settings['LogoURL']) localStorage.setItem('kiosk_school_logo', settings['Logo URL'] || settings['LogoURL']);
+                if (settings['Yönetici Şifresi'] || settings['Sifre']) localStorage.setItem('kiosk_admin_password', settings['Yönetici Şifresi'] || settings['Sifre']);
                 
-                let city = settings['Hava Durumu Şehri'];
+                let city = settings['Hava Durumu Şehri'] || settings['Sehir'];
                 if (city) {
                     localStorage.setItem('kiosk_weather_city', city);
                     if (CITY_DATA[city]) {
@@ -282,6 +282,11 @@
                         localStorage.setItem('kiosk_weather_lon', CITY_DATA[city][1]);
                     }
                 }
+
+                let enlem = settings['Enlem'];
+                let boylam = settings['Boylam'];
+                if (enlem) localStorage.setItem('kiosk_weather_lat', enlem);
+                if (boylam) localStorage.setItem('kiosk_weather_lon', boylam);
             } catch(e) {}
             
             delete window.magicAppCallback;
