@@ -344,3 +344,17 @@ html, body {
 .next-slide-preview.visible { opacity: 1; transform: translateY(0); }
 .next-slide-preview .next-label { font-weight: 800; color: var(--vibrant-blue); text-transform: uppercase; font-size: 11px; }
 .next-slide-preview .next-title { color: var(--text-primary); font-weight: 700; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Parola ve Ayarlar Penceresini Tam Ortaya Sabitleme */
+.ortalanmis-pencere {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 9999 !important;
+    background: #ffffff;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+    max-height: 90vh;
+    overflow-y: auto;
+    /* Eğer tasarımınızda zaten border-radius vb. varsa buraları kendinize göre silebilirsiniz */
+}
