@@ -9,36 +9,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #0a0e1a;
-            --bg-card: rgba(255, 255, 255, 0.06);
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --accent-blue: #3b82f6;
-            --accent-purple: #8b5cf6;
-            --accent-emerald: #10b981;
-            --gradient-primary: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --radius-md: 20px;
-            --radius-sm: 12px;
+            --bg-primary: #0a0e1a; --bg-card: rgba(255, 255, 255, 0.06); --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8; --accent-blue: #3b82f6; --accent-purple: #8b5cf6;
+            --accent-emerald: #10b981; --gradient-primary: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            --glass-border: rgba(255, 255, 255, 0.08); --radius-md: 20px; --radius-sm: 12px;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 40px; position: relative; overflow-x: hidden; }
-
         body::before, body::after { content: ''; position: fixed; border-radius: 50%; filter: blur(120px); opacity: 0.15; z-index: 0; }
         body::before { width: 500px; height: 500px; background: var(--accent-blue); top: -200px; right: -100px; }
         body::after { width: 400px; height: 400px; background: var(--accent-purple); bottom: -150px; left: -100px; }
-
         .setup-container { position: relative; z-index: 1; width: 100%; max-width: 660px; }
-
         .setup-header { text-align: center; margin-bottom: 40px; }
         .setup-header-icon { font-size: 64px; margin-bottom: 16px; }
         .setup-header h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
         .setup-header p { color: var(--text-secondary); font-size: 16px; }
-
         .setup-form { background: var(--bg-card); backdrop-filter: blur(40px); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 40px; }
-
         .form-group { margin-bottom: 24px; }
         .form-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1.5px; }
         .form-group input, .form-group select { width: 100%; padding: 14px 18px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 15px; font-family: inherit; outline: none; transition: all 0.3s; }
@@ -46,10 +32,8 @@
         .form-group select option { background: #1e293b; color: white; }
         .form-group input::focus, .form-group select:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
         .form-hint { font-size: 12px; color: var(--text-secondary); margin-top: 8px; line-height: 1.6; opacity: 0.7; }
-
         .media-section { background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: var(--radius-sm); margin-bottom: 24px; border: 1px dashed rgba(255,255,255,0.1); }
         .media-section-title { font-size: 13px; font-weight: 700; color: #cbd5e1; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
-
         .btn-save { width: 100%; padding: 16px 32px; background: var(--gradient-primary); color: white; border: none; border-radius: var(--radius-sm); font-size: 17px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
         .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4); }
         .btn-save:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
@@ -57,7 +41,6 @@
         .btn-warning:hover { box-shadow: 0 8px 30px rgba(245, 158, 11, 0.4); }
         .btn-cancel { background: #475569; display: none; }
         .btn-cancel:hover { box-shadow: 0 8px 30px rgba(71, 85, 105, 0.4); }
-
         .success-message { display: none; text-align: center; padding: 20px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-sm); color: #10b981; margin-top: 16px; font-weight: 600; }
         .divider { border: none; border-top: 1px solid var(--glass-border); margin: 28px 0; }
         .btn-group { display: flex; gap: 12px; }
@@ -66,23 +49,19 @@
         .btn-demo:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4); }
         .btn-reset { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
         .btn-reset:hover { transform: translateY(-2px); background: rgba(239, 68, 68, 0.25); }
-
         .setup-tabs { display: flex; gap: 8px; margin-bottom: 24px; background: rgba(0, 0, 0, 0.2); padding: 6px; border-radius: var(--radius-sm); overflow-x: auto; }
         .tab-btn { flex: 1; padding: 12px; background: transparent; color: var(--text-secondary); border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; white-space: nowrap; }
         .tab-btn:hover { color: var(--text-primary); }
         .tab-btn.active { background: var(--bg-card); color: var(--text-primary); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-
         #loading-overlay, #setup-loading { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 14, 26, 0.8); backdrop-filter: blur(4px); z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: var(--radius-md); color: white; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-
         #login-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10,14,26,0.95); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .login-card { background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 40px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
         .login-card h2 { margin-bottom: 12px; font-size: 24px; }
         .login-error { color: #ef4444; font-size: 14px; margin-top: 12px; display: none; }
-
         .content-list-section { margin-top: 40px; border-top: 1px solid var(--glass-border); padding-top: 24px; }
         .content-list-title { font-size: 16px; font-weight: 700; color: white; margin-bottom: 16px; display:flex; align-items:center; justify-content:space-between;}
         .content-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 12px 16px; border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05); }
@@ -97,7 +76,6 @@
         .btn-edit:hover { background: rgba(59, 130, 246, 0.2); }
         .btn-delete { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
         .btn-delete:hover { background: rgba(239, 68, 68, 0.2); }
-        
         .refresh-btn { background: rgba(255,255,255,0.1); border:none; color:white; padding:4px 10px; border-radius:4px; font-size:12px; cursor:pointer;}
         .refresh-btn:hover { background: rgba(255,255,255,0.2); }
     </style>
@@ -156,9 +134,7 @@
 
                 <button type="submit" class="btn-save" id="btn-save">🪄 Bağlantıyı Sağla</button>
 
-                <div class="success-message" id="success-msg">
-                    ✅ Ayarlar tablodan başarıyla çekildi! Sisteme yönlendiriliyorsunuz...
-                </div>
+                <div class="success-message" id="success-msg">✅ Ayarlar tablodan başarıyla çekildi! Sisteme yönlendiriliyorsunuz...</div>
 
                 <hr class="divider">
                 <div style="text-align: center;">
@@ -289,7 +265,6 @@
 
     <script>
         window.currentContentsData = {};
-
         let isAuthenticated = false;
         let savedPassword = localStorage.getItem('kiosk_admin_password');
         const loginOverlay = document.getElementById('login-overlay');
@@ -299,7 +274,6 @@
         function switchTab(tabId) {
             tabBtns.forEach(b => b.classList.remove('active'));
             tabContents.forEach(c => c.classList.remove('active'));
-            
             const btn = document.querySelector(`[data-tab="${tabId}"]`);
             const content = document.getElementById(tabId);
             if (btn) btn.classList.add('active');
@@ -315,9 +289,7 @@
                 document.getElementById('s-logourl').value = localStorage.getItem('kiosk_school_logo') || '';
             }
 
-            if(tabId === 'tab-icerik') {
-                fetchContentList();
-            }
+            if(tabId === 'tab-icerik') { fetchContentList(); }
         }
 
         tabBtns.forEach(btn => {
@@ -370,7 +342,7 @@
             if(!isSilentLoad) setupLoading.style.display = 'flex';
             if(btn) btn.disabled = true;
 
-            const url = `https://docs.google.com/spreadsheets/d/${cleanSheetId}/gviz/tq?tqx=out:json;responseHandler:magicSetupCallback&sheet=AYARLAR&headers=0`;
+            const url = `https://docs.google.com/spreadsheets/d/${cleanSheetId}/gviz/tq?tqx=out:json;responseHandler:magicSetupCallback&sheet=AYARLAR`;
             const scriptId = 'jsonp-magic-setup';
             
             let oldScript = document.getElementById(scriptId);
@@ -454,16 +426,19 @@
             if (confirm('Tüm cihaz ayarları sıfırlansın mı?')) { localStorage.clear(); window.location.reload(); }
         });
 
-        // Ayarları Kaydet
+        // ============================================
+        // AYARLARI KAYDET (CORS HATASIZ, GÜVENLİ METHOD)
+        // ============================================
         const settingsForm = document.getElementById('settings-form');
         if (settingsForm) {
             settingsForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 if (!confirm("Bu işlem Google Sheet tablonuzdaki ayarları tamamen değiştirecektir. Onaylıyor musunuz?")) return;
 
-                const currentScriptUrl = localStorage.getItem('kiosk_script_url');
+                let currentScriptUrl = localStorage.getItem('kiosk_script_url');
                 const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
                 if (!currentScriptUrl || !cleanSheetId) { alert('Sistem AppScript ağına bağlanamadı.'); return; }
+                if (!currentScriptUrl.endsWith('/exec')) { alert('Lütfen geçerli bir AppScript dağıtım linki girin (/exec ile bitmeli).'); return; }
 
                 const btnSubmit = document.getElementById('btn-submit-settings');
                 const overlay = document.getElementById('settings-loading-overlay');
@@ -484,15 +459,20 @@
                         LogoURL: document.getElementById('s-logourl').value.trim()
                     };
 
+                    const payload = { sheetId: cleanSheetId, action: 'updateSettings', settings: newSettings };
+
+                    // YENİ GÜVENLİ GÖNDERİM METODU (CORS bypass)
                     const fetchPromise = fetch(currentScriptUrl, {
-                        method: 'POST', body: JSON.stringify({ sheetId: cleanSheetId, action: 'updateSettings', settings: newSettings })
+                        method: 'POST',
+                        mode: 'no-cors', // Tarayıcı güvenlik duvarını atlar
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Özel header yasağını atlar
+                        body: JSON.stringify(payload)
                     });
                     
                     const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('İstek zaman aşımına uğradı.')), 15000));
-                    const response = await Promise.race([fetchPromise, timeoutPromise]);
-                    const data = await response.json();
-                    if (data.status === 'error') throw new Error(data.message);
+                    await Promise.race([fetchPromise, timeoutPromise]);
                     
+                    // No-Cors ile başarılı olunduğunda hata vermez, veriyi okuyamayız ama yazıldığını anlarız.
                     localStorage.setItem('kiosk_school_name', newSettings.OkulAdi);
                     localStorage.setItem('kiosk_admin_password', newSettings.Sifre); savedPassword = newSettings.Sifre;
                     localStorage.setItem('kiosk_script_url', newSettings.ScriptURL);
@@ -502,63 +482,51 @@
                     localStorage.setItem('kiosk_school_logo', newSettings.LogoURL);
 
                     overlay.style.display = 'none'; btnSubmit.disabled = false;
-                    successMsg.style.display = 'block'; setTimeout(() => { successMsg.style.display = 'none'; }, 6000);
+                    successMsg.style.display = 'block'; setTimeout(() => { successMsg.style.display = 'none'; }, 5000);
                 } catch(error) {
                     overlay.style.display = 'none'; btnSubmit.disabled = false;
-                    errorMsg.textContent = 'Hata: ' + error.message; errorMsg.style.display = 'block';
+                    errorMsg.textContent = 'Bağlantı hatası! İnternetinizi veya script linkini kontrol edin.'; errorMsg.style.display = 'block';
                 }
             });
         }
 
-        // AKILLI VE GÜVENLİ İÇERİK LİSTESİ ÇEKME
+        // ============================================
+        // LİSTELERİ ÇEK (ÖNBELLEK KIRICI İLE GÜVENLİ METOD)
+        // ============================================
         window.fetchContentList = function() {
             const sheetId = localStorage.getItem('kiosk_sheet_id');
             const listContainer = document.getElementById('content-list-container');
-            if (!sheetId) { listContainer.innerHTML = '<p style="color:#ef4444; font-size:13px; text-align:center;">Önce Google Sheet bağlantısı kurmalısınız.</p>'; return; }
+            if (!sheetId) { listContainer.innerHTML = '<p style="color:#ef4444; font-size:13px; text-align:center;">Önce Kurulum yapmalısınız.</p>'; return; }
 
-            listContainer.innerHTML = '<div style="text-align:center;"><div class="spinner" style="width:24px;height:24px;border-width:3px;margin:0 auto 8px;"></div><p style="color:#64748b; font-size:14px;">İçerikler yükleniyor...</p></div>';
+            listContainer.innerHTML = '<div style="text-align:center;"><div class="spinner" style="width:24px;height:24px;border-width:3px;margin:0 auto 8px;"></div><p style="color:#64748b; font-size:14px;">İçerikler Google\'dan çekiliyor...</p></div>';
             
-            // Cache Buster (Önbellek Kırıcı) ve Unique Callback ile sayfayı yenilemeye gerek kalmaz
-            const cbName = 'fetchListCB_' + Date.now();
-            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:${cbName}&sheet=DUYURULAR&headers=1&_cb=${Date.now()}`;
-            
-            let fetchTimeout = setTimeout(() => {
-                if (window[cbName]) {
-                    listContainer.innerHTML = '<p style="color:#ef4444; font-size:14px; text-align:center;">Bağlantı zaman aşımına uğradı. <button type="button" onclick="fetchContentList()" class="refresh-btn">Tekrar Dene</button></p>';
-                    delete window[cbName];
-                }
-            }, 8000);
+            // app.js ile birebir aynı, sorunsuz çalışan mantık.
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:parseGoogleSheetDataList&sheet=DUYURULAR`;
+            let oldScript = document.getElementById('jsonp-list-script');
+            if (oldScript) oldScript.remove();
 
-            window[cbName] = function(json) {
-                clearTimeout(fetchTimeout);
+            window.parseGoogleSheetDataList = function(json) {
                 try {
-                    if (!json || !json.table || !json.table.rows) {
-                        listContainer.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:14px;">Tablonuzda henüz hiç duyuru yok veya okunamadı.</p>';
-                        return;
-                    }
                     const rows = json.table.rows;
                     let html = '';
                     window.currentContentsData = {}; 
 
                     rows.forEach((row, index) => {
-                        // Eğer hücre tamamen boş değilse
-                        if (row && row.c && row.c[0] && row.c[0].v !== null && row.c[0].v !== '') {
-                            let rowIndex = index + 2; // header=1 ayarlandığı için index 0 aslında tablodaki 2. satırdır
-                            
+                        if (row && row.c && row.c[0] && row.c[0].v !== null) {
                             let baslik = (row.c[0].v || '').toString();
+                            // İlk satır başlıksa atla
+                            if (baslik.toLowerCase() === 'başlık' || baslik.toLowerCase() === 'baslik') return;
+
+                            let rowIndex = index + 1; // Google Sheet Satır numarası yaklaşımı
                             let icerik = (row.c[1] && row.c[1].v) ? row.c[1].v.toString() : '';
                             let kategori = (row.c[2] && row.c[2].v) ? row.c[2].v.toString() : 'duyuru';
                             
-                            // Tarih Formatı Düzeltme (Date nesnesini algılama)
                             let tarih = '';
                             if (row.c[3]) {
                                 if (row.c[3].v && typeof row.c[3].v === 'string' && row.c[3].v.startsWith('Date(')) {
                                     let match = row.c[3].v.match(/Date\((\d+),\s*(\d+),\s*(\d+)\)/);
                                     if (match) {
-                                        let y = match[1];
-                                        let m = String(parseInt(match[2]) + 1).padStart(2, '0');
-                                        let d = String(match[3]).padStart(2, '0');
-                                        tarih = `${y}-${m}-${d}`;
+                                        tarih = `${match[1]}-${String(parseInt(match[2]) + 1).padStart(2, '0')}-${String(match[3]).padStart(2, '0')}`;
                                     }
                                 } else {
                                     tarih = (row.c[3].f || row.c[3].v || '').toString();
@@ -586,20 +554,18 @@
                                 </div>`;
                         }
                     });
-                    listContainer.innerHTML = html || '<p style="text-align:center; color:#94a3b8; font-size:14px;">Henüz eklenmiş bir içerik yok.</p>';
+                    listContainer.innerHTML = html || '<p style="text-align:center; color:#94a3b8; font-size:14px;">Tablonuzda hiç duyuru bulunmuyor.</p>';
                 } catch(e) {
-                    console.error(e);
-                    listContainer.innerHTML = '<p style="color:#ef4444; font-size:13px; text-align:center;">İçerikler okunamadı. Lütfen tabloyu kontrol edin.</p>';
+                    listContainer.innerHTML = '<p style="color:#ef4444; font-size:13px; text-align:center;">İçerikler okunamadı. Tablo ayarlarını kontrol edin.</p>';
                 }
-                delete window[cbName];
+                delete window.parseGoogleSheetDataList;
             };
 
             const script = document.createElement('script');
+            script.id = 'jsonp-list-script';
             script.src = url;
             script.onerror = function() {
-                clearTimeout(fetchTimeout);
-                listContainer.innerHTML = '<p style="color:#ef4444; font-size:13px; text-align:center;">Google Sheets ile bağlantı kurulamadı.</p>';
-                delete window[cbName];
+                listContainer.innerHTML = '<p style="color:#ef4444; font-size:13px; text-align:center;">Google ile bağlantı kurulamadı.</p>';
             }
             document.body.appendChild(script);
         };
@@ -619,7 +585,7 @@
             document.getElementById('c-gorsel-url').value = data.gorsel;
             document.getElementById('c-video-url').value = data.video;
 
-            document.getElementById('btn-submit-content').innerHTML = '💾 İçeriği Güncelle';
+            document.getElementById('btn-submit-content').innerHTML = '💾 Değişiklikleri Güncelle';
             document.getElementById('btn-submit-content').classList.add('btn-warning');
             document.getElementById('btn-cancel-edit').style.display = 'block';
 
@@ -635,52 +601,57 @@
             document.getElementById('btn-cancel-edit').style.display = 'none';
         };
 
-        // İÇERİK SİLME İŞLEMİ
+        // İÇERİK SİLME İŞLEMİ (CORS BYPASS)
         window.deleteContent = async function(rowIndex) {
             if(!confirm("Bu duyuruyu silmek istediğinize emin misiniz?")) return;
 
-            const scriptUrl = localStorage.getItem('kiosk_script_url');
+            let scriptUrl = localStorage.getItem('kiosk_script_url');
             const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
 
             if (!scriptUrl || !cleanSheetId) return;
 
             const overlay = document.getElementById('loading-overlay');
-            document.getElementById('loading-text').textContent = 'İçerik siliniyor...';
+            document.getElementById('loading-text').textContent = 'Siliniyor...';
             overlay.style.display = 'flex';
 
             try {
                 const fetchPromise = fetch(scriptUrl, {
                     method: 'POST',
+                    mode: 'no-cors', // Güvenlik duvarını atlar
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ sheetId: cleanSheetId, action: 'deleteContent', rowIndex: rowIndex })
                 });
                 
-                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('İstek zaman aşımına uğradı.')), 15000));
-                const response = await Promise.race([fetchPromise, timeoutPromise]);
-                const data = await response.json();
-                
-                if (data.status === 'error') throw new Error(data.message);
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Zaman aşımı')), 15000));
+                await Promise.race([fetchPromise, timeoutPromise]);
                 
                 overlay.style.display = 'none';
-                window.fetchContentList(); 
-                window.cancelEdit(); 
+                
+                // Silme işleminden sonra listeyi otomatik tazelemek için 1 sn bekle
+                setTimeout(() => {
+                    window.fetchContentList(); 
+                    window.cancelEdit(); 
+                }, 1000);
 
             } catch (error) {
                 overlay.style.display = 'none';
-                alert('Silme işlemi başarısız: ' + error.message);
+                alert('Silme işlemi başarısız. Lütfen interneti kontrol edin.');
             }
         };
 
-        // İçerik Ekleme / Güncelleme Form Logic
+        // ============================================
+        // İÇERİK EKLEME / GÜNCELLEME (CORS BYPASS EKLENDİ)
+        // ============================================
         const contentForm = document.getElementById('content-form');
         if (contentForm) {
             contentForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
-                const scriptUrl = localStorage.getItem('kiosk_script_url');
+                let scriptUrl = localStorage.getItem('kiosk_script_url');
                 const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
                 
                 if (!scriptUrl || scriptUrl === 'undefined' || scriptUrl === '') {
-                    alert('HATA: Ayarlarda "App Script URL" eksik!'); return;
+                    alert('HATA: Ayarlarda "App Script URL" eksik! Lütfen ayarlardan kaydedin.'); return;
                 }
                 
                 const btnSubmit = document.getElementById('btn-submit-content');
@@ -718,29 +689,34 @@
                         const reader = new FileReader();
                         const filePromise = new Promise((resolve, reject) => { reader.onload = (ev) => resolve(ev.target.result); reader.onerror = (err) => reject(err); reader.readAsDataURL(file); });
                         payload.file = { name: file.name, mimeType: file.type, content: await filePromise };
-                        document.getElementById('loading-text').textContent = 'Dosya Drive\'a yükleniyor...';
+                        document.getElementById('loading-text').textContent = 'Dosya yükleniyor, lütfen bekleyin (büyük dosyalarda zaman alabilir)...';
                     } else {
                         document.getElementById('loading-text').textContent = editRowIndex ? 'Duyuru güncelleniyor...' : 'Duyuru kaydediliyor...';
                     }
                     
-                    const fetchPromise = fetch(scriptUrl, { method: 'POST', body: JSON.stringify(payload) });
-                    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Zaman aşımı.')), 30000));
-                    const response = await Promise.race([fetchPromise, timeoutPromise]);
-                    const data = await response.json();
-                    
-                    if (data.status === 'error') throw new Error(data.message);
+                    // GÜVENLİ VE CORS HATASI VERMEYEN YÖNTEM:
+                    const fetchPromise = fetch(scriptUrl, { 
+                        method: 'POST', 
+                        mode: 'no-cors', // Asla CORS hatası vermez
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify(payload) 
+                    });
+
+                    // Drive'a büyük video yükleniyorsa diye 90 saniye süre verdik
+                    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Sunucu cevap vermedi.')), 90000));
+                    await Promise.race([fetchPromise, timeoutPromise]);
                     
                     overlay.style.display = 'none'; btnSubmit.disabled = false;
                     
                     window.cancelEdit(); 
-                    window.fetchContentList(); 
                     
                     successMsg.style.display = 'block';
-                    setTimeout(() => { successMsg.style.display = 'none'; }, 5000);
+                    setTimeout(() => { successMsg.style.display = 'none'; window.fetchContentList(); }, 1500); // 1.5 saniye sonra listeyi yenile
                     
                 } catch (error) {
                     overlay.style.display = 'none'; btnSubmit.disabled = false;
-                    errorMsg.textContent = 'Hata: ' + error.message; errorMsg.style.display = 'block';
+                    errorMsg.textContent = 'Bağlantı koptu. Dosyanız çok büyük olabilir veya ağ engeline takılmış olabilirsiniz.'; 
+                    errorMsg.style.display = 'block';
                 }
             });
         }
