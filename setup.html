@@ -438,7 +438,8 @@
                 const sheetId = localStorage.getItem('kiosk_sheet_id');
                 if (!sheetId) return;
 
-                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:loadContentsCallback&sheet=DUYURULAR`;
+                // Cache-Busting (Önbelleği engellemek) için milisaniye eklendi
+                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:loadContentsCallback&sheet=DUYURULAR&t=${new Date().getTime()}`;
                 const scriptId = 'jsonp-load-contents';
                 
                 let oldScript = document.getElementById(scriptId);
