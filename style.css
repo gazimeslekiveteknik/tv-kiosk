@@ -336,25 +336,11 @@ html, body {
 
 /* --- Next Preview --- */
 .next-slide-preview {
-    position: absolute; bottom: 24px; right: 48px; display: flex; align-items: center; gap: 12px; padding: 12px 24px;
+    position: absolute; bottom: 24px; right: 48px; display: flex; align-items: center; gap: 12px; padding: 14px 28px;
     background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--border-light);
-    border-radius: var(--radius-md); font-size: 15px; color: var(--text-secondary); font-weight: 600;
+    border-radius: var(--radius-md); font-size: 17px; color: var(--text-secondary); font-weight: 600;
     z-index: 5; opacity: 0; transform: translateY(12px); transition: opacity 0.5s ease, transform 0.5s ease; box-shadow: var(--shadow-card);
 }
 .next-slide-preview.visible { opacity: 1; transform: translateY(0); }
-.next-slide-preview .next-label { font-weight: 800; color: var(--vibrant-blue); text-transform: uppercase; font-size: 11px; }
-.next-slide-preview .next-title { color: var(--text-primary); font-weight: 700; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-/* Parola ve Ayarlar Penceresini Tam Ortaya Sabitleme */
-.ortalanmis-pencere {
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    z-index: 9999 !important;
-    background: #ffffff;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.5);
-    max-height: 90vh;
-    overflow-y: auto;
-    /* Eğer tasarımınızda zaten border-radius vb. varsa buraları kendinize göre silebilirsiniz */
-}
+.next-slide-preview .next-label { font-weight: 800; color: var(--vibrant-blue); text-transform: uppercase; font-size: 13px; }
+.next-slide-preview .next-title { color: var(--text-primary); font-weight: 700; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
