@@ -1,56 +1,931 @@
-function processData(rows) {
-        const newDataString = JSON.stringify(rows);
-        
-        if (currentDataString === newDataString && slides.length > 0) {
-            if (els.loadingSlide) els.loadingSlide.style.display = 'none';
-            return; 
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bilgi Ekranı Yönetim Paneli</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-card: rgba(255, 255, 255, 0.06);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-emerald: #10b981;
+            --gradient-primary: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --radius-md: 20px;
+            --radius-sm: 12px;
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 40px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before, body::after {
+            content: ''; position: fixed; border-radius: 50%; filter: blur(120px); opacity: 0.15; z-index: 0;
+        }
+        body::before { width: 500px; height: 500px; background: var(--accent-blue); top: -200px; right: -100px; }
+        body::after { width: 400px; height: 400px; background: var(--accent-purple); bottom: -150px; left: -100px; }
+
+        .setup-container { position: relative; z-index: 1; width: 100%; max-width: 660px; }
+
+        .setup-header { text-align: center; margin-bottom: 40px; }
+        .setup-header-icon { font-size: 64px; margin-bottom: 16px; }
+        .setup-header h1 {
+            font-size: 32px; font-weight: 800; margin-bottom: 8px;
+            background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .setup-header p { color: var(--text-secondary); font-size: 16px; }
+
+        .setup-form {
+            background: var(--bg-card); backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 40px;
+        }
+
+        .form-group { margin-bottom: 24px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1.5px; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 14px 18px; background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+            color: var(--text-primary); font-size: 15px; font-family: inherit; outline: none; transition: all 0.3s;
+        }
+        .form-group select {
+            cursor: pointer; appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 16px center;
+        }
+        .form-group select option { background: #1e293b; color: white; }
+        .form-group input::placeholder { color: rgba(255, 255, 255, 0.2); }
+        .form-group input:focus, .form-group select:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+
+        .form-hint { font-size: 12px; color: var(--text-secondary); margin-top: 8px; line-height: 1.6; opacity: 0.7; }
+
+        .media-section {
+            background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: var(--radius-sm); margin-bottom: 24px; border: 1px dashed rgba(255,255,255,0.1);
+        }
+        .media-section-title { font-size: 13px; font-weight: 700; color: #cbd5e1; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+
+        .btn-save {
+            width: 100%; padding: 16px 32px; background: var(--gradient-primary); color: white;
+            border: none; border-radius: var(--radius-sm); font-size: 17px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 8px;
+        }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4); }
+        .btn-save:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
         
-        currentDataString = newDataString;
-        clearAllTimers();
+        .btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .btn-warning:hover { box-shadow: 0 8px 30px rgba(245, 158, 11, 0.4); }
 
-        slides = []; tickerItems = [];
-        let activeSlideCount = 0; // Aktif duyuruları saymak için eklendi
-        const MAX_VISIBLE_SLIDES = 7; // Miller Yasası İdeal Sınırı
+        .success-message {
+            display: none; text-align: center; padding: 20px; background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-sm); color: #10b981; margin-top: 16px; font-weight: 600;
+        }
 
-        rows.forEach(row => {
-            const normalized = {};
-            Object.keys(row).forEach(key => { normalized[(key || '').trim().toLowerCase()] = (row[key] || '').toString().trim(); });
+        .divider { border: none; border-top: 1px solid var(--glass-border); margin: 28px 0; }
+        .btn-group { display: flex; gap: 12px; }
+        .btn-demo { flex: 1; padding: 14px 24px; background: linear-gradient(135deg, #10b981, #06b6d4); color: white; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-demo:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4); }
+        .btn-reset { padding: 14px 24px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-reset:hover { transform: translateY(-2px); background: rgba(239, 68, 68, 0.25); }
+        
+        /* Listeleme ve Düzenleme CSS */
+        .content-list { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 12px; }
+        .content-item { background: rgba(0, 0, 0, 0.2); padding: 16px; border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.2s; }
+        .content-item:hover { background: rgba(255, 255, 255, 0.05); border-color: var(--glass-border); }
+        .content-item-info h4 { margin-bottom: 6px; color: var(--text-primary); font-size: 15px; display: flex; align-items: center; gap: 8px; }
+        .content-item-info p { font-size: 13px; color: var(--text-secondary); }
+        .content-item-actions { display: flex; gap: 6px; }
+        .btn-icon { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        
+        .btn-icon.move { background: rgba(245, 158, 11, 0.15); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); padding: 8px; font-size: 14px; }
+        .btn-icon.move:hover:not(:disabled) { background: rgba(245, 158, 11, 0.3); }
+        .btn-icon.move:disabled { opacity: 0.3; cursor: not-allowed; background: transparent; border-color: rgba(255,255,255,0.1); color: #94a3b8; }
+        
+        .btn-icon.edit { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .btn-icon.edit:hover { background: rgba(59, 130, 246, 0.4); }
+        .btn-icon.delete { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .btn-icon.delete:hover { background: rgba(239, 68, 68, 0.4); }
+        .badge { font-size: 11px; padding: 4px 8px; border-radius: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .category-badge { background: rgba(255,255,255,0.1); font-weight: 500; font-size: 10px; }
 
-            const baslik = normalized['baslik'] || normalized['başlık'] || '';
-            const aktif = (normalized['aktif'] || 'evet').toLowerCase();
+        /* Tabs */
+        .setup-tabs { display: flex; gap: 8px; margin-bottom: 24px; background: rgba(0, 0, 0, 0.2); padding: 6px; border-radius: var(--radius-sm); overflow-x: auto; }
+        .tab-btn { flex: 1; padding: 12px; background: transparent; color: var(--text-secondary); border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; white-space: nowrap; }
+        .tab-btn:hover { color: var(--text-primary); }
+        .tab-btn.active { background: var(--bg-card); color: var(--text-primary); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        #loading-overlay, #setup-loading {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 14, 26, 0.8); backdrop-filter: blur(4px);
+            z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: var(--radius-md); color: white;
+        }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Login Overlay */
+        #login-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10,14,26,0.95);
+            z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px);
+        }
+        .login-card { background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 40px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+        .login-card h2 { margin-bottom: 12px; font-size: 24px; }
+        .login-error { color: #ef4444; font-size: 14px; margin-top: 12px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="setup-container">
+        
+        <div id="login-overlay" style="display: none;">
+            <div class="login-card">
+                <h2>Yönetici Girişi</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 14px;">Kurulum ayarlarına erişmek için şifre gereklidir.</p>
+                <form id="login-form">
+                    <div class="form-group" style="text-align: left;">
+                        <input type="password" id="login-password" placeholder="Yönetici Şifrenizi Girin" required>
+                    </div>
+                    <div class="btn-group" style="margin-top: 16px;">
+                        <button type="button" class="btn-reset" id="btn-login-cancel" style="flex: 1;">Vazgeç</button>
+                        <button type="submit" class="btn-save" style="margin-top: 0; flex: 1;">Giriş Yap</button>
+                    </div>
+                    <div class="login-error" id="login-error">Hatalı şifre, lütfen tekrar deneyin.</div>
+                </form>
+            </div>
+        </div>
+
+        <div class="setup-header">
+            <div class="setup-header-icon">📺</div>
+            <h1>Bilgi Ekranı Yönetim Paneli</h1>
+            <p>Sistemi yapılandırın ve içerik ekleyin</p>
+        </div>
+        
+        <div class="setup-tabs" id="main-tabs">
+            <button class="tab-btn" data-tab="tab-kurulum">Bağlantı</button>
+            <button class="tab-btn active" data-tab="tab-icerik">İçerik Yönetimi</button>
+            <button class="tab-btn" data-tab="tab-ayarlar">Sistem Ayarları</button>
+        </div>
+
+        <div id="tab-kurulum" class="tab-content">
+            <form class="setup-form" id="setup-form" style="position: relative;">
+                <div id="setup-loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <div id="setup-loading-text">Bağlantı Kuruluyor...</div>
+                </div>
+
+                <div class="form-group" style="text-align: center; margin-bottom: 30px;">
+                    <div style="font-size: 48px; margin-bottom: 10px;">✨</div>
+                    <h3 style="color: var(--accent-blue); font-size: 20px; margin-bottom: 10px;">Google Sheet Bağlantısı</h3>
+                    <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
+                        Google Sheet Linkinizi yapıştırın; AppScript, Şifre ve diğer tüm ayarlar otomatik çekilsin.
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label for="sheet-id">Sihirli Link (Google Sheet URL / ID)</label>
+                    <input type="text" id="sheet-id" placeholder="Google Sheet linkini buraya yapıştırın" required>
+                </div>
+
+                <button type="submit" class="btn-save" id="btn-save">🪄 Bağlantıyı Sağla</button>
+
+                <div class="success-message" id="success-msg">
+                    ✅ Ayarlar tablodan başarıyla çekildi! Sisteme yönlendiriliyorsunuz...
+                </div>
+
+                <hr class="divider">
+                <div style="text-align: center;">
+                    <div class="btn-group" style="justify-content: center;">
+                        <button type="button" class="btn-demo" id="btn-demo">Kiosku Aç</button>
+                        <button type="button" class="btn-reset" id="btn-reset">Cihazı Sıfırla</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div id="tab-icerik" class="tab-content active">
+            <form class="setup-form" id="content-form" style="position: relative;">
+                <div id="loading-overlay" style="display: none;">
+                    <div class="spinner"></div>
+                    <div id="loading-text">Yükleniyor... Lütfen bekleyin.</div>
+                </div>
+                
+                <div id="form-title" style="margin-bottom: 24px; font-size: 18px; font-weight: 700; color: var(--accent-blue); text-align: center;">YENİ İÇERİK EKLE</div>
+
+                <div class="form-group">
+                    <label for="c-baslik">Duyuru / İçerik Başlığı</label>
+                    <input type="text" id="c-baslik" required placeholder="İçerik başlığını girin">
+                </div>
+                
+                <div class="form-group">
+                    <label for="c-icerik">Detay / Açıklama</label>
+                    <input type="text" id="c-icerik" placeholder="Varsa açıklama metni girin">
+                </div>
+                
+                <div style="display: flex; gap: 16px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="c-kategori">Kategori</label>
+                        <select id="c-kategori">
+                            <option value="duyuru">Duyuru</option>
+                            <option value="etkinlik">Etkinlik</option>
+                            <option value="sinav">Sınav</option>
+                            <option value="onemli">Önemli / Acil</option>
+                            <option value="spor">Spor</option>
+                            <option value="bilim">Bilim</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="c-tarih">Tarih</label>
+                        <input type="date" id="c-tarih">
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 16px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="c-aktif">Yayında mı?</label>
+                        <select id="c-aktif">
+                            <option value="EVET">Evet</option>
+                            <option value="HAYIR">Hayır</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="c-bant">Alt Bantta Göster?</label>
+                        <select id="c-bant">
+                            <option value="HAYIR">Hayır</option>
+                            <option value="EVET">Evet</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="media-section">
+                    <div class="media-section-title">🎬 Medya Ekleme (Sadece birini tercih edin)</div>
+                    
+                    <div class="form-group">
+                        <label for="c-video-url" style="color:#60a5fa;">▶️ Video Linki (YouTube, Drive, mp4)</label>
+                        <input type="text" id="c-video-url" placeholder="Örn: https://youtube.com/watch?v=...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="c-gorsel-url" style="color:#34d399;">🖼️ İnternetten Görsel Linki</label>
+                        <input type="text" id="c-gorsel-url" placeholder="Örn: https://site.com/resim.jpg">
+                    </div>
+
+                    <div style="text-align:center; color:rgba(255,255,255,0.3); font-size:12px; margin-bottom:12px;">-- VEYA BİLGİSAYARDAN YÜKLE --</div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="c-file">📁 Dosya Seç (Resim / Video)</label>
+                        <input type="file" id="c-file" accept="image/*,video/mp4,video/webm">
+                        <p class="form-hint">Seçtiğiniz dosya otomatik olarak Google Drive klasörüne yüklenecektir.</p>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-save" id="btn-submit-content">🚀 İçeriği Tabloya Ekle</button>
+                <button type="button" class="btn-reset" id="btn-cancel-edit" style="display: none; width: 100%; margin-top: 12px;">İptali Et (Yeni Eklemeye Dön)</button>
+                
+                <div class="success-message" id="content-success-msg">✅ İşlem Başarılı!</div>
+                <div class="success-message" id="content-error-msg" style="color: #ef4444; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3);">
+                    ❌ Bir hata oluştu.
+                </div>
+                
+                <div class="content-list" id="content-list-container">
+                    </div>
+            </form>
+        </div>
+
+        <div id="tab-ayarlar" class="tab-content">
+            <form class="setup-form" id="settings-form" style="position: relative;">
+                <div id="settings-loading-overlay" style="display: none; position: absolute; top:0; left:0; right:0; bottom:0; background:rgba(10,14,26,0.8); backdrop-filter:blur(4px); z-index:10; flex-direction:column; align-items:center; justify-content:center; border-radius:var(--radius-md); color:white;">
+                    <div class="spinner"></div>
+                    <div>Ayarlar Tabloya Yazılıyor...</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Okul Adı</label>
+                    <input type="text" id="s-okuladi" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Yönetici Şifresi</label>
+                    <input type="text" id="s-sifre" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>App Script URL</label>
+                    <input type="text" id="s-scripturl" required>
+                </div>
+
+                <div style="display: flex; gap: 16px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Şehir</label>
+                        <input type="text" id="s-sehir" required>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Enlem</label>
+                        <input type="text" id="s-enlem" required>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Boylam</label>
+                        <input type="text" id="s-boylam" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Okul Logo URL</label>
+                    <input type="text" id="s-logourl" placeholder="Logo linkini buraya yapıştırın">
+                </div>
+
+                <button type="submit" class="btn-save btn-warning" id="btn-submit-settings">💾 Ayarları Doğrudan Tabloya Kaydet</button>
+                <div class="success-message" id="settings-success-msg">
+                    ✅ Ayarlarınız hem cihaza hem de Google Sheet tablosuna başarıyla kaydedildi!
+                </div>
+                <div class="success-message" id="settings-error-msg" style="color: #ef4444; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3);">
+                    ❌ Bir hata oluştu.
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        (function() {
+            let isAuthenticated = false;
+            let savedPassword = localStorage.getItem('kiosk_admin_password');
+            let currentEditRowIndex = null; 
+            const MAX_VISIBLE_ITEMS = 7; // MİLLER YASASI: İdeal Görünür Sınır
             
-            // Satır boş veya kapalıysa atla
-            if (aktif === 'hayır' || aktif === 'hayir' || aktif === 'h' || aktif === 'no' || !baslik) return;
+            const loginOverlay = document.getElementById('login-overlay');
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            function switchTab(tabId) {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                const btn = document.querySelector(`[data-tab="${tabId}"]`);
+                const content = document.getElementById(tabId);
+                if (btn) btn.classList.add('active');
+                if (content) content.classList.add('active');
 
-            // Görünürlük sınırını aştıysak, aktif olsa bile TV'de gösterme (arşive bekle)
-            if (activeSlideCount >= MAX_VISIBLE_SLIDES) return;
+                if(tabId === 'tab-icerik') {
+                    fetchExistingContents();
+                }
 
-            activeSlideCount++; // Görünür bir slayt eklendi
+                if(tabId === 'tab-ayarlar') {
+                    document.getElementById('s-okuladi').value = localStorage.getItem('kiosk_school_name') || '';
+                    document.getElementById('s-sifre').value = localStorage.getItem('kiosk_admin_password') || '';
+                    document.getElementById('s-scripturl').value = localStorage.getItem('kiosk_script_url') || '';
+                    document.getElementById('s-sehir').value = localStorage.getItem('kiosk_weather_city') || 'Istanbul';
+                    document.getElementById('s-enlem').value = localStorage.getItem('kiosk_weather_lat') || '41.1075';
+                    document.getElementById('s-boylam').value = localStorage.getItem('kiosk_weather_lon') || '28.8617';
+                    document.getElementById('s-logourl').value = localStorage.getItem('kiosk_school_logo') || '';
+                }
+            }
 
-            const video = normalized['video'] || '';
-            const gorsel = normalized['gorsel'] || normalized['görsel'] || normalized['resim'] || '';
-            let mediaUrl = video || gorsel;
-            let mediaType = video ? getMediaType(video) : (gorsel ? getMediaType(gorsel) : null);
+            // Tabs Logic
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const targetTab = btn.dataset.tab;
+                    document.getElementById('login-error').style.display = 'none';
+                    document.getElementById('login-password').value = '';
 
-            const item = {
-                baslik, icerik: normalized['icerik'] || normalized['içerik'] || '',
-                kategori: (normalized['kategori'] || '').toLowerCase(),
-                tarih: normalized['tarih'] || '',
-                catInfo: CATEGORY_MAP[(normalized['kategori'] || '').toLowerCase()] || DEFAULT_CATEGORY,
-                mediaUrl, mediaType
-            };
+                    if ((targetTab === 'tab-kurulum' || targetTab === 'tab-ayarlar') && savedPassword && !isAuthenticated) {
+                        loginOverlay.dataset.targetTab = targetTab;
+                        loginOverlay.style.display = 'flex';
+                    } else {
+                        switchTab(targetTab);
+                    }
+                });
+            });
 
-            const bant = (normalized['bant'] || 'hayir').toLowerCase();
-            if (bant === 'evet' || bant === 'e' || bant === 'yes') tickerItems.push(item);
-            slides.push(item);
-        });
+            // Login Logic
+            document.getElementById('login-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const enteredPwd = document.getElementById('login-password').value;
+                if (enteredPwd === savedPassword) {
+                    isAuthenticated = true;
+                    loginOverlay.style.display = 'none';
+                    const targetTab = loginOverlay.dataset.targetTab || 'tab-kurulum';
+                    switchTab(targetTab);
+                    
+                    const existingSheet = localStorage.getItem('kiosk_sheet_id');
+                    if (existingSheet && targetTab === 'tab-kurulum') document.getElementById('sheet-id').value = existingSheet;
+                } else {
+                    document.getElementById('login-error').style.display = 'block';
+                }
+            });
 
-        if (els.loadingSlide) els.loadingSlide.style.display = 'none';
-        if (slides.length === 0) { showError('Gösterilecek aktif duyuru bulunamadı.'); return; }
+            document.getElementById('btn-login-cancel').addEventListener('click', function() {
+                loginOverlay.style.display = 'none';
+                const currentlyActive = document.querySelector('.tab-content.active');
+                if (!currentlyActive) switchTab('tab-icerik');
+            });
 
-        renderSlides();
-        renderDots();
-        renderTicker();
-        startSlideshow();
-    }
+            // --- MEVCUT İÇERİKLERİ ÇEKME VE LİSTELEME ---
+            function fetchExistingContents() {
+                const sheetId = localStorage.getItem('kiosk_sheet_id');
+                if (!sheetId) return;
+
+                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:loadContentsCallback&sheet=DUYURULAR`;
+                const scriptId = 'jsonp-load-contents';
+                
+                let oldScript = document.getElementById(scriptId);
+                if (oldScript) oldScript.remove();
+
+                window.loadContentsCallback = function(json) {
+                    try {
+                        renderContentList(json.table.rows);
+                    } catch(e) {
+                        console.error("İçerik çekilemedi", e);
+                    }
+                    delete window.loadContentsCallback;
+                };
+
+                const script = document.createElement('script');
+                script.id = scriptId;
+                script.src = url;
+                document.body.appendChild(script);
+            }
+
+            function renderContentList(rows) {
+                const container = document.getElementById('content-list-container');
+                if (!container) return;
+                
+                container.innerHTML = `
+                    <div style="border-bottom:1px solid var(--glass-border); padding-bottom:12px; margin-bottom:16px;">
+                        <h3 style="font-size:16px; color:var(--text-primary); margin-bottom:4px;">Yayın Akışı Yönetimi</h3>
+                        <p style="font-size:12px; color:var(--text-secondary);">Dikkat dağınıklığını önlemek için ekranda maksimum <b>${MAX_VISIBLE_ITEMS} aktif içerik</b> gösterilir. Sıralamayı ▲ ▼ butonlarıyla düzenleyebilirsiniz.</p>
+                    </div>
+                `;
+                
+                if (!rows || rows.length === 0) {
+                    container.innerHTML += '<p style="color: var(--text-secondary); font-size: 14px;">Tabloda henüz yayınlanmış içerik bulunmuyor.</p>';
+                    return;
+                }
+
+                let activeCount = 0; // Sadece aktif olanları sayacağız
+
+                rows.forEach((row, index) => {
+                    const rowIndex = index + 2; 
+                    const baslik = row.c[0] ? (row.c[0].v || '') : '';
+                    const kategori = row.c[2] ? (row.c[2].v || 'duyuru') : 'duyuru';
+                    const aktif = row.c[4] ? (row.c[4].v || 'EVET') : 'EVET';
+                    
+                    const isAktif = aktif.toString().toUpperCase() === 'EVET';
+                    let statusHtml = '';
+                    let itemOpacity = '1';
+
+                    // GÖRÜNÜRLÜK SINIRI MANTIĞI
+                    if (isAktif) {
+                        activeCount++;
+                        if (activeCount <= MAX_VISIBLE_ITEMS) {
+                            statusHtml = '<span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">📺 YAYINDA</span>';
+                        } else {
+                            // 7'den sonrakiler aktif olsa bile sırada bekler
+                            statusHtml = '<span class="badge" style="background: rgba(245, 158, 11, 0.1); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3);">📁 SIRADA (YEDEK)</span>';
+                            itemOpacity = '0.6'; // Soluklaştır
+                        }
+                    } else {
+                        // Tamamen kapalı
+                        statusHtml = '<span class="badge" style="background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3);">❌ KAPALI</span>';
+                        itemOpacity = '0.4'; // Çok soluklaştır
+                    }
+
+                    const isFirst = (index === 0);
+                    const isLast = (index === rows.length - 1);
+
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'content-item';
+                    itemDiv.style.opacity = itemOpacity;
+                    
+                    itemDiv.innerHTML = `
+                        <div class="content-item-info">
+                            <h4>
+                                ${statusHtml}
+                                ${baslik || '(Başlıksız)'} 
+                                <span class="badge category-badge">${kategori}</span>
+                            </h4>
+                        </div>
+                        <div class="content-item-actions">
+                            <button type="button" class="btn-icon move move-up" data-index="${rowIndex}" title="Yukarı Taşı" ${isFirst ? 'disabled' : ''}>▲</button>
+                            <button type="button" class="btn-icon move move-down" data-index="${rowIndex}" title="Aşağı Taşı" ${isLast ? 'disabled' : ''}>▼</button>
+                            <button type="button" class="btn-icon edit" data-index="${rowIndex}">Düzenle</button>
+                            <button type="button" class="btn-icon delete" data-index="${rowIndex}">Sil</button>
+                        </div>
+                    `;
+                    
+                    itemDiv.querySelector('.edit').addEventListener('click', () => startEditing(rowIndex, row));
+                    itemDiv.querySelector('.delete').addEventListener('click', () => deleteItem(rowIndex));
+                    
+                    itemDiv.querySelector('.move-up').addEventListener('click', (e) => {
+                        if (!e.target.disabled) moveItem(rowIndex, 'up');
+                    });
+                    
+                    itemDiv.querySelector('.move-down').addEventListener('click', (e) => {
+                        if (!e.target.disabled) moveItem(rowIndex, 'down');
+                    });
+
+                    container.appendChild(itemDiv);
+                });
+            }
+
+            // --- İÇERİK SIRALAMA (TAŞIMA) MANTIĞI ---
+            async function moveItem(rowIndex, direction) {
+                const scriptUrl = localStorage.getItem('kiosk_script_url');
+                const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
+                const overlay = document.getElementById('loading-overlay');
+                
+                overlay.style.display = 'flex';
+                document.getElementById('loading-text').textContent = 'Sıralama güncelleniyor...';
+
+                try {
+                    const response = await fetch(scriptUrl, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            sheetId: cleanSheetId,
+                            action: 'moveContent',
+                            rowIndex: rowIndex,
+                            direction: direction
+                        })
+                    });
+                    const data = await response.json();
+                    if(data.status === 'error') throw new Error(data.message);
+                    
+                    fetchExistingContents(); // Listeyi yenile
+                    overlay.style.display = 'none';
+
+                } catch(e) {
+                    overlay.style.display = 'none';
+                    alert('Sıralama işlemi başarısız: ' + e.message);
+                }
+            }
+
+            // --- İÇERİK DÜZENLEME MANTIĞI ---
+            function startEditing(rowIndex, row) {
+                currentEditRowIndex = rowIndex;
+                document.getElementById('form-title').textContent = `İÇERİĞİ DÜZENLE`;
+                document.getElementById('form-title').style.color = 'var(--accent-purple)';
+                document.getElementById('btn-submit-content').innerHTML = '💾 Değişiklikleri Kaydet';
+                document.getElementById('btn-cancel-edit').style.display = 'block';
+
+                document.getElementById('c-baslik').value = row.c[0] ? (row.c[0].v || '') : '';
+                document.getElementById('c-icerik').value = row.c[1] ? (row.c[1].v || '') : '';
+                document.getElementById('c-kategori').value = (row.c[2] ? (row.c[2].v || 'duyuru') : 'duyuru').toString().toLowerCase();
+                document.getElementById('c-tarih').value = ''; 
+                document.getElementById('c-aktif').value = (row.c[4] ? (row.c[4].v || 'EVET') : 'EVET').toString().toUpperCase();
+                document.getElementById('c-bant').value = (row.c[5] ? (row.c[5].v || 'HAYIR') : 'HAYIR').toString().toUpperCase();
+                document.getElementById('c-gorsel-url').value = row.c[6] ? (row.c[6].v || '') : '';
+                document.getElementById('c-video-url').value = row.c[7] ? (row.c[7].v || '') : '';
+
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            }
+
+            document.getElementById('btn-cancel-edit').addEventListener('click', cancelEditing);
+
+            function cancelEditing() {
+                currentEditRowIndex = null;
+                document.getElementById('form-title').textContent = 'YENİ İÇERİK EKLE';
+                document.getElementById('form-title').style.color = 'var(--accent-blue)';
+                document.getElementById('btn-submit-content').innerHTML = '🚀 İçeriği Tabloya Ekle';
+                document.getElementById('btn-cancel-edit').style.display = 'none';
+                document.getElementById('content-form').reset();
+            }
+
+            // --- İÇERİK SİLME MANTIĞI ---
+            async function deleteItem(rowIndex) {
+                if(!confirm('Bu içeriği tamamen silmek istediğinize emin misiniz?')) return;
+                
+                const scriptUrl = localStorage.getItem('kiosk_script_url');
+                const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
+                const overlay = document.getElementById('loading-overlay');
+                
+                overlay.style.display = 'flex';
+                document.getElementById('loading-text').textContent = 'İçerik tablodan siliniyor...';
+
+                try {
+                    const response = await fetch(scriptUrl, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            sheetId: cleanSheetId,
+                            action: 'deleteContent',
+                            rowIndex: rowIndex
+                        })
+                    });
+                    const data = await response.json();
+                    if(data.status === 'error') throw new Error(data.message);
+                    
+                    fetchExistingContents(); 
+                    overlay.style.display = 'none';
+                    
+                    if(currentEditRowIndex === rowIndex) cancelEditing(); 
+
+                } catch(e) {
+                    overlay.style.display = 'none';
+                    alert('Silme işlemi başarısız: ' + e.message);
+                }
+            }
+
+
+            // --- Sihirli Kurulum Motoru ---
+            function runMagicSetup(sheetInput, isSilentLoad) {
+                let cleanSheetId = sheetInput;
+                if (cleanSheetId.includes('docs.google.com/spreadsheets/d/')) {
+                    const match = cleanSheetId.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                    if (match) cleanSheetId = match[1];
+                }
+
+                const setupLoading = document.getElementById('setup-loading');
+                const btn = document.getElementById('btn-save');
+                
+                if(!isSilentLoad) setupLoading.style.display = 'flex';
+                if(btn) btn.disabled = true;
+
+                const url = `https://docs.google.com/spreadsheets/d/${cleanSheetId}/gviz/tq?tqx=out:json;responseHandler:magicSetupCallback&sheet=AYARLAR&headers=0`;
+                const scriptId = 'jsonp-magic-setup';
+                
+                let oldScript = document.getElementById(scriptId);
+                if (oldScript) oldScript.remove();
+
+                window.magicSetupCallback = function(json) {
+                    try {
+                        const rows = json.table.rows;
+                        let settings = {};
+
+                        rows.forEach(row => {
+                            if (row.c && row.c.length >= 2) {
+                                let c0 = row.c[0];
+                                let c1 = row.c[1];
+                                let rawKey = c0 ? (c0.f || c0.v || '').toString() : '';
+                                let val = c1 ? (c1.f || c1.v || '').toString().trim() : '';
+                                let cleanKey = rawKey.replace(/\s+/g, '').toLowerCase();
+                                if(cleanKey) settings[cleanKey] = val;
+                            }
+                        });
+
+                        localStorage.setItem('kiosk_sheet_id', cleanSheetId);
+                        localStorage.removeItem('kiosk_demo_mode');
+
+                        let scriptFound = false;
+
+                        for (let key in settings) {
+                            let val = settings[key];
+                            if (key.includes('scripturl') || key.includes('appscript')) {
+                                localStorage.setItem('kiosk_script_url', val);
+                                scriptFound = true;
+                            } else if (key.includes('okuladi') || key.includes('okuladı')) {
+                                localStorage.setItem('kiosk_school_name', val);
+                            } else if (key.includes('sifre') || key.includes('şifre')) {
+                                localStorage.setItem('kiosk_admin_password', val);
+                                savedPassword = val;
+                            } else if (key.includes('logourl')) {
+                                localStorage.setItem('kiosk_school_logo', val);
+                            } else if (key.includes('sehir') || key.includes('şehir')) {
+                                localStorage.setItem('kiosk_weather_city', val);
+                            } else if (key.includes('enlem')) {
+                                localStorage.setItem('kiosk_weather_lat', val.replace(',', '.'));
+                            } else if (key.includes('boylam')) {
+                                localStorage.setItem('kiosk_weather_lon', val.replace(',', '.'));
+                            }
+                        }
+
+                        if(!isSilentLoad) {
+                            setupLoading.style.display = 'none';
+                            if (!scriptFound) alert("BAŞARILI! Ancak tablonuzda 'ScriptURL' satırı bulunamadığı için sadece ayarlar çekilebildi. İçerik ekleyebilmek için lütfen tablonuza ScriptURL değerini giriniz.");
+                            else document.getElementById('success-msg').style.display = 'block';
+                            btn.textContent = '✅ Ayarlar Kaydedildi!';
+                            setTimeout(() => { switchTab('tab-icerik'); }, 1500);
+                        } else {
+                            switchTab('tab-icerik');
+                            if (window.history && window.history.replaceState && window.location.search.includes('id=')) {
+                                const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                                window.history.replaceState({}, document.title, cleanUrl);
+                            }
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        if(!isSilentLoad) {
+                            alert("Hata! Tablonuzda 'AYARLAR' sekmesi bulunamadı veya veriler okunamadı.");
+                            setupLoading.style.display = 'none';
+                        }
+                    }
+                    if(btn) btn.disabled = false;
+                    delete window.magicSetupCallback;
+                };
+
+                const script = document.createElement('script');
+                script.id = scriptId;
+                script.src = url;
+                script.onerror = function() {
+                    if(!isSilentLoad) {
+                        alert("Google Sheets'e bağlanılamadı. Linkin erişime açık olduğundan emin olun.");
+                        setupLoading.style.display = 'none';
+                        if(btn) btn.disabled = false;
+                    }
+                };
+                document.body.appendChild(script);
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const magicId = urlParams.get('id');
+            const localSheetId = localStorage.getItem('kiosk_sheet_id');
+
+            if (magicId) {
+                document.getElementById('sheet-id').value = magicId;
+                runMagicSetup(magicId, true);
+            } else if (localSheetId) {
+                document.getElementById('sheet-id').value = localSheetId;
+                switchTab('tab-icerik');
+                runMagicSetup(localSheetId, true); 
+            } else {
+                switchTab('tab-kurulum');
+            }
+
+            document.getElementById('setup-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const sheetInput = document.getElementById('sheet-id').value.trim();
+                if (!sheetInput) return;
+                runMagicSetup(sheetInput, false);
+            });
+
+            document.getElementById('btn-demo').addEventListener('click', function() { window.location.href = 'index.html'; });
+
+            document.getElementById('btn-reset').addEventListener('click', function() {
+                if (confirm('Tüm cihaz ayarları sıfırlansın mı?')) {
+                    localStorage.clear();
+                    window.location.reload();
+                }
+            });
+
+            // Settings Save
+            const settingsForm = document.getElementById('settings-form');
+            if (settingsForm) {
+                settingsForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    if (!confirm("Dikkat! Bu işlem Google Sheet tablonuzdaki ayarları tamamen değiştirecektir. Onaylıyor musunuz?")) return;
+
+                    const currentScriptUrl = localStorage.getItem('kiosk_script_url');
+                    const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
+                    
+                    if (!currentScriptUrl || !cleanSheetId) {
+                        alert('Ayarları değiştirebilmek için sistemin AppScript ağına daha önce bağlanmış olması gerekir.');
+                        return;
+                    }
+
+                    const btnSubmit = document.getElementById('btn-submit-settings');
+                    const overlay = document.getElementById('settings-loading-overlay');
+                    const errorMsg = document.getElementById('settings-error-msg');
+                    const successMsg = document.getElementById('settings-success-msg');
+                    
+                    errorMsg.style.display = 'none';
+                    successMsg.style.display = 'none';
+                    overlay.style.display = 'flex';
+                    btnSubmit.disabled = true;
+
+                    try {
+                        const newSettings = {
+                            OkulAdi: document.getElementById('s-okuladi').value.trim(),
+                            Sifre: document.getElementById('s-sifre').value.trim(),
+                            ScriptURL: document.getElementById('s-scripturl').value.trim(),
+                            Sehir: document.getElementById('s-sehir').value.trim(),
+                            Enlem: document.getElementById('s-enlem').value.trim(),
+                            Boylam: document.getElementById('s-boylam').value.trim(),
+                            LogoURL: document.getElementById('s-logourl').value.trim()
+                        };
+
+                        const payload = { sheetId: cleanSheetId, action: 'updateSettings', settings: newSettings };
+
+                        const fetchPromise = fetch(currentScriptUrl, { method: 'POST', body: JSON.stringify(payload) });
+                        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('İstek zaman aşımına uğradı.')), 15000));
+                        
+                        const response = await Promise.race([fetchPromise, timeoutPromise]);
+                        const data = await response.json();
+                        
+                        if (data.status === 'error') throw new Error(data.message);
+                        
+                        localStorage.setItem('kiosk_school_name', newSettings.OkulAdi);
+                        localStorage.setItem('kiosk_admin_password', newSettings.Sifre);
+                        savedPassword = newSettings.Sifre;
+                        localStorage.setItem('kiosk_script_url', newSettings.ScriptURL);
+                        localStorage.setItem('kiosk_weather_city', newSettings.Sehir);
+                        localStorage.setItem('kiosk_weather_lat', newSettings.Enlem);
+                        localStorage.setItem('kiosk_weather_lon', newSettings.Boylam);
+                        localStorage.setItem('kiosk_school_logo', newSettings.LogoURL);
+
+                        overlay.style.display = 'none';
+                        btnSubmit.disabled = false;
+                        successMsg.style.display = 'block';
+                        setTimeout(() => { successMsg.style.display = 'none'; }, 6000);
+
+                    } catch(error) {
+                        overlay.style.display = 'none';
+                        btnSubmit.disabled = false;
+                        errorMsg.textContent = 'Hata: ' + error.message;
+                        errorMsg.style.display = 'block';
+                    }
+                });
+            }
+
+            // --- YENİ & DÜZENLENMİŞ İÇERİK EKLEME/GÜNCELLEME FORMU ---
+            const contentForm = document.getElementById('content-form');
+            if (contentForm) {
+                contentForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const scriptUrl = localStorage.getItem('kiosk_script_url');
+                    const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
+                    
+                    if (!scriptUrl || scriptUrl === 'undefined' || scriptUrl === '') {
+                        alert('HATA: Ayarlarda "App Script URL" eksik! Lütfen Sistem Ayarları sekmesinden Script URL\'nizi girin.');
+                        return;
+                    }
+                    if (!cleanSheetId) {
+                        alert('Lütfen önce Kurulum sekmesinden bağlantı yapın.');
+                        return;
+                    }
+                    
+                    const btnSubmit = document.getElementById('btn-submit-content');
+                    const overlay = document.getElementById('loading-overlay');
+                    const errorMsg = document.getElementById('content-error-msg');
+                    const successMsg = document.getElementById('content-success-msg');
+                    
+                    errorMsg.style.display = 'none';
+                    successMsg.style.display = 'none';
+                    overlay.style.display = 'flex';
+                    btnSubmit.disabled = true;
+                    
+                    try {
+                        const itemData = {
+                            baslik: document.getElementById('c-baslik').value.trim(),
+                            icerik: document.getElementById('c-icerik').value.trim(),
+                            kategori: document.getElementById('c-kategori').value,
+                            tarih: document.getElementById('c-tarih').value,
+                            aktif: document.getElementById('c-aktif').value,
+                            bant: document.getElementById('c-bant').value,
+                            gorsel: document.getElementById('c-gorsel-url').value.trim(),
+                            video: document.getElementById('c-video-url').value.trim()
+                        };
+                        
+                        const actionType = currentEditRowIndex ? 'editContent' : 'addContent';
+                        const payload = { sheetId: cleanSheetId, action: actionType, item: itemData };
+                        
+                        if(currentEditRowIndex) payload.rowIndex = currentEditRowIndex;
+                        
+                        const fileInput = document.getElementById('c-file');
+                        if (fileInput.files.length > 0) {
+                            const file = fileInput.files[0];
+                            const reader = new FileReader();
+                            
+                            const filePromise = new Promise((resolve, reject) => {
+                                reader.onload = (ev) => resolve(ev.target.result);
+                                reader.onerror = (err) => reject(err);
+                                reader.readAsDataURL(file);
+                            });
+                            
+                            const base64Data = await filePromise;
+                            payload.file = { name: file.name, mimeType: file.type, content: base64Data };
+                            document.getElementById('loading-text').textContent = 'Dosya Drive\'a yükleniyor, lütfen bekleyin...';
+                        } else {
+                            document.getElementById('loading-text').textContent = currentEditRowIndex ? 'Değişiklikler kaydediliyor...' : 'Duyuru tabloya kaydediliyor...';
+                        }
+                        
+                        const fetchPromise = fetch(scriptUrl, { method: 'POST', body: JSON.stringify(payload) });
+                        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('İstek zaman aşımına uğradı.')), 30000));
+                        
+                        const response = await Promise.race([fetchPromise, timeoutPromise]);
+                        const data = await response.json();
+                        
+                        if (data.status === 'error') throw new Error(data.message);
+                        
+                        overlay.style.display = 'none';
+                        btnSubmit.disabled = false;
+                        
+                        cancelEditing();
+                        fetchExistingContents();
+                        
+                        successMsg.style.display = 'block';
+                        setTimeout(() => { successMsg.style.display = 'none'; }, 5000);
+                        
+                    } catch (error) {
+                        overlay.style.display = 'none';
+                        btnSubmit.disabled = false;
+                        errorMsg.textContent = 'Hata: ' + error.message;
+                        errorMsg.style.display = 'block';
+                    }
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
