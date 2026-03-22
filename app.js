@@ -482,6 +482,8 @@
 
         slides = []; tickerItems = [];
         rows.forEach(row => {
+            if (slides.length >= 7) return; 
+
             const normalized = {};
             Object.keys(row).forEach(key => { normalized[(key || '').trim().toLowerCase()] = (row[key] || '').toString().trim(); });
 
