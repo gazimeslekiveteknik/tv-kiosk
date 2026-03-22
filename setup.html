@@ -83,7 +83,6 @@
         .login-card h2 { margin-bottom: 12px; font-size: 24px; }
         .login-error { color: #ef4444; font-size: 14px; margin-top: 12px; display: none; }
 
-        /* YENİ: İÇERİK LİSTESİ TASARIMI */
         .content-list-section { margin-top: 40px; border-top: 1px solid var(--glass-border); padding-top: 24px; }
         .content-list-title { font-size: 16px; font-weight: 700; color: white; margin-bottom: 16px; display:flex; align-items:center; justify-content:space-between;}
         .content-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 12px 16px; border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05); }
@@ -289,7 +288,6 @@
     </div>
 
     <script>
-        // Global veri hafızası
         window.currentContentsData = {};
 
         let isAuthenticated = false;
@@ -359,7 +357,6 @@
             if (!currentlyActive) { switchTab('tab-icerik'); }
         });
 
-        // Sihirli Kurulum Motoru
         function runMagicSetup(sheetInput, isSilentLoad) {
             let cleanSheetId = sheetInput;
             if (cleanSheetId.includes('docs.google.com/spreadsheets/d/')) {
@@ -513,37 +510,65 @@
             });
         }
 
-        // İÇERİK LİSTELEME
-        function fetchContentList() {
+        // AKILLI VE GÜVENLİ İÇERİK LİSTESİ ÇEKME
+        window.fetchContentList = function() {
             const sheetId = localStorage.getItem('kiosk_sheet_id');
             const listContainer = document.getElementById('content-list-container');
-            if (!sheetId) { listContainer.innerHTML = '<p style="color:#ef4444; font-size:13px;">Önce Google Sheet bağlantısı kurmalısınız.</p>'; return; }
+            if (!sheetId) { listContainer.innerHTML = '<p style="color:#ef4444; font-size:13px; text-align:center;">Önce Google Sheet bağlantısı kurmalısınız.</p>'; return; }
 
-            listContainer.innerHTML = '<p style="text-align:center; color:#64748b; font-size:14px;">İçerikler yükleniyor...</p>';
+            listContainer.innerHTML = '<div style="text-align:center;"><div class="spinner" style="width:24px;height:24px;border-width:3px;margin:0 auto 8px;"></div><p style="color:#64748b; font-size:14px;">İçerikler yükleniyor...</p></div>';
             
-            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:fetchContentsList&sheet=DUYURULAR`;
-            const scriptId = 'jsonp-fetch-list';
-            let oldScript = document.getElementById(scriptId);
-            if (oldScript) oldScript.remove();
+            // Cache Buster (Önbellek Kırıcı) ve Unique Callback ile sayfayı yenilemeye gerek kalmaz
+            const cbName = 'fetchListCB_' + Date.now();
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:${cbName}&sheet=DUYURULAR&headers=1&_cb=${Date.now()}`;
+            
+            let fetchTimeout = setTimeout(() => {
+                if (window[cbName]) {
+                    listContainer.innerHTML = '<p style="color:#ef4444; font-size:14px; text-align:center;">Bağlantı zaman aşımına uğradı. <button type="button" onclick="fetchContentList()" class="refresh-btn">Tekrar Dene</button></p>';
+                    delete window[cbName];
+                }
+            }, 8000);
 
-            window.fetchContentsList = function(json) {
+            window[cbName] = function(json) {
+                clearTimeout(fetchTimeout);
                 try {
+                    if (!json || !json.table || !json.table.rows) {
+                        listContainer.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:14px;">Tablonuzda henüz hiç duyuru yok veya okunamadı.</p>';
+                        return;
+                    }
                     const rows = json.table.rows;
                     let html = '';
-                    window.currentContentsData = {}; // Hafızayı sıfırla
+                    window.currentContentsData = {}; 
 
-                    // Satırlar indeks + 2 olarak hesaplanır (1 Başlık satırı, 0 indexli array)
                     rows.forEach((row, index) => {
-                        if (row.c && row.c[0] && row.c[0].v) {
-                            let rowIndex = index + 2; 
+                        // Eğer hücre tamamen boş değilse
+                        if (row && row.c && row.c[0] && row.c[0].v !== null && row.c[0].v !== '') {
+                            let rowIndex = index + 2; // header=1 ayarlandığı için index 0 aslında tablodaki 2. satırdır
+                            
                             let baslik = (row.c[0].v || '').toString();
-                            let icerik = row.c[1] ? (row.c[1].v || '').toString() : '';
-                            let kategori = row.c[2] ? (row.c[2].v || '').toString() : 'duyuru';
-                            let tarih = row.c[3] ? (row.c[3].f || row.c[3].v || '').toString() : '';
-                            let aktif = row.c[4] ? (row.c[4].v || '').toString().toUpperCase() : 'EVET';
-                            let bant = row.c[5] ? (row.c[5].v || '').toString() : 'HAYIR';
-                            let gorsel = row.c[6] ? (row.c[6].v || '').toString() : '';
-                            let video = row.c[7] ? (row.c[7].v || '').toString() : '';
+                            let icerik = (row.c[1] && row.c[1].v) ? row.c[1].v.toString() : '';
+                            let kategori = (row.c[2] && row.c[2].v) ? row.c[2].v.toString() : 'duyuru';
+                            
+                            // Tarih Formatı Düzeltme (Date nesnesini algılama)
+                            let tarih = '';
+                            if (row.c[3]) {
+                                if (row.c[3].v && typeof row.c[3].v === 'string' && row.c[3].v.startsWith('Date(')) {
+                                    let match = row.c[3].v.match(/Date\((\d+),\s*(\d+),\s*(\d+)\)/);
+                                    if (match) {
+                                        let y = match[1];
+                                        let m = String(parseInt(match[2]) + 1).padStart(2, '0');
+                                        let d = String(match[3]).padStart(2, '0');
+                                        tarih = `${y}-${m}-${d}`;
+                                    }
+                                } else {
+                                    tarih = (row.c[3].f || row.c[3].v || '').toString();
+                                }
+                            }
+                            
+                            let aktif = (row.c[4] && row.c[4].v) ? row.c[4].v.toString().toUpperCase() : 'EVET';
+                            let bant = (row.c[5] && row.c[5].v) ? row.c[5].v.toString().toUpperCase() : 'HAYIR';
+                            let gorsel = (row.c[6] && row.c[6].v) ? row.c[6].v.toString() : '';
+                            let video = (row.c[7] && row.c[7].v) ? row.c[7].v.toString() : '';
 
                             window.currentContentsData[rowIndex] = { baslik, icerik, kategori, tarih, aktif, bant, gorsel, video };
 
@@ -563,16 +588,21 @@
                     });
                     listContainer.innerHTML = html || '<p style="text-align:center; color:#94a3b8; font-size:14px;">Henüz eklenmiş bir içerik yok.</p>';
                 } catch(e) {
-                    listContainer.innerHTML = '<p style="color:#ef4444; font-size:13px;">İçerikler okunamadı.</p>';
+                    console.error(e);
+                    listContainer.innerHTML = '<p style="color:#ef4444; font-size:13px; text-align:center;">İçerikler okunamadı. Lütfen tabloyu kontrol edin.</p>';
                 }
-                delete window.fetchContentsList;
+                delete window[cbName];
             };
 
             const script = document.createElement('script');
-            script.id = scriptId;
             script.src = url;
+            script.onerror = function() {
+                clearTimeout(fetchTimeout);
+                listContainer.innerHTML = '<p style="color:#ef4444; font-size:13px; text-align:center;">Google Sheets ile bağlantı kurulamadı.</p>';
+                delete window[cbName];
+            }
             document.body.appendChild(script);
-        }
+        };
 
         // İÇERİK DÜZENLEME BAŞLATMA
         window.startEdit = function(rowIndex) {
@@ -593,7 +623,6 @@
             document.getElementById('btn-submit-content').classList.add('btn-warning');
             document.getElementById('btn-cancel-edit').style.display = 'block';
 
-            // Yukarı Kaydır
             document.getElementById('content-form').scrollIntoView({ behavior: 'smooth' });
         };
 
@@ -632,8 +661,8 @@
                 if (data.status === 'error') throw new Error(data.message);
                 
                 overlay.style.display = 'none';
-                fetchContentList(); // Listeyi yenile
-                cancelEdit(); // Form düzenleme modundaysa iptal et
+                window.fetchContentList(); 
+                window.cancelEdit(); 
 
             } catch (error) {
                 overlay.style.display = 'none';
@@ -703,8 +732,8 @@
                     
                     overlay.style.display = 'none'; btnSubmit.disabled = false;
                     
-                    cancelEdit(); // Formu tamamen sıfırlar ve butonları eski haline çevirir
-                    fetchContentList(); // Listeyi otomatik yenile
+                    window.cancelEdit(); 
+                    window.fetchContentList(); 
                     
                     successMsg.style.display = 'block';
                     setTimeout(() => { successMsg.style.display = 'none'; }, 5000);
