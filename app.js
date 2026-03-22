@@ -318,7 +318,7 @@
         if (!sheetId) { showSetupPrompt(); return; }
 
         if (schoolName) {
-            els.schoolName.textContent = schoolName;
+            els.schoolName.textContent = schoolName + ' Bilgi Ekranı';
             document.title = schoolName + ' — Bilgi Ekranı';
         }
 
@@ -482,8 +482,6 @@
 
         slides = []; tickerItems = [];
         rows.forEach(row => {
-            if (slides.length >= 7) return; 
-
             const normalized = {};
             Object.keys(row).forEach(key => { normalized[(key || '').trim().toLowerCase()] = (row[key] || '').toString().trim(); });
 
@@ -618,7 +616,6 @@
 
     function startSlideshow() {
         if (slides.length === 0) return;
-        scheduleNextPreview();
         playCurrentSlide();
     }
 
@@ -635,6 +632,7 @@
         } else {
             startProgress(CONFIG.SLIDE_INTERVAL);
             currentSlideTimeout = setTimeout(nextSlide, CONFIG.SLIDE_INTERVAL);
+            scheduleNextPreview();
         }
     }
 
@@ -756,7 +754,6 @@
         }
 
         if (els.slideCounter) els.slideCounter.innerHTML = `<span class="current">${currentSlideIndex + 1}</span> / ${slides.length}`;
-        scheduleNextPreview();
         playCurrentSlide();
     }
 
@@ -798,7 +795,9 @@
         if (nextPreviewTimer) clearTimeout(nextPreviewTimer);
         if (slides.length <= 1 || !els.nextPreview) return;
 
-        if (slides[currentSlideIndex].mediaType !== 'image' && slides[currentSlideIndex].mediaUrl === '') return;
+        const currentItem = slides[currentSlideIndex];
+        // Video/YouTube slaytlarında süre dinamik olduğu için preview gösterme
+        if (currentItem.mediaType === 'youtube' || currentItem.mediaType === 'video') return;
 
         nextPreviewTimer = setTimeout(() => {
             els.nextPreviewTitle.textContent = slides[(currentSlideIndex + 1) % slides.length].baslik;
