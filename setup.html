@@ -104,13 +104,19 @@
         .btn-reset:hover { transform: translateY(-2px); background: rgba(239, 68, 68, 0.25); }
         
         /* Listeleme ve Düzenleme CSS */
-        .content-list { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--glass-border); }
-        .content-item { background: rgba(0, 0, 0, 0.2); padding: 16px; border-radius: var(--radius-sm); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.2s; }
+        .content-list { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 12px; }
+        .content-item { background: rgba(0, 0, 0, 0.2); padding: 16px; border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.2s; }
         .content-item:hover { background: rgba(255, 255, 255, 0.05); border-color: var(--glass-border); }
         .content-item-info h4 { margin-bottom: 4px; color: var(--text-primary); font-size: 15px; display: flex; align-items: center; gap: 8px; }
         .content-item-info p { font-size: 13px; color: var(--text-secondary); }
-        .content-item-actions { display: flex; gap: 8px; }
-        .btn-icon { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+        .content-item-actions { display: flex; gap: 6px; }
+        .btn-icon { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        
+        /* Taşıma (Sıralama) Butonları */
+        .btn-icon.move { background: rgba(245, 158, 11, 0.15); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); padding: 8px; font-size: 14px; }
+        .btn-icon.move:hover:not(:disabled) { background: rgba(245, 158, 11, 0.3); }
+        .btn-icon.move:disabled { opacity: 0.3; cursor: not-allowed; background: transparent; border-color: rgba(255,255,255,0.1); color: #94a3b8; }
+        
         .btn-icon.edit { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
         .btn-icon.edit:hover { background: rgba(59, 130, 246, 0.4); }
         .btn-icon.delete { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
@@ -360,7 +366,7 @@
         (function() {
             let isAuthenticated = false;
             let savedPassword = localStorage.getItem('kiosk_admin_password');
-            let currentEditRowIndex = null; // Düzenleme işlemi için satır numarasını tutar
+            let currentEditRowIndex = null; 
             
             const loginOverlay = document.getElementById('login-overlay');
             const tabBtns = document.querySelectorAll('.tab-btn');
@@ -375,12 +381,10 @@
                 if (btn) btn.classList.add('active');
                 if (content) content.classList.add('active');
 
-                // İçerik Yönetimi Sekmesi Seçildiğinde Listeyi Çek
                 if(tabId === 'tab-icerik') {
                     fetchExistingContents();
                 }
 
-                // Eğer Ayarlar sekmesine geçiliyorsa inputları doldur
                 if(tabId === 'tab-ayarlar') {
                     document.getElementById('s-okuladi').value = localStorage.getItem('kiosk_school_name') || '';
                     document.getElementById('s-sifre').value = localStorage.getItem('kiosk_admin_password') || '';
@@ -468,13 +472,16 @@
                     return;
                 }
 
-                // Google sheets satır indexleri: +1 Başlıklar, +1 Dizi(0) = +2
                 rows.forEach((row, index) => {
                     const rowIndex = index + 2; 
                     const baslik = row.c[0] ? (row.c[0].v || '') : '';
                     const kategori = row.c[2] ? (row.c[2].v || 'duyuru') : 'duyuru';
                     const aktif = row.c[4] ? (row.c[4].v || 'EVET') : 'EVET';
                     const isAktif = aktif.toString().toUpperCase() === 'EVET';
+
+                    // İlk satır ise Yukarı çıkamaz, son satır ise Aşağı inemez.
+                    const isFirst = (index === 0);
+                    const isLast = (index === rows.length - 1);
 
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'content-item';
@@ -485,9 +492,10 @@
                                 ${baslik || '(Başlıksız)'} 
                                 <span class="badge">${kategori}</span>
                             </h4>
-                            <p>Satır No: ${rowIndex}</p>
                         </div>
                         <div class="content-item-actions">
+                            <button type="button" class="btn-icon move move-up" data-index="${rowIndex}" title="Yukarı Taşı" ${isFirst ? 'disabled' : ''}>▲</button>
+                            <button type="button" class="btn-icon move move-down" data-index="${rowIndex}" title="Aşağı Taşı" ${isLast ? 'disabled' : ''}>▼</button>
                             <button type="button" class="btn-icon edit" data-index="${rowIndex}">Düzenle</button>
                             <button type="button" class="btn-icon delete" data-index="${rowIndex}">Sil</button>
                         </div>
@@ -495,32 +503,67 @@
                     
                     itemDiv.querySelector('.edit').addEventListener('click', () => startEditing(rowIndex, row));
                     itemDiv.querySelector('.delete').addEventListener('click', () => deleteItem(rowIndex));
+                    
+                    itemDiv.querySelector('.move-up').addEventListener('click', (e) => {
+                        if (!e.target.disabled) moveItem(rowIndex, 'up');
+                    });
+                    
+                    itemDiv.querySelector('.move-down').addEventListener('click', (e) => {
+                        if (!e.target.disabled) moveItem(rowIndex, 'down');
+                    });
 
                     container.appendChild(itemDiv);
                 });
             }
 
+            // --- İÇERİK SIRALAMA (TAŞIMA) MANTIĞI ---
+            async function moveItem(rowIndex, direction) {
+                const scriptUrl = localStorage.getItem('kiosk_script_url');
+                const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
+                const overlay = document.getElementById('loading-overlay');
+                
+                overlay.style.display = 'flex';
+                document.getElementById('loading-text').textContent = 'Sıralama güncelleniyor...';
+
+                try {
+                    const response = await fetch(scriptUrl, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            sheetId: cleanSheetId,
+                            action: 'moveContent',
+                            rowIndex: rowIndex,
+                            direction: direction
+                        })
+                    });
+                    const data = await response.json();
+                    if(data.status === 'error') throw new Error(data.message);
+                    
+                    fetchExistingContents(); // Listeyi yenile
+                    overlay.style.display = 'none';
+
+                } catch(e) {
+                    overlay.style.display = 'none';
+                    alert('Sıralama işlemi başarısız: ' + e.message);
+                }
+            }
+
             // --- İÇERİK DÜZENLEME MANTIĞI ---
             function startEditing(rowIndex, row) {
                 currentEditRowIndex = rowIndex;
-                document.getElementById('form-title').textContent = `İÇERİĞİ DÜZENLE (Satır: ${rowIndex})`;
+                document.getElementById('form-title').textContent = `İÇERİĞİ DÜZENLE`;
                 document.getElementById('form-title').style.color = 'var(--accent-purple)';
                 document.getElementById('btn-submit-content').innerHTML = '💾 Değişiklikleri Kaydet';
                 document.getElementById('btn-cancel-edit').style.display = 'block';
 
-                // Verileri forma doldur (Google gviz boşlukları null döndürebilir)
                 document.getElementById('c-baslik').value = row.c[0] ? (row.c[0].v || '') : '';
                 document.getElementById('c-icerik').value = row.c[1] ? (row.c[1].v || '') : '';
                 document.getElementById('c-kategori').value = (row.c[2] ? (row.c[2].v || 'duyuru') : 'duyuru').toString().toLowerCase();
-                
-                document.getElementById('c-tarih').value = ''; // Tarih formatı API'den kompleks geldiği için güvenlik amaçlı boş bırakılır
-                
+                document.getElementById('c-tarih').value = ''; 
                 document.getElementById('c-aktif').value = (row.c[4] ? (row.c[4].v || 'EVET') : 'EVET').toString().toUpperCase();
                 document.getElementById('c-bant').value = (row.c[5] ? (row.c[5].v || 'HAYIR') : 'HAYIR').toString().toUpperCase();
                 document.getElementById('c-gorsel-url').value = row.c[6] ? (row.c[6].v || '') : '';
                 document.getElementById('c-video-url').value = row.c[7] ? (row.c[7].v || '') : '';
 
-                // Yumuşak kaydırma
                 window.scrollTo({top: 0, behavior: 'smooth'});
             }
 
@@ -558,10 +601,10 @@
                     const data = await response.json();
                     if(data.status === 'error') throw new Error(data.message);
                     
-                    fetchExistingContents(); // Listeyi yenile
+                    fetchExistingContents(); 
                     overlay.style.display = 'none';
                     
-                    if(currentEditRowIndex === rowIndex) cancelEditing(); // Düzenleneni sildiyse formu sıfırla
+                    if(currentEditRowIndex === rowIndex) cancelEditing(); 
 
                 } catch(e) {
                     overlay.style.display = 'none';
@@ -809,18 +852,10 @@
                             video: document.getElementById('c-video-url').value.trim()
                         };
                         
-                        // Edit mi, Add mi olduğunu belirle
                         const actionType = currentEditRowIndex ? 'editContent' : 'addContent';
+                        const payload = { sheetId: cleanSheetId, action: actionType, item: itemData };
                         
-                        const payload = {
-                            sheetId: cleanSheetId,
-                            action: actionType,
-                            item: itemData
-                        };
-                        
-                        if(currentEditRowIndex) {
-                            payload.rowIndex = currentEditRowIndex;
-                        }
+                        if(currentEditRowIndex) payload.rowIndex = currentEditRowIndex;
                         
                         const fileInput = document.getElementById('c-file');
                         if (fileInput.files.length > 0) {
@@ -851,7 +886,6 @@
                         overlay.style.display = 'none';
                         btnSubmit.disabled = false;
                         
-                        // Formu sıfırla ve listeyi yenile
                         cancelEditing();
                         fetchExistingContents();
                         
