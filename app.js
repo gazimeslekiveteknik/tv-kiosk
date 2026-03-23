@@ -265,16 +265,19 @@
                 let settings = {};
                 rows.forEach(row => {
                     if (row.c && row.c[0] && row.c[1]) {
-                        settings[(row.c[0].v || '').toString().trim()] = (row.c[1].v || '').toString().trim();
+                        let rawKey = (row.c[0].v || '').toString();
+                        let cleanKey = rawKey.replace(/\s+/g, '').toLowerCase();
+                        let val = (row.c[1].v || '').toString().trim();
+                        if (cleanKey) settings[cleanKey] = val;
                     }
                 });
 
-                if (settings['Okul Adı'] || settings['OkulAdi']) localStorage.setItem('kiosk_school_name', settings['Okul Adı'] || settings['OkulAdi']);
-                if (settings['App Script URL'] || settings['ScriptURL']) localStorage.setItem('kiosk_script_url', settings['App Script URL'] || settings['ScriptURL']);
-                if (settings['Logo URL'] || settings['LogoURL']) localStorage.setItem('kiosk_school_logo', settings['Logo URL'] || settings['LogoURL']);
-                if (settings['Yönetici Şifresi'] || settings['Sifre']) localStorage.setItem('kiosk_admin_password', settings['Yönetici Şifresi'] || settings['Sifre']);
+                if (settings['okuladi'] || settings['okuladı']) localStorage.setItem('kiosk_school_name', settings['okuladi'] || settings['okuladı']);
+                if (settings['scripturl'] || settings['appscripturl']) localStorage.setItem('kiosk_script_url', settings['scripturl'] || settings['appscripturl']);
+                if (settings['logourl']) localStorage.setItem('kiosk_school_logo', settings['logourl']);
+                if (settings['sifre'] || settings['yöneticişifresi']) localStorage.setItem('kiosk_admin_password', settings['sifre'] || settings['yöneticişifresi']);
                 
-                let city = settings['Hava Durumu Şehri'] || settings['Sehir'];
+                let city = settings['sehir'] || settings['şehir'] || settings['havadurumușehri'];
                 if (city) {
                     localStorage.setItem('kiosk_weather_city', city);
                     if (CITY_DATA[city]) {
@@ -283,10 +286,10 @@
                     }
                 }
 
-                let enlem = settings['Enlem'];
-                let boylam = settings['Boylam'];
-                if (enlem) localStorage.setItem('kiosk_weather_lat', enlem);
-                if (boylam) localStorage.setItem('kiosk_weather_lon', boylam);
+                let enlem = settings['enlem'];
+                let boylam = settings['boylam'];
+                if (enlem) localStorage.setItem('kiosk_weather_lat', enlem.replace(',', '.'));
+                if (boylam) localStorage.setItem('kiosk_weather_lon', boylam.replace(',', '.'));
             } catch(e) {}
             
             delete window.magicAppCallback;
