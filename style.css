@@ -347,30 +347,6 @@ html, body {
 
 
 
-/*
-/* Logoya 3D Dönme Animasyonu Ekleme (Düzeltilmiş) */
-.school-logo, #school-logo {
-    /* Dönüş hızını 6 saniyeden 12 saniyeye çıkardık (daha yavaş ve akıcı) */
-    animation: spin3D 12s linear infinite;
-    
-    /* GPU hızlandırmasını zorla (TV'nin kasmasını engeller) */
-    will-change: transform;
-    transform-style: preserve-3d;
-}
-
-/* Dönüş hareketinin anahtarları */
-@keyframes spin3D {
-    0% {
-        /* perspective(1000px) ile gerçekçi bir 3D derinlik kattık */
-        transform: perspective(1000px) rotateY(0deg);
-    }
-    100% {
-        transform: perspective(1000px) rotateY(360deg);
-    }
-} 
-
-*/
-
 
 
 /* Logoya Yumuşak Büyüyüp Küçülme (Nefes Alma) Efekti */
