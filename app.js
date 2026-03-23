@@ -515,6 +515,9 @@
             slides.push(item);
         });
 
+        // 7 İçerik Sınırı (Sadece ilk 7 aktif içerik gösterilsin)
+        if (slides.length > 7) slides = slides.slice(0, 7);
+
         if (els.loadingSlide) els.loadingSlide.style.display = 'none';
         if (slides.length === 0) { showError('Gösterilecek aktif duyuru bulunamadı.'); return; }
 
