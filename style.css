@@ -79,10 +79,7 @@ html, body {
 }
 
 .bg-orb {
-    position: absolute;
-    border-radius: 50%;
-    opacity: 0.3; 
-    filter: blur(40px); /* TV Performance limit */
+    display: none !important; /* TV'yi kilitlediği için animasyonlu ağır arka plan iptal edildi */
 }
 
 .bg-orb-1 {
@@ -345,17 +342,13 @@ html, body {
 .next-slide-preview .next-label { font-weight: 800; color: var(--vibrant-blue); text-transform: uppercase; font-size: 13px; }
 .next-slide-preview .next-title { color: var(--text-primary); font-weight: 700; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-
-
-
-
 /* Logoya Yumuşak Büyüyüp Küçülme (Nefes Alma) Efekti */
 .school-logo, #school-logo {
     /* GPU hızlandırmasını koruyoruz, TV kesinlikle kasmaz */
     will-change: transform;
     
-    /* 4 saniyede bir, çok yumuşak bir geçişle (ease-in-out) tekrar et */
-    animation: pulseLogo 8s ease-in-out infinite;
+    /* 8 saniyede bir, çok yumuşak bir geçişle (ease-in-out) tekrar et */
+    animation: pulseLogo 6s ease-in-out infinite;
 }
 
 /* Büyüyüp küçülme hareketinin anahtarları */
