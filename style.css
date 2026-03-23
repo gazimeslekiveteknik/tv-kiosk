@@ -355,7 +355,7 @@ html, body {
     will-change: transform;
     
     /* 4 saniyede bir, çok yumuşak bir geçişle (ease-in-out) tekrar et */
-    animation: pulseLogo 4s ease-in-out infinite;
+    animation: pulseLogo 8s ease-in-out infinite;
 }
 
 /* Büyüyüp küçülme hareketinin anahtarları */
