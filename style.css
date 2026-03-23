@@ -346,24 +346,23 @@ html, body {
 .next-slide-preview .next-title { color: var(--text-primary); font-weight: 700; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 
-/* Logoya 3D Dönme Animasyonu Ekleme */
+/* Logoya 3D Dönme Animasyonu Ekleme (Düzeltilmiş) */
 .school-logo, #school-logo {
-    /* 3D efekti için perspektif katıyoruz */
-    transform-style: preserve-3d;
-    
-    /* Animasyonu 6 saniyede bir sürekli, eşit hızda tekrar et */
-    animation: spin3D 6s linear infinite;
+    /* Dönüş hızını 6 saniyeden 12 saniyeye çıkardık (daha yavaş ve akıcı) */
+    animation: spin3D 12s linear infinite;
     
     /* GPU hızlandırmasını zorla (TV'nin kasmasını engeller) */
     will-change: transform;
+    transform-style: preserve-3d;
 }
 
 /* Dönüş hareketinin anahtarları */
 @keyframes spin3D {
     0% {
-        transform: rotateY(0deg);
+        /* perspective(1000px) ile gerçekçi bir 3D derinlik kattık */
+        transform: perspective(1000px) rotateY(0deg);
     }
     100% {
-        transform: rotateY(360deg);
+        transform: perspective(1000px) rotateY(360deg);
     }
 }
