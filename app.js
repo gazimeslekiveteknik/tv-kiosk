@@ -386,22 +386,25 @@
         return sheetId;
     }
 
-    // --- AKILLI ÇEVRİMDIŞI MOD ---
     function loadFromCache() {
-        // Eğer sistem halihazırda çalışıyorsa, dönmeye devam etsin (Kesinti yaşatma)
         if (slides.length > 0) return;
 
-        const cachedData = localStorage.getItem('cachedAnnouncements');
-        if (cachedData) {
-            try { 
-                const parsedData = JSON.parse(cachedData);
-                console.log("Çevrimdışı Mod: Hafızadaki verilerle başlatılıyor...");
-                processData(parsedData); 
-            } catch (e) { 
-                showError('Önbellek okunamadı. İnternet bekleniyor...'); 
+        let parsedData = null;
+        try {
+            const cachedData = localStorage.getItem('cachedAnnouncements');
+            if (cachedData && cachedData.startsWith('[')) {
+                parsedData = JSON.parse(cachedData);
             }
+        } catch (e) {
+            console.warn("Önbellek bozulmuş veya eski formatta:", e);
+        }
+
+        if (Array.isArray(parsedData) && parsedData.length > 0) {
+            console.log("Çevrimdışı Mod: Hafızadaki verilerle başlatılıyor...");
+            processData(parsedData); 
         } else {
-            showError('İnternet bağlantısı yok ve cihaz hafızasında kayıtlı veri bulunamadı.');
+            // Tam ekran daha belirgin bir hata kartı
+            showError('Cihaz çevrimdışı ve hafızada kayıtlı geçerli bir yayın akışı bulunamadı. Lütfen internet bağlantısını kontrol edip uygulamayı yeniden başlatın.');
         }
     }
 
