@@ -107,6 +107,8 @@
         .content-list { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 12px; }
         .content-item { background: rgba(0, 0, 0, 0.2); padding: 16px; border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.2s; }
         .content-item:hover { background: rgba(255, 255, 255, 0.05); border-color: var(--glass-border); }
+        .content-item.dragging { opacity: 0.5 !important; transform: scale(0.98); z-index: 10; cursor: grabbing; }
+        .content-item.drag-over { border: 2px dashed var(--accent-blue); background: rgba(59, 130, 246, 0.1); }
         .content-item-info h4 { margin-bottom: 6px; color: var(--text-primary); font-size: 15px; display: flex; align-items: center; gap: 8px; }
         .content-item-info p { font-size: 13px; color: var(--text-secondary); }
         .content-item-actions { display: flex; gap: 6px; }
@@ -386,6 +388,9 @@
             let currentEditRowIndex = null; 
             const MAX_VISIBLE_ITEMS = 7; // MİLLER YASASI: İdeal Görünür Sınır
             
+            let draggedRowIndex = null;
+            let dragSourceEl = null;
+            
             const loginOverlay = document.getElementById('login-overlay');
             const tabBtns = document.querySelectorAll('.tab-btn');
             const tabContents = document.querySelectorAll('.tab-content');
@@ -557,14 +562,19 @@
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'content-item';
                     itemDiv.style.opacity = itemOpacity;
+                    itemDiv.setAttribute('draggable', 'true');
+                    itemDiv.dataset.rowIndex = rowIndex;
                     
                     itemDiv.innerHTML = `
-                        <div class="content-item-info">
-                            <h4>
-                                ${statusHtml}
-                                ${baslik || '(Başlıksız)'} 
-                                <span class="badge category-badge">${kategori}</span>
-                            </h4>
+                        <div class="content-item-info" style="display: flex; align-items: center; gap: 8px;">
+                            <div class="drag-handle" style="cursor: grab; font-size: 20px; color: var(--text-secondary); padding-right: 8px;" title="Sürüklemek için tutun">☰</div>
+                            <div>
+                                <h4>
+                                    ${statusHtml}
+                                    ${baslik || '(Başlıksız)'} 
+                                    <span class="badge category-badge">${kategori}</span>
+                                </h4>
+                            </div>
                         </div>
                         <div class="content-item-actions">
                             <button type="button" class="btn-icon move move-up" data-index="${rowIndex}" title="Yukarı Taşı" ${isFirst ? 'disabled' : ''}>▲</button>
@@ -584,6 +594,12 @@
                     itemDiv.querySelector('.move-down').addEventListener('click', (e) => {
                         if (!e.target.disabled) moveItem(rowIndex, 'down');
                     });
+
+                    itemDiv.addEventListener('dragstart', handleDragStart);
+                    itemDiv.addEventListener('dragover', handleDragOver);
+                    itemDiv.addEventListener('dragleave', handleDragLeave);
+                    itemDiv.addEventListener('drop', handleDrop);
+                    itemDiv.addEventListener('dragend', handleDragEnd);
 
                     container.appendChild(itemDiv);
                 });
@@ -617,6 +633,71 @@
                 } catch(e) {
                     overlay.style.display = 'none';
                     alert('Sıralama işlemi başarısız: ' + e.message);
+                }
+            }
+
+            function handleDragStart(e) {
+                dragSourceEl = this;
+                draggedRowIndex = this.dataset.rowIndex;
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', this.innerHTML);
+                this.classList.add('dragging');
+            }
+
+            function handleDragOver(e) {
+                if (e.preventDefault) e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                this.classList.add('drag-over');
+                return false;
+            }
+
+            function handleDragLeave(e) {
+                this.classList.remove('drag-over');
+            }
+
+            function handleDrop(e) {
+                if (e.stopPropagation) e.stopPropagation();
+                this.classList.remove('drag-over');
+                
+                const targetRowIndex = this.dataset.rowIndex;
+                if (dragSourceEl !== this && draggedRowIndex && targetRowIndex) {
+                    reorderItemDrop(draggedRowIndex, targetRowIndex);
+                }
+                return false;
+            }
+
+            function handleDragEnd(e) {
+                this.classList.remove('dragging');
+                document.querySelectorAll('.content-item').forEach(el => el.classList.remove('drag-over'));
+            }
+
+            async function reorderItemDrop(fromRow, toRow) {
+                const scriptUrl = localStorage.getItem('kiosk_script_url');
+                const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
+                const overlay = document.getElementById('loading-overlay');
+                
+                overlay.style.display = 'flex';
+                document.getElementById('loading-text').textContent = 'Sürükle-bırak ile sıralama güncelleniyor...';
+
+                try {
+                    const response = await fetch(scriptUrl, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            sheetId: cleanSheetId,
+                            action: 'reorderContent',
+                            fromRow: fromRow,
+                            toRow: toRow
+                        })
+                    });
+                    const data = await response.json();
+                    if(data.status === 'error') throw new Error(data.message);
+                    
+                    fetchExistingContents(); // Listeyi yenile
+                    overlay.style.display = 'none';
+
+                } catch(e) {
+                    overlay.style.display = 'none';
+                    alert('Sürükle-bırak başarısız: ' + e.message);
                 }
             }
 
