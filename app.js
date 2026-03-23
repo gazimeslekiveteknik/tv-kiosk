@@ -244,7 +244,7 @@
             if (p) p.textContent = 'Sistem ayarları çekiliyor...';
         }
 
-        const url = `https://docs.google.com/spreadsheets/d/${cleanId}/gviz/tq?tqx=out:json;responseHandler:magicAppCallback&sheet=AYARLAR`;
+        const url = `https://docs.google.com/spreadsheets/d/${cleanId}/gviz/tq?tqx=out:json;responseHandler:magicAppCallback&sheet=AYARLAR&headers=1`;
         const scriptId = 'jsonp-magic-app';
 
         let oldScript = document.getElementById(scriptId);
