@@ -414,7 +414,7 @@
             return;
         }
 
-        const url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json;responseHandler:parseGoogleSheetData&sheet=DUYURULAR`;
+        const url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json;responseHandler:parseGoogleSheetData&sheet=DUYURULAR&headers=1`;
         const scriptId = 'jsonp-sheet-fetch';
 
         let oldScript = document.getElementById(scriptId);
