@@ -346,6 +346,8 @@ html, body {
 .next-slide-preview .next-title { color: var(--text-primary); font-weight: 700; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 
+
+/*
 /* Logoya 3D Dönme Animasyonu Ekleme (Düzeltilmiş) */
 .school-logo, #school-logo {
     /* Dönüş hızını 6 saniyeden 12 saniyeye çıkardık (daha yavaş ve akıcı) */
@@ -364,5 +366,31 @@ html, body {
     }
     100% {
         transform: perspective(1000px) rotateY(360deg);
+    }
+} 
+
+*/
+
+
+
+/* Logoya Yumuşak Büyüyüp Küçülme (Nefes Alma) Efekti */
+.school-logo, #school-logo {
+    /* GPU hızlandırmasını koruyoruz, TV kesinlikle kasmaz */
+    will-change: transform;
+    
+    /* 4 saniyede bir, çok yumuşak bir geçişle (ease-in-out) tekrar et */
+    animation: pulseLogo 4s ease-in-out infinite;
+}
+
+/* Büyüyüp küçülme hareketinin anahtarları */
+@keyframes pulseLogo {
+    0% {
+        transform: scale(1); /* Orijinal boyut */
+    }
+    50% {
+        transform: scale(1.08); /* Abartı olmadan, sadece %8 oranında hafifçe büyür */
+    }
+    100% {
+        transform: scale(1); /* Sakince orijinal boyutuna geri döner */
     }
 }
