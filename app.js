@@ -1,7 +1,6 @@
 /* ============================================
-   TV KIOSK - APP.JS v5.6 (Smart Offline & Magic Link)
-   Gelişmiş Bellek Kontrolü, Otomatik Ölçekleme ve Hayalet Simge
-   (Sesli Video Oynatma Güncellemesi Yapıldı)
+   TV KIOSK - APP.JS v5.7 (Optimized Video & Anti-Freeze)
+   Gelişmiş Bellek Kontrolü, Otomatik Ölçekleme ve Sesli Video Fix
    ============================================ */
 
 (function () {
@@ -16,9 +15,9 @@
         TICKER_CYCLE: 6000,
         TICKER_SCROLL_SPEED: 70,
         WEATHER_REFRESH: 600000,
-        WEATHER_CITY: 'Sultangazi',
-        WEATHER_LAT: 41.1075,
-        WEATHER_LON: 28.8617,
+        WEATHER_CITY: 'Sultangazi', //
+        WEATHER_LAT: 41.1075, //
+        WEATHER_LON: 28.8617, //
         NEXT_PREVIEW_SHOW: 3000,
     };
 
@@ -52,6 +51,7 @@
     window.ytApiReady = false;
     window.ytPlayers = {};
     window.currentYtStateCallback = null;
+    window.currentYtErrorCallback = null;
 
     window.onYouTubeIframeAPIReady = function () {
         window.ytApiReady = true;
@@ -162,7 +162,6 @@
         window.ytPlayers = {};
     }
 
-    // --- OTO ÖLÇEKLENDİRME ---
     function applyAutoScaling() {
         let viewport = document.querySelector('meta[name="viewport"]');
         if (viewport) {
@@ -202,18 +201,15 @@
         resizeKiosk();
     }
 
-    // --- BOOT PROCESS ---
     function init() {
         cacheDom();
         applyAutoScaling(); 
         
-        // İlk açılışta internet kontrolü (hayalet simge için)
         if (!navigator.onLine && els.offlineBadge) {
             els.offlineBadge.classList.remove('hidden');
         }
 
         const urlParams = new URLSearchParams(window.location.search);
-        
         const magicId = urlParams.get('id');
         if (magicId) {
             runMagicBoot(magicId);
@@ -233,7 +229,6 @@
         localStorage.setItem('kiosk_sheet_id', cleanId);
         localStorage.removeItem('kiosk_demo_mode');
 
-        // İnternet yoksa direkt atla
         if (!navigator.onLine) {
             continueInit();
             return;
@@ -250,7 +245,6 @@
         let oldScript = document.getElementById(scriptId);
         if (oldScript) oldScript.remove();
 
-        // Magic Boot Zaman Aşımı Koruması (Ağ yavaşsa)
         let magicTimeout = setTimeout(() => {
             if (window.magicAppCallback) {
                 delete window.magicAppCallback;
@@ -354,8 +348,9 @@
     }
 
     function startDemoMode() {
-        els.schoolName.textContent = 'Gazi MTAL';
-        startClock(); fetchFreeWeather();
+        els.schoolName.textContent = 'Gazi MTAL'; //
+        startClock(); 
+        fetchFreeWeather();
         const demoRows = [{
             baslik: 'Örnek Duyuru', icerik: 'Sistem demo modunda çalışıyor.', kategori: 'duyuru', tarih: '', aktif: 'evet', bant: 'evet', gorsel: '', video: ''
         }];
@@ -396,22 +391,19 @@
                 parsedData = JSON.parse(cachedData);
             }
         } catch (e) {
-            console.warn("Önbellek bozulmuş veya eski formatta:", e);
+            console.warn("Önbellek bozulmuş:", e);
         }
 
         if (Array.isArray(parsedData) && parsedData.length > 0) {
-            console.log("Çevrimdışı Mod: Hafızadaki verilerle başlatılıyor...");
             processData(parsedData); 
         } else {
-            // Tam ekran daha belirgin bir hata kartı
-            showError('Cihaz çevrimdışı ve hafızada kayıtlı geçerli bir yayın akışı bulunamadı. Lütfen internet bağlantısını kontrol edip uygulamayı yeniden başlatın.');
+            showError('Cihaz çevrimdışı ve hafızada kayıtlı veri bulunamadı.');
         }
     }
 
     function fetchData(sheetId) {
         const id = getCleanSheetId(sheetId);
         
-        // 1. İNTERNET KONTROLÜ
         if (!navigator.onLine) {
             loadFromCache();
             return;
@@ -423,7 +415,6 @@
         let oldScript = document.getElementById(scriptId);
         if (oldScript) oldScript.remove();
 
-        // 2. ZAMAN AŞIMI KONTROLÜ
         let fetchTimeout = setTimeout(() => {
             if (window.parseGoogleSheetData) {
                 delete window.parseGoogleSheetData;
@@ -433,7 +424,6 @@
 
         window.parseGoogleSheetData = function (json) {
             clearTimeout(fetchTimeout); 
-            
             try {
                 const cols = json.table.cols;
                 const rows = json.table.rows;
@@ -449,9 +439,7 @@
                     resultData.push(rowObj);
                 });
                 
-                // 3. YEDEKLEME
                 localStorage.setItem('cachedAnnouncements', JSON.stringify(resultData));
-                
                 processData(resultData);
             } catch (e) { loadFromCache(); }
             delete window.parseGoogleSheetData;
@@ -518,7 +506,6 @@
             slides.push(item);
         });
 
-        // 7 İçerik Sınırı (Sadece ilk 7 aktif içerik gösterilsin)
         if (slides.length > 7) slides = slides.slice(0, 7);
 
         if (els.loadingSlide) els.loadingSlide.style.display = 'none';
@@ -534,7 +521,7 @@
         if (!item.mediaUrl || !item.mediaType) return '';
         if (item.mediaType === 'image') {
             return `<div class="slide-media image-container" id="media-container-${index}">
-                <img src="${escapeAttr(item.mediaUrl)}" loading="lazy" onerror="this.closest('.slide-media').style.display='none'; this.closest('.slide-card').classList.add('no-media');">
+                <img src="${escapeAttr(item.mediaUrl)}" loading="lazy" onerror="this.closest('.slide-media').style.display='none';">
             </div>`;
         } else if (item.mediaType === 'video') {
             return `<div class="slide-media video-container" id="media-container-${index}">
@@ -626,7 +613,7 @@
         });
     }
 
-    // --- SLIDESHOW ENGINE ---
+    // --- SLIDESHOW ENGINE (UPDATED FOR STABILITY) ---
 
     function startSlideshow() {
         if (slides.length === 0) return;
@@ -635,7 +622,6 @@
 
     function playCurrentSlide() {
         clearAllTimers(); 
-        
         document.querySelectorAll('.slide-progress').forEach(bar => { bar.style.width = '0%'; bar.style.transition = 'none'; });
 
         const item = slides[currentSlideIndex];
@@ -652,14 +638,12 @@
 
     function handleVideoSlide(item, index) {
         const container = document.getElementById(`media-container-${index}`);
-        if (!container) { currentSlideTimeout = setTimeout(nextSlide, CONFIG.SLIDE_INTERVAL); return; }
+        if (!container) { nextSlide(); return; }
 
         const textElement = container.closest('.slide-card').querySelector('.slide-text');
-
         container.classList.remove('fullscreen-media');
         if (textElement) textElement.classList.remove('text-hidden');
 
-        // İNTERNET YOKSA YOUTUBE SLAYTINI ANINDA ATLA
         if (item.mediaType === 'youtube' && !navigator.onLine) {
             currentSlideTimeout = setTimeout(nextSlide, 100); 
             return;
@@ -668,81 +652,57 @@
         if (item.mediaType === 'youtube') {
             const playerObj = window.ytPlayers[index];
             if (!window.ytApiReady || !playerObj || typeof playerObj.playVideo !== 'function') {
-                currentSlideTimeout = setTimeout(nextSlide, CONFIG.SLIDE_INTERVAL); return;
+                nextSlide(); return;
             }
 
-            fallbackTimer = setTimeout(() => { nextSlide(); }, 10000);
+            // Fallback: 12 saniye sonra video başlamazsa geç
+            fallbackTimer = setTimeout(() => { nextSlide(); }, 12000);
 
             playerObj.seekTo(0);
             playerObj.playVideo();
 
-            window.currentYtErrorCallback = (err) => {
-                clearTimeout(fallbackTimer);
-                nextSlide(); 
-            };
-
+            window.currentYtErrorCallback = () => nextSlide();
             window.currentYtStateCallback = (state) => {
-                if (state === 1) { 
-                    clearTimeout(fallbackTimer); 
-                }
-                if (state === 3) { 
+                if (state === 1) { // Playing
                     clearTimeout(fallbackTimer);
-                    fallbackTimer = setTimeout(() => { nextSlide(); }, 15000); 
+                    fullscreenTriggerTimer = setTimeout(() => {
+                        container.classList.add('fullscreen-media');
+                        if (textElement) textElement.classList.add('text-hidden');
+                    }, 2000);
                 }
-                if (state === 0) { 
-                    clearTimeout(fallbackTimer);
-                    if (fullscreenTriggerTimer) clearTimeout(fullscreenTriggerTimer);
-                    if (container.classList.contains('fullscreen-media')) endVideoSlide(container, textElement);
-                    else nextSlide();
-                }
+                if (state === 0) endVideoSlide(container, textElement);
             };
         } else if (item.mediaType === 'video') {
             const playerObj = document.getElementById(`html-video-${index}`);
             if (playerObj) {
-                fallbackTimer = setTimeout(() => { nextSlide(); }, 10000);
+                fallbackTimer = setTimeout(() => { nextSlide(); }, 15000);
 
                 playerObj.currentTime = 0;
+                playerObj.muted = false; // Sesli oynatmayı zorla
+
                 playerObj.play().then(() => {
                     clearTimeout(fallbackTimer); 
-                }).catch(e => {
-                    clearTimeout(fallbackTimer);
-                    nextSlide(); 
-                });
+                    fullscreenTriggerTimer = setTimeout(() => {
+                        container.classList.add('fullscreen-media');
+                        if (textElement) textElement.classList.add('text-hidden');
+                    }, 1500); 
+                }).catch(() => nextSlide());
 
+                playerObj.onended = () => endVideoSlide(container, textElement);
+                playerObj.onerror = () => nextSlide();
                 playerObj.onwaiting = () => {
                     clearTimeout(fallbackTimer);
-                    fallbackTimer = setTimeout(() => { nextSlide(); }, 15000);
-                };
-                
-                playerObj.onplaying = () => { clearTimeout(fallbackTimer); };
-
-                playerObj.onended = () => {
-                    clearTimeout(fallbackTimer);
-                    if (fullscreenTriggerTimer) clearTimeout(fullscreenTriggerTimer);
-                    if (container.classList.contains('fullscreen-media')) endVideoSlide(container, textElement);
-                    else nextSlide();
-                };
-                
-                playerObj.onerror = () => {
-                    clearTimeout(fallbackTimer);
-                    nextSlide();
+                    fallbackTimer = setTimeout(() => { nextSlide(); }, 10000);
                 };
             }
         }
-
-        fullscreenTriggerTimer = setTimeout(() => {
-            container.classList.add('fullscreen-media');
-            if (textElement) textElement.classList.add('text-hidden');
-        }, 4000);
     }
 
     function endVideoSlide(container, textElement) {
+        if (fullscreenTriggerTimer) clearTimeout(fullscreenTriggerTimer);
         container.classList.remove('fullscreen-media');
         if (textElement) textElement.classList.remove('text-hidden');
-
-        currentSlideTimeout = setTimeout(() => {
-            nextSlide();
-        }, 2000); 
+        currentSlideTimeout = setTimeout(() => nextSlide(), 1500); 
     }
 
     function nextSlide() {
@@ -775,11 +735,7 @@
         const item = slides[index];
         if (!item) return;
         const container = document.getElementById(`media-container-${index}`);
-        if (container) {
-            container.classList.remove('fullscreen-media');
-            const textElement = container.closest('.slide-card').querySelector('.slide-text');
-            if (textElement) textElement.classList.remove('text-hidden');
-        }
+        if (container) container.classList.remove('fullscreen-media');
 
         if (item.mediaType === 'youtube' && window.ytPlayers[index] && typeof window.ytPlayers[index].pauseVideo === 'function') {
             window.ytPlayers[index].pauseVideo();
@@ -806,11 +762,8 @@
     }
 
     function scheduleNextPreview() {
-        if (nextPreviewTimer) clearTimeout(nextPreviewTimer);
         if (slides.length <= 1 || !els.nextPreview) return;
-
         const currentItem = slides[currentSlideIndex];
-        // Video/YouTube slaytlarında süre dinamik olduğu için preview gösterme
         if (currentItem.mediaType === 'youtube' || currentItem.mediaType === 'video') return;
 
         nextPreviewTimer = setTimeout(() => {
@@ -821,16 +774,14 @@
     }
 
     function showError(message) {
-        els.slidesContainer.innerHTML = `<div class="slide active"><div class="slide-card cat-onemli no-media"><div class="slide-text"><div class="slide-icon">⚠️</div><h2 class="slide-title">Bilgi Ekranı</h2><p class="slide-content">${escapeHtml(message)}</p></div></div></div>`;
+        els.slidesContainer.innerHTML = `<div class="slide active"><div class="slide-card cat-onemli no-media"><div class="slide-text"><div class="slide-icon">⚠️</div><h2 class="slide-title">Hata</h2><p class="slide-content">${escapeHtml(message)}</p></div></div></div>`;
     }
 
     function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
-    function escapeAttr(text) { return text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function escapeAttr(text) { return text.replace(/&/g, '&amp;').replace(/"/g, '&quot;'); }
 
-    // --- Hava Durumu ---
     function fetchFreeWeather() {
         if (!navigator.onLine) return; 
-        
         fetch(`https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.WEATHER_LAT}&longitude=${CONFIG.WEATHER_LON}&current_weather=true`)
             .then(r => r.json())
             .then(data => {
@@ -844,14 +795,8 @@
     }
     function fetchWeather() { fetchFreeWeather(); }
 
-    // --- İNTERNET DURUMU DİNLEYİCİLERİ ---
-    window.addEventListener('online', () => {
-        if (els.offlineBadge) els.offlineBadge.classList.add('hidden');
-    });
-    
-    window.addEventListener('offline', () => {
-        if (els.offlineBadge) els.offlineBadge.classList.remove('hidden');
-    });
+    window.addEventListener('online', () => { if (els.offlineBadge) els.offlineBadge.classList.add('hidden'); });
+    window.addEventListener('offline', () => { if (els.offlineBadge) els.offlineBadge.classList.remove('hidden'); });
 
     document.addEventListener('DOMContentLoaded', init);
 })();
