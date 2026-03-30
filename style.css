@@ -5,10 +5,13 @@
    ============================================ */
 
 :root {
-    --bg-primary: #f8fafc;
-    --bg-secondary: #f1f5f9;
-    --bg-card: rgba(255, 255, 255, 0.85);
-    --bg-glass: rgba(255, 255, 255, 0.6);
+    /* Arka plan renkleri daha tok bir gri/mavi tona çekildi */
+    --bg-primary: #e2e8f0;
+    --bg-secondary: #cbd5e1;
+    
+    /* Kart arka planı daha beyaz ve opak yapıldı */
+    --bg-card: rgba(255, 255, 255, 0.95);
+    --bg-glass: rgba(255, 255, 255, 0.7);
 
     --text-primary: #0f172a;
     --text-secondary: #334155;
@@ -75,11 +78,15 @@ html, body {
     height: 100%;
     z-index: 0;
     overflow: hidden;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    /* Arka plan animasyonu degradeleri yeni renklere uyarlandı */
+    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%); 
 }
 
 .bg-orb {
-    display: none !important; /* TV'yi kilitlediği için animasyonlu ağır arka plan iptal edildi */
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.3; 
+    filter: blur(40px); /* TV Performance limit */
 }
 
 .bg-orb-1 {
@@ -238,7 +245,9 @@ html, body {
     width: 100%; max-width: 1540px; height: 100%; max-height: 740px;
     display: flex; align-items: stretch; gap: 0;
     background: var(--bg-card); backdrop-filter: blur(30px); border: 1px solid rgba(255, 255, 255, 0.5);
-    border-radius: var(--radius-xl); box-shadow: var(--shadow-card); position: relative; overflow: hidden;
+    border-radius: var(--radius-xl); 
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); /* Eklendi: Kartların daha boyutlu durması için özel gölge */
+    position: relative; overflow: hidden;
 }
 .slide-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px; z-index: 2; }
 
@@ -341,25 +350,3 @@ html, body {
 .next-slide-preview.visible { opacity: 1; transform: translateY(0); }
 .next-slide-preview .next-label { font-weight: 800; color: var(--vibrant-blue); text-transform: uppercase; font-size: 13px; }
 .next-slide-preview .next-title { color: var(--text-primary); font-weight: 700; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-/* Logoya Yumuşak Büyüyüp Küçülme (Nefes Alma) Efekti */
-.school-logo, #school-logo {
-    /* GPU hızlandırmasını koruyoruz, TV kesinlikle kasmaz */
-    will-change: transform;
-    
-    /* 8 saniyede bir, çok yumuşak bir geçişle (ease-in-out) tekrar et */
-    animation: pulseLogo 6s ease-in-out infinite;
-}
-
-/* Büyüyüp küçülme hareketinin anahtarları */
-@keyframes pulseLogo {
-    0% {
-        transform: scale(1); /* Orijinal boyut */
-    }
-    50% {
-        transform: scale(1.08); /* Abartı olmadan, sadece %8 oranında hafifçe büyür */
-    }
-    100% {
-        transform: scale(1); /* Sakince orijinal boyutuna geri döner */
-    }
-}
