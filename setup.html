@@ -6,7 +6,6 @@
     <title>Bilgi Ekranı Yönetim Paneli</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* ... Sizin orijinal CSS ayarlarınız aynen korunmuştur ... */
         :root { --bg-primary: #0a0e1a; --bg-card: rgba(255, 255, 255, 0.06); --text-primary: #f1f5f9; --text-secondary: #94a3b8; --accent-blue: #3b82f6; --accent-purple: #8b5cf6; --accent-emerald: #10b981; --gradient-primary: linear-gradient(135deg, #3b82f6, #8b5cf6); --glass-border: rgba(255, 255, 255, 0.08); --radius-md: 20px; --radius-sm: 12px; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 40px; position: relative; overflow-x: hidden; }
@@ -206,7 +205,6 @@
                     
                     itemDiv.querySelector('.edit').addEventListener('click', () => startEditing(rowIndex, row));
                     
-                    // GÜNCELLEME: SİLME İŞLEMİNDE MEDYA LİNKLERİNİ AL
                     const gorselUrl = row.c[6] ? (row.c[6].v || '') : ''; const videoUrl = row.c[7] ? (row.c[7].v || '') : '';
                     itemDiv.querySelector('.delete').addEventListener('click', () => deleteItem(rowIndex, gorselUrl, videoUrl));
                     
@@ -240,7 +238,6 @@
 
             document.getElementById('btn-cancel-edit').addEventListener('click', () => { currentEditRowIndex = null; document.getElementById('form-title').textContent = 'YENİ İÇERİK EKLE'; document.getElementById('btn-submit-content').innerHTML = '🚀 Tabloya Ekle'; document.getElementById('btn-cancel-edit').style.display = 'none'; document.getElementById('content-form').reset(); });
 
-            // GÜNCELLEME: AKILLI SİLME (MEDYA DOSYALARINI DA KALDIRMA)
             async function deleteItem(rowIndex, gorselUrl, videoUrl) {
                 if (!confirm('Bu içeriği tamamen silmek istediğinize emin misiniz?')) return;
                 let deleteMedia = false;
@@ -285,71 +282,96 @@
             document.getElementById('btn-demo').addEventListener('click', function () { window.location.href = 'index.html'; });
             document.getElementById('btn-reset').addEventListener('click', function () { if (confirm('Sıfırlansın mı?')) { localStorage.clear(); window.location.reload(); } });
 
-            // GÜNCELLEME: ÇOKLU (MULTIPLE) DOSYA YÜKLEME 
+            // GÜNCELLEME: ÇOKLU (MULTIPLE) DOSYALAR İÇİN SIRALI YÜKLEME 
             const contentForm = document.getElementById('content-form');
             if (contentForm) {
                 contentForm.addEventListener('submit', async function (e) {
                     e.preventDefault();
-                    const scriptUrl = localStorage.getItem('kiosk_script_url'); const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
-                    const btnSubmit = document.getElementById('btn-submit-content'); const overlay = document.getElementById('loading-overlay');
-                    overlay.style.display = 'flex'; btnSubmit.disabled = true;
+                    const scriptUrl = localStorage.getItem('kiosk_script_url');
+                    const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
+                    const btnSubmit = document.getElementById('btn-submit-content');
+                    const overlay = document.getElementById('loading-overlay');
+                    const progContainer = document.getElementById('upload-progress-container');
+                    const progBar = document.getElementById('upload-progress-bar');
+                    const progText = document.getElementById('upload-progress-text');
+
+                    overlay.style.display = 'flex';
+                    btnSubmit.disabled = true;
 
                     try {
-                        const itemData = {
-                            baslik: document.getElementById('c-baslik').value.trim(), icerik: document.getElementById('c-icerik').value.trim(),
-                            kategori: document.getElementById('c-kategori').value, tarih: document.getElementById('c-tarih').value,
-                            aktif: document.getElementById('c-aktif').value, bant: document.getElementById('c-bant').value,
-                            gorsel: document.getElementById('c-gorsel-url').value.trim(), video: document.getElementById('c-video-url').value.trim()
-                        };
-
-                        const payload = { sheetId: cleanSheetId, action: currentEditRowIndex ? 'editContent' : 'addContent', item: itemData };
-                        if (currentEditRowIndex) payload.rowIndex = currentEditRowIndex;
-
+                        let currentGorselLinks = document.getElementById('c-gorsel-url').value.trim();
+                        let currentVideoLinks = document.getElementById('c-video-url').value.trim();
                         const fileInput = document.getElementById('c-file');
-                        let filesForDrive = []; let uploadedYoutubeLinks = [];
 
                         if (fileInput.files.length > 0) {
-                            const progContainer = document.getElementById('upload-progress-container');
-                            const progBar = document.getElementById('upload-progress-bar');
-                            const progText = document.getElementById('upload-progress-text');
                             progContainer.style.display = 'block';
+                            let gLinks = [];
+                            let vLinks = [];
 
                             for (let i = 0; i < fileInput.files.length; i++) {
                                 const file = fileInput.files[i];
-                                if (file.type.startsWith('video/')) {
-                                    progText.textContent = `${i+1}/${fileInput.files.length} YouTube'a Yükleniyor...`;
-                                    const urlResp = await fetch(scriptUrl, { method: 'POST', body: JSON.stringify({ sheetId: cleanSheetId, action: 'getYouTubeUploadUrl', videoTitle: itemData.baslik, mimeType: file.type, size: file.size, origin: window.location.origin }) });
+                                progText.textContent = `Yükleniyor: ${i+1}/${fileInput.files.length} - ${file.name}`;
+                                progBar.style.width = '0%';
+
+                                if (file.type.startsWith('image/')) {
+                                    const base64 = await new Promise(r => { const rd = new FileReader(); rd.onload = e => r(e.target.result); rd.readAsDataURL(file); });
+                                    const resp = await fetch(scriptUrl, { method: 'POST', body: JSON.stringify({ sheetId: cleanSheetId, action: 'uploadFile', file: { name: file.name, mimeType: file.type, content: base64 } }) });
+                                    const res = await resp.json();
+                                    if (res.status === 'success') gLinks.push(res.url);
+                                    progBar.style.width = '100%';
+                                } 
+                                else if (file.type.startsWith('video/')) {
+                                    const urlResp = await fetch(scriptUrl, { method: 'POST', body: JSON.stringify({ sheetId: cleanSheetId, action: 'getYouTubeUploadUrl', videoTitle: document.getElementById('c-baslik').value, mimeType: file.type, size: file.size, origin: window.location.origin }) });
                                     const uploadUrl = (await urlResp.json()).uploadUrl;
-                                    
-                                    const CHUNK = 2097152; let uploaded = 0; let videoId = null;
+                                    const CHUNK = 2 * 1024 * 1024; let uploaded = 0;
                                     while (uploaded < file.size) {
                                         const end = Math.min(uploaded + CHUNK, file.size);
-                                        const putResp = await fetch(uploadUrl, { method: 'PUT', headers: { 'Content-Range': `bytes ${uploaded}-${end - 1}/${file.size}` }, body: file.slice(uploaded, end) });
-                                        if (putResp.status === 308) { uploaded = end; progBar.style.width = Math.round((uploaded/file.size)*100) + '%'; } 
-                                        else if (putResp.status === 200 || putResp.status === 201) { videoId = (await putResp.json()).id; break; }
+                                        const put = await fetch(uploadUrl, { method: 'PUT', headers: { 'Content-Range': `bytes ${uploaded}-${end - 1}/${file.size}` }, body: file.slice(uploaded, end) });
+                                        if (put.status === 308) { uploaded = end; progBar.style.width = Math.round((uploaded/file.size)*100) + '%'; }
+                                        else if (put.status === 200 || put.status === 201) { const vid = (await put.json()).id; vLinks.push(`https://www.youtube.com/watch?v=${vid}`); break; }
                                     }
-                                    uploadedYoutubeLinks.push(`https://www.youtube.com/watch?v=${videoId}`);
-                                } else if (file.type.startsWith('image/')) {
-                                    progText.textContent = `${i+1}/${fileInput.files.length} Görsel Hazırlanıyor...`;
-                                    const base64Data = await new Promise(res => { const r = new FileReader(); r.onload = ev => res(ev.target.result); r.readAsDataURL(file); });
-                                    filesForDrive.push({ name: file.name, mimeType: file.type, content: base64Data });
                                 }
                             }
+                            // Mevcut linklerin üzerine yenileri ekle
+                            currentGorselLinks = currentGorselLinks ? (currentGorselLinks + ',' + gLinks.join(',')) : gLinks.join(',');
+                            currentVideoLinks = currentVideoLinks ? (currentVideoLinks + ',' + vLinks.join(',')) : vLinks.join(',');
                             progContainer.style.display = 'none';
-                            if(uploadedYoutubeLinks.length > 0) payload.item.video = payload.item.video ? payload.item.video + ',' + uploadedYoutubeLinks.join(',') : uploadedYoutubeLinks.join(',');
-                            payload.files = filesForDrive;
                         }
 
-                        document.getElementById('loading-text').textContent = 'Kayıt tamamlanıyor...';
-                        const fetchPromise = fetch(scriptUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
-                        const response = await Promise.race([fetchPromise, new Promise((_, r) => setTimeout(() => r(new Error('Zaman aşımı')), 30000))]);
-                        if ((await response.json()).status === 'error') throw new Error('Sunucu Hatası');
+                        // Son Aşama: Duyuruyu Tabloya Kaydet
+                        document.getElementById('loading-text').textContent = 'Tablo güncelleniyor...';
+                        const finalPayload = {
+                            sheetId: cleanSheetId,
+                            action: currentEditRowIndex ? 'editContent' : 'addContent',
+                            rowIndex: currentEditRowIndex,
+                            item: {
+                                baslik: document.getElementById('c-baslik').value.trim(),
+                                icerik: document.getElementById('c-icerik').value.trim(),
+                                kategori: document.getElementById('c-kategori').value,
+                                tarih: document.getElementById('c-tarih').value,
+                                aktif: document.getElementById('c-aktif').value,
+                                bant: document.getElementById('c-bant').value,
+                                gorsel: currentGorselLinks,
+                                video: currentVideoLinks
+                            }
+                        };
 
-                        overlay.style.display = 'none'; btnSubmit.disabled = false;
-                        document.getElementById('btn-cancel-edit').click(); fetchExistingContents();
-                        document.getElementById('content-success-msg').style.display = 'block'; setTimeout(() => { document.getElementById('content-success-msg').style.display = 'none'; }, 5000);
+                        const finalResp = await fetch(scriptUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(finalPayload) });
+                        const finalData = await finalResp.json();
+                        
+                        if (finalData.status === 'success') {
+                            overlay.style.display = 'none';
+                            btnSubmit.disabled = false;
+                            document.getElementById('btn-cancel-edit').click();
+                            fetchExistingContents();
+                            document.getElementById('content-success-msg').style.display = 'block';
+                            setTimeout(() => { document.getElementById('content-success-msg').style.display = 'none'; }, 4000);
+                        } else { throw new Error(finalData.message); }
+
                     } catch (error) {
-                        overlay.style.display = 'none'; btnSubmit.disabled = false;
+                        console.error(error);
+                        overlay.style.display = 'none';
+                        btnSubmit.disabled = false;
                         document.getElementById('content-error-msg').style.display = 'block';
                     }
                 });
