@@ -257,7 +257,7 @@
             document.getElementById('btn-demo').addEventListener('click', function () { window.location.href = 'index.html'; });
             document.getElementById('btn-reset').addEventListener('click', function () { if (confirm('Sıfırlansın mı?')) { localStorage.clear(); window.location.reload(); } });
 
-            // --- İÇERİK FORMU GÖNDERME (GÖRSEL LİNK SORUNU DÜZELTİLDİ) ---
+            // --- İÇERİK FORMU GÖNDERME (HATA YAKALAMA VE TEXT/PLAIN EKLENDİ) ---
             const contentForm = document.getElementById('content-form');
             if (contentForm) {
                 contentForm.addEventListener('submit', async function (e) {
@@ -266,11 +266,13 @@
                     const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
                     const btnSubmit = document.getElementById('btn-submit-content');
                     const overlay = document.getElementById('loading-overlay');
+                    const errorMsg = document.getElementById('content-error-msg');
                     const progContainer = document.getElementById('upload-progress-container');
                     const progBar = document.getElementById('upload-progress-bar');
                     const progText = document.getElementById('upload-progress-text');
 
                     overlay.style.display = 'flex';
+                    errorMsg.style.display = 'none';
                     btnSubmit.disabled = true;
 
                     try {
@@ -290,13 +292,28 @@
 
                                 if (file.type.startsWith('image/')) {
                                     const base64 = await new Promise(r => { const rd = new FileReader(); rd.onload = e => r(e.target.result); rd.readAsDataURL(file); });
-                                    const resp = await fetch(scriptUrl, { method: 'POST', body: JSON.stringify({ sheetId: cleanSheetId, action: 'uploadFile', file: { name: file.name, mimeType: file.type, content: base64 } }) });
+                                    
+                                    // HATA ÇÖZÜMÜ: Content-Type: text/plain zorunluluğu getirildi
+                                    const resp = await fetch(scriptUrl, { 
+                                        method: 'POST', 
+                                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                        body: JSON.stringify({ sheetId: cleanSheetId, action: 'uploadFile', file: { name: file.name, mimeType: file.type, content: base64 } }) 
+                                    });
                                     const res = await resp.json();
-                                    if (res.status === 'success' && res.url) uploadedGLinks.push(res.url);
+                                    
+                                    if (res.status === 'success' && res.url) {
+                                        uploadedGLinks.push(res.url);
+                                    } else {
+                                        throw new Error(res.message || "Resim linki alınamadı");
+                                    }
                                     progBar.style.width = '100%';
                                 } 
                                 else if (file.type.startsWith('video/')) {
-                                    const urlResp = await fetch(scriptUrl, { method: 'POST', body: JSON.stringify({ sheetId: cleanSheetId, action: 'getYouTubeUploadUrl', videoTitle: document.getElementById('c-baslik').value, mimeType: file.type, size: file.size, origin: window.location.origin }) });
+                                    const urlResp = await fetch(scriptUrl, { 
+                                        method: 'POST', 
+                                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                        body: JSON.stringify({ sheetId: cleanSheetId, action: 'getYouTubeUploadUrl', videoTitle: document.getElementById('c-baslik').value, mimeType: file.type, size: file.size, origin: window.location.origin }) 
+                                    });
                                     const uploadUrl = (await urlResp.json()).uploadUrl;
                                     const CHUNK = 2 * 1024 * 1024; let uploaded = 0;
                                     while (uploaded < file.size) {
@@ -309,7 +326,6 @@
                             }
                         }
 
-                        // LİNKLERİ GARANTİ ALTINA ALARAK BİRLEŞTİR
                         let finalGorsel = [manualGorsel, ...uploadedGLinks].filter(Boolean).join(',');
                         let finalVideo = [manualVideo, ...uploadedVLinks].filter(Boolean).join(',');
 
@@ -330,7 +346,11 @@
                             }
                         };
 
-                        const finalResp = await fetch(scriptUrl, { method: 'POST', body: JSON.stringify(finalPayload) });
+                        const finalResp = await fetch(scriptUrl, { 
+                            method: 'POST', 
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify(finalPayload) 
+                        });
                         const finalData = await finalResp.json();
                         
                         if (finalData.status === 'success') {
@@ -340,8 +360,10 @@
                         } else { throw new Error(finalData.message); }
 
                     } catch (error) {
-                        overlay.style.display = 'none'; btnSubmit.disabled = false;
-                        document.getElementById('content-error-msg').style.display = 'block';
+                        overlay.style.display = 'none'; 
+                        btnSubmit.disabled = false;
+                        errorMsg.textContent = "❌ Hata: " + error.message;
+                        errorMsg.style.display = 'block';
                     }
                 });
             }
