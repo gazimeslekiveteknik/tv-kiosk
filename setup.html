@@ -731,35 +731,41 @@
                 document.getElementById('upload-progress-container').style.display = 'none';
                 document.getElementById('content-form').reset();
             }
-
-            async function deleteItem(rowIndex) {
-                if(!confirm('Bu içeriği tamamen silmek istediğinize emin misiniz?')) return;
-                
+            async function deleteItem(rowIndex, gorselUrl, videoUrl) {
+                if (!confirm('Bu içeriği tamamen silmek istediğinize emin misiniz?')) return;
+            
+                let deleteMedia = false;
+                // Eğer görsel veya video URL'si varsa medyayı da silmek isteyip istemediğini sor
+                if (gorselUrl || videoUrl) {
+                    deleteMedia = confirm('Bu duyuruya ait bir medya dosyası (Görsel veya Video) bulunuyor.\n\nYüklenmiş bu dosya sistemden (Drive / YouTube) tamamen SİLİNSİN Mİ?\n\n(Dosyayı silmek için Tamam\'a, sadece tablodan kaldırmak için İptal\'e tıklayın.)');
+                }
+            
                 const scriptUrl = localStorage.getItem('kiosk_script_url');
                 const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
                 const overlay = document.getElementById('loading-overlay');
-                
+            
                 overlay.style.display = 'flex';
-                document.getElementById('loading-text').textContent = 'İçerik tablodan siliniyor...';
-
+                document.getElementById('loading-text').textContent = deleteMedia ? 'İçerik ve medya dosyası siliniyor...' : 'İçerik tablodan siliniyor...';
+            
                 try {
                     const response = await fetch(scriptUrl, {
                         method: 'POST',
                         body: JSON.stringify({
                             sheetId: cleanSheetId,
                             action: 'deleteContent',
-                            rowIndex: rowIndex
+                            rowIndex: rowIndex,
+                            deleteMedia: deleteMedia
                         })
                     });
                     const data = await response.json();
-                    if(data.status === 'error') throw new Error(data.message);
-                    
-                    fetchExistingContents(); 
+                    if (data.status === 'error') throw new Error(data.message);
+            
+                    fetchExistingContents();
                     overlay.style.display = 'none';
-                    
-                    if(currentEditRowIndex === rowIndex) cancelEditing(); 
-
-                } catch(e) {
+            
+                    if (currentEditRowIndex === rowIndex) cancelEditing();
+            
+                } catch (e) {
                     overlay.style.display = 'none';
                     alert('Silme işlemi başarısız: ' + e.message);
                 }
