@@ -1,7 +1,7 @@
 /* ============================================
-   TV KIOSK - APP.JS v6.0 (Album Support)
+   TV KIOSK - APP.JS v5.6 (Smart Offline & Magic Link)
    Gelişmiş Bellek Kontrolü, Otomatik Ölçekleme ve Hayalet Simge
-   + Albüm Modu: Çoklu medya sıralı gösterim
+   (Sesli Video Oynatma Güncellemesi Yapıldı)
    ============================================ */
 
 (function () {
@@ -20,7 +20,6 @@
         WEATHER_LAT: 41.1075,
         WEATHER_LON: 28.8617,
         NEXT_PREVIEW_SHOW: 3000,
-        ALBUM_IMAGE_DURATION: 10000,  // Albüm fotoğraf süresi
     };
 
     // --- Dynamic CSS Injection for In-Card Fullscreen ---
@@ -120,11 +119,6 @@
     let fullscreenTriggerTimer = null;
     let fallbackTimer = null; 
     
-    // Album state
-    let albumTimer = null;
-    let albumProgressTimer = null;
-    let currentAlbumIndex = 0;
-    
     let currentDataString = null;
 
     const els = {};
@@ -157,8 +151,6 @@
         if (nextPreviewTimer) clearTimeout(nextPreviewTimer);
         if (fullscreenTriggerTimer) clearTimeout(fullscreenTriggerTimer);
         if (fallbackTimer) clearTimeout(fallbackTimer);
-        if (albumTimer) clearTimeout(albumTimer);
-        if (albumProgressTimer) clearInterval(albumProgressTimer);
     }
 
     function destroyAllPlayers() {
@@ -365,7 +357,7 @@
         els.schoolName.textContent = 'Gazi MTAL';
         startClock(); fetchFreeWeather();
         const demoRows = [{
-            baslik: 'Örnek Duyuru', icerik: 'Sistem demo modunda çalışıyor.', kategori: 'duyuru', tarih: '', aktif: 'evet', bant: 'evet', gorsel: '', video: '', album: ''
+            baslik: 'Örnek Duyuru', icerik: 'Sistem demo modunda çalışıyor.', kategori: 'duyuru', tarih: '', aktif: 'evet', bant: 'evet', gorsel: '', video: ''
         }];
         processData(demoRows);
     }
@@ -394,25 +386,22 @@
         return sheetId;
     }
 
+    // --- AKILLI ÇEVRİMDIŞI MOD ---
     function loadFromCache() {
+        // Eğer sistem halihazırda çalışıyorsa, dönmeye devam etsin (Kesinti yaşatma)
         if (slides.length > 0) return;
 
-        let parsedData = null;
-        try {
-            const cachedData = localStorage.getItem('cachedAnnouncements');
-            if (cachedData && cachedData.startsWith('[')) {
-                parsedData = JSON.parse(cachedData);
+        const cachedData = localStorage.getItem('cachedAnnouncements');
+        if (cachedData) {
+            try { 
+                const parsedData = JSON.parse(cachedData);
+                console.log("Çevrimdışı Mod: Hafızadaki verilerle başlatılıyor...");
+                processData(parsedData); 
+            } catch (e) { 
+                showError('Önbellek okunamadı. İnternet bekleniyor...'); 
             }
-        } catch (e) {
-            console.warn("Önbellek bozulmuş veya eski formatta:", e);
-        }
-
-        if (Array.isArray(parsedData) && parsedData.length > 0) {
-            console.log("Çevrimdışı Mod: Hafızadaki verilerle başlatılıyor...");
-            processData(parsedData); 
         } else {
-            // Tam ekran daha belirgin bir hata kartı
-            showError('Cihaz çevrimdışı ve hafızada kayıtlı geçerli bir yayın akışı bulunamadı. Lütfen internet bağlantısını kontrol edip uygulamayı yeniden başlatın.');
+            showError('İnternet bağlantısı yok ve cihaz hafızasında kayıtlı veri bulunamadı.');
         }
     }
 
@@ -488,21 +477,6 @@
         return match ? match[1] : null;
     }
 
-    // --- ALBÜM VERİSİ PARSE ---
-    function parseAlbumData(albumRaw) {
-        if (!albumRaw || albumRaw === '') return null;
-        try {
-            const parsed = JSON.parse(albumRaw);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-                return parsed.map(item => ({
-                    url: item.url || '',
-                    type: item.type || getMediaType(item.url) || 'image'
-                })).filter(item => item.url);
-            }
-        } catch(e) {}
-        return null;
-    }
-
     function processData(rows) {
         const newDataString = JSON.stringify(rows);
         
@@ -525,11 +499,6 @@
 
             const video = normalized['video'] || '';
             const gorsel = normalized['gorsel'] || normalized['görsel'] || normalized['resim'] || '';
-            const albumRaw = normalized['album'] || normalized['albüm'] || '';
-            
-            // Albüm verisini parse et
-            const albumItems = parseAlbumData(albumRaw);
-            
             let mediaUrl = video || gorsel;
             let mediaType = video ? getMediaType(video) : (gorsel ? getMediaType(gorsel) : null);
 
@@ -538,8 +507,7 @@
                 kategori: (normalized['kategori'] || '').toLowerCase(),
                 tarih: normalized['tarih'] || '',
                 catInfo: CATEGORY_MAP[(normalized['kategori'] || '').toLowerCase()] || DEFAULT_CATEGORY,
-                mediaUrl, mediaType,
-                albumItems: albumItems  // null veya [{url, type}, ...]
+                mediaUrl, mediaType
             };
 
             const bant = (normalized['bant'] || 'hayir').toLowerCase();
@@ -560,11 +528,6 @@
     }
 
     function buildMediaHtml(item, index) {
-        // ALBÜM MODU: Birden fazla medya varsa albüm konteynerı oluştur
-        if (item.albumItems && item.albumItems.length > 0) {
-            return buildAlbumHtml(item, index);
-        }
-        
         if (!item.mediaUrl || !item.mediaType) return '';
         if (item.mediaType === 'image') {
             return `<div class="slide-media image-container" id="media-container-${index}">
@@ -584,41 +547,6 @@
         return '';
     }
 
-    // --- ALBÜM HTML OLUŞTURMA ---
-    function buildAlbumHtml(item, index) {
-        let mediaItemsHtml = '';
-        
-        item.albumItems.forEach((albumItem, aIdx) => {
-            const activeClass = aIdx === 0 ? 'album-active' : '';
-            if (albumItem.type === 'video') {
-                mediaItemsHtml += `<div class="album-media-item ${activeClass}" data-album-idx="${aIdx}" data-album-type="video">
-                    <video id="album-video-${index}-${aIdx}" src="${escapeAttr(albumItem.url)}" playsinline style="width:100%;height:100%;object-fit:cover;"></video>
-                </div>`;
-            } else {
-                mediaItemsHtml += `<div class="album-media-item ${activeClass}" data-album-idx="${aIdx}" data-album-type="image">
-                    <img src="${escapeAttr(albumItem.url)}" loading="lazy" onerror="this.parentElement.remove();">
-                </div>`;
-            }
-        });
-
-        // Albüm alt-dot navigasyonu
-        let dotsHtml = '<div class="album-sub-dots">';
-        item.albumItems.forEach((_, aIdx) => {
-            dotsHtml += `<div class="album-sub-dot ${aIdx === 0 ? 'album-dot-active' : ''}"></div>`;
-        });
-        dotsHtml += '</div>';
-
-        return `<div class="album-media-container" id="media-container-${index}">
-            <div class="album-counter-badge">
-                <span class="album-counter-icon">📸</span>
-                <span><span class="album-counter-current" id="album-current-${index}">1</span> / ${item.albumItems.length}</span>
-            </div>
-            ${mediaItemsHtml}
-            ${dotsHtml}
-            <div class="album-progress-bar" id="album-progress-${index}" style="width:0%"></div>
-        </div>`;
-    }
-
     function renderSlides() {
         destroyAllPlayers();
         els.slidesContainer.innerHTML = '';
@@ -626,12 +554,10 @@
         slides.forEach((item, index) => {
             const slideEl = document.createElement('div');
             slideEl.className = `slide ${index === 0 ? 'active' : ''}`;
-            const hasMedia = (item.albumItems && item.albumItems.length > 0) || (item.mediaUrl && item.mediaType);
+            const hasMedia = item.mediaUrl && item.mediaType;
             const noMediaClass = hasMedia ? '' : 'no-media';
 
-            // Albüm ve video slaytlarında progress bar gösterme
-            const isAlbumOrVideo = (item.albumItems && item.albumItems.length > 0) || item.mediaType === 'youtube' || item.mediaType === 'video';
-            const progressHtml = isAlbumOrVideo
+            const progressHtml = (item.mediaType === 'youtube' || item.mediaType === 'video')
                 ? ''
                 : `<div class="slide-progress" id="progress-${index}"></div>`;
 
@@ -712,143 +638,12 @@
         const item = slides[currentSlideIndex];
         if (!item) return;
 
-        // ALBÜM MODU
-        if (item.albumItems && item.albumItems.length > 0) {
-            handleAlbumSlide(item, currentSlideIndex);
-            return;
-        }
-
         if (item.mediaType === 'youtube' || item.mediaType === 'video') {
             handleVideoSlide(item, currentSlideIndex);
         } else {
             startProgress(CONFIG.SLIDE_INTERVAL);
             currentSlideTimeout = setTimeout(nextSlide, CONFIG.SLIDE_INTERVAL);
             scheduleNextPreview();
-        }
-    }
-
-    // --- ALBÜM SLAYT MOTORU ---
-    function handleAlbumSlide(item, slideIndex) {
-        currentAlbumIndex = 0;
-        const container = document.getElementById(`media-container-${slideIndex}`);
-        if (!container) { currentSlideTimeout = setTimeout(nextSlide, CONFIG.SLIDE_INTERVAL); return; }
-
-        const textElement = container.closest('.slide-card').querySelector('.slide-text');
-
-        // 4 saniye sonra tam ekrana geç (video/tekli medya gibi)
-        fullscreenTriggerTimer = setTimeout(() => {
-            container.classList.add('fullscreen-album');
-            if (textElement) textElement.classList.add('text-hidden');
-        }, 4000);
-
-        playAlbumItem(item, slideIndex, 0);
-    }
-
-    function playAlbumItem(item, slideIndex, albumIdx) {
-        if (albumTimer) clearTimeout(albumTimer);
-        if (albumProgressTimer) clearInterval(albumProgressTimer);
-        
-        currentAlbumIndex = albumIdx;
-        const albumItems = item.albumItems;
-        
-        if (albumIdx >= albumItems.length) {
-            // Tüm albüm medyaları bitti -> slayt geçişi
-            const container = document.getElementById(`media-container-${slideIndex}`);
-            const textElement = container ? container.closest('.slide-card').querySelector('.slide-text') : null;
-            
-            if (container && container.classList.contains('fullscreen-album')) {
-                // Fullscreen'den çık, 2sn bekle, sonraki slayta geç
-                container.classList.remove('fullscreen-album');
-                if (textElement) textElement.classList.remove('text-hidden');
-                currentSlideTimeout = setTimeout(nextSlide, 2000);
-            } else {
-                nextSlide();
-            }
-            return;
-        }
-
-        const currentAlbumItem = albumItems[albumIdx];
-        const container = document.getElementById(`media-container-${slideIndex}`);
-        if (!container) { nextSlide(); return; }
-
-        // Sayaç güncelle
-        const counterEl = document.getElementById(`album-current-${slideIndex}`);
-        if (counterEl) counterEl.textContent = albumIdx + 1;
-
-        // Dot navigasyonunu güncelle
-        const dots = container.querySelectorAll('.album-sub-dot');
-        dots.forEach((dot, i) => {
-            dot.classList.remove('album-dot-active', 'album-dot-done');
-            if (i < albumIdx) dot.classList.add('album-dot-done');
-            if (i === albumIdx) dot.classList.add('album-dot-active');
-        });
-
-        // Aktif medyayı göster (crossfade)
-        const mediaItems = container.querySelectorAll('.album-media-item');
-        mediaItems.forEach(mi => mi.classList.remove('album-active'));
-        const targetItem = container.querySelector(`[data-album-idx="${albumIdx}"]`);
-        if (targetItem) targetItem.classList.add('album-active');
-
-        // Medya türüne göre süreyi belirle
-        if (currentAlbumItem.type === 'video') {
-            const videoEl = document.getElementById(`album-video-${slideIndex}-${albumIdx}`);
-            if (videoEl) {
-                // Fallback timer: video yüklenmezse 10sn sonra atla
-                fallbackTimer = setTimeout(() => {
-                    playAlbumItem(item, slideIndex, albumIdx + 1);
-                }, 15000);
-
-                videoEl.currentTime = 0;
-                videoEl.play().then(() => {
-                    clearTimeout(fallbackTimer);
-                }).catch(() => {
-                    clearTimeout(fallbackTimer);
-                    playAlbumItem(item, slideIndex, albumIdx + 1);
-                });
-
-                videoEl.onwaiting = () => {
-                    clearTimeout(fallbackTimer);
-                    fallbackTimer = setTimeout(() => {
-                        playAlbumItem(item, slideIndex, albumIdx + 1);
-                    }, 15000);
-                };
-                videoEl.onplaying = () => { clearTimeout(fallbackTimer); };
-
-                videoEl.onended = () => {
-                    clearTimeout(fallbackTimer);
-                    playAlbumItem(item, slideIndex, albumIdx + 1);
-                };
-
-                videoEl.onerror = () => {
-                    clearTimeout(fallbackTimer);
-                    playAlbumItem(item, slideIndex, albumIdx + 1);
-                };
-            } else {
-                // Video element bulunamazsa atla
-                albumTimer = setTimeout(() => playAlbumItem(item, slideIndex, albumIdx + 1), 500);
-            }
-        } else {
-            // Fotoğraf: ALBUM_IMAGE_DURATION süresince göster + progress bar
-            const progressBar = document.getElementById(`album-progress-${slideIndex}`);
-            const duration = CONFIG.ALBUM_IMAGE_DURATION;
-            let elapsed = 0;
-            
-            if (progressBar) {
-                progressBar.style.transition = 'none';
-                progressBar.style.width = '0%';
-                void progressBar.offsetWidth;
-
-                albumProgressTimer = setInterval(() => {
-                    elapsed += CONFIG.PROGRESS_STEP;
-                    progressBar.style.width = `${Math.min((elapsed / duration) * 100, 100)}%`;
-                    progressBar.style.transition = `width ${CONFIG.PROGRESS_STEP}ms linear`;
-                }, CONFIG.PROGRESS_STEP);
-            }
-
-            albumTimer = setTimeout(() => {
-                if (albumProgressTimer) clearInterval(albumProgressTimer);
-                playAlbumItem(item, slideIndex, albumIdx + 1);
-            }, duration);
         }
     }
 
@@ -979,19 +774,8 @@
         const container = document.getElementById(`media-container-${index}`);
         if (container) {
             container.classList.remove('fullscreen-media');
-            container.classList.remove('fullscreen-album');
             const textElement = container.closest('.slide-card').querySelector('.slide-text');
             if (textElement) textElement.classList.remove('text-hidden');
-        }
-
-        // Albüm videolarını durdur
-        if (item.albumItems && item.albumItems.length > 0) {
-            item.albumItems.forEach((albumItem, aIdx) => {
-                if (albumItem.type === 'video') {
-                    const videoEl = document.getElementById(`album-video-${index}-${aIdx}`);
-                    if (videoEl) { videoEl.pause(); videoEl.currentTime = 0; }
-                }
-            });
         }
 
         if (item.mediaType === 'youtube' && window.ytPlayers[index] && typeof window.ytPlayers[index].pauseVideo === 'function') {
@@ -1023,8 +807,8 @@
         if (slides.length <= 1 || !els.nextPreview) return;
 
         const currentItem = slides[currentSlideIndex];
-        // Video/YouTube/Albüm slaytlarında süre dinamik olduğu için preview gösterme
-        if (currentItem.mediaType === 'youtube' || currentItem.mediaType === 'video' || (currentItem.albumItems && currentItem.albumItems.length > 0)) return;
+        // Video/YouTube slaytlarında süre dinamik olduğu için preview gösterme
+        if (currentItem.mediaType === 'youtube' || currentItem.mediaType === 'video') return;
 
         nextPreviewTimer = setTimeout(() => {
             els.nextPreviewTitle.textContent = slides[(currentSlideIndex + 1) % slides.length].baslik;
