@@ -290,7 +290,17 @@
                     <div class="form-group" style="margin-bottom: 0;">
                         <label for="c-file">📁 Dosya Seç (Resim / Video)</label>
                         <input type="file" id="c-file" accept="image/*,video/mp4,video/webm">
-                        <p class="form-hint">Seçtiğiniz dosya otomatik olarak Google Drive klasörüne yüklenecektir.</p>
+                        <p class="form-hint">Görseller Drive'a, videolar (mp4 vb.) doğrudan <b>YouTube kanalınıza (Liste Dışı)</b> otomatik yüklenir.</p>
+                    </div>
+
+                    <div id="upload-progress-container" style="display: none; margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                        <div style="font-size: 13px; font-weight: 600; color: var(--accent-blue); margin-bottom: 8px; display: flex; justify-content: space-between;">
+                            <span id="upload-progress-text">YouTube'a Yükleniyor: %0</span>
+                            <span id="upload-progress-size">0 MB / 0 MB</span>
+                        </div>
+                        <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                            <div id="upload-progress-bar" style="width: 0%; height: 100%; background: var(--gradient-primary); transition: width 0.3s ease;"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -302,8 +312,7 @@
                     ❌ Bir hata oluştu.
                 </div>
                 
-                <div class="content-list" id="content-list-container">
-                    </div>
+                <div class="content-list" id="content-list-container"></div>
             </form>
         </div>
 
@@ -386,7 +395,7 @@
             let isAuthenticated = false;
             let savedPassword = localStorage.getItem('kiosk_admin_password');
             let currentEditRowIndex = null; 
-            const MAX_VISIBLE_ITEMS = 7; // MİLLER YASASI: İdeal Görünür Sınır
+            const MAX_VISIBLE_ITEMS = 7; 
             
             let draggedRowIndex = null;
             let dragSourceEl = null;
@@ -417,11 +426,9 @@
                     var citySelect = document.getElementById('s-sehir');
                     citySelect.value = savedCity;
                     
-                    // Eğer kaydedilmiş lat/lon varsa direkt göster
                     document.getElementById('s-enlem').value = localStorage.getItem('kiosk_weather_lat') || '';
                     document.getElementById('s-boylam').value = localStorage.getItem('kiosk_weather_lon') || '';
                     
-                    // Eğer şehir listede varsa ve enlem/boylam boşsa, dropdown'dan dolduralım
                     if (savedCity && citySelect.value === savedCity) {
                         var opt = citySelect.options[citySelect.selectedIndex];
                         if (opt && opt.dataset.lat) {
@@ -434,7 +441,6 @@
                 }
             }
 
-            // Tabs Logic
             tabBtns.forEach(btn => {
                 btn.addEventListener('click', () => {
                     const targetTab = btn.dataset.tab;
@@ -450,7 +456,6 @@
                 });
             });
 
-            // Login Logic
             document.getElementById('login-form').addEventListener('submit', function(e) {
                 e.preventDefault();
                 const enteredPwd = document.getElementById('login-password').value;
@@ -473,7 +478,6 @@
                 if (!currentlyActive) switchTab('tab-icerik');
             });
 
-            // Şehir dropdown'ı değiştiğinde enlem/boylam otomatik doldur
             document.getElementById('s-sehir').addEventListener('change', function() {
                 var selected = this.options[this.selectedIndex];
                 if (selected && selected.dataset.lat) {
@@ -485,12 +489,10 @@
                 }
             });
 
-            // --- MEVCUT İÇERİKLERİ ÇEKME VE LİSTELEME ---
             function fetchExistingContents() {
                 const sheetId = localStorage.getItem('kiosk_sheet_id');
                 if (!sheetId) return;
 
-                // Cache-Busting (Önbelleği engellemek) ve &headers=1 (Google'ın satır yutmasını engellemek)
                 const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:loadContentsCallback&sheet=DUYURULAR&headers=1&t=${new Date().getTime()}`;
                 const scriptId = 'jsonp-load-contents';
                 
@@ -528,7 +530,7 @@
                     return;
                 }
 
-                let activeCount = 0; // Sadece aktif olanları sayacağız
+                let activeCount = 0; 
 
                 rows.forEach((row, index) => {
                     const rowIndex = index + 2; 
@@ -540,20 +542,17 @@
                     let statusHtml = '';
                     let itemOpacity = '1';
 
-                    // GÖRÜNÜRLÜK SINIRI MANTIĞI
                     if (isAktif) {
                         activeCount++;
                         if (activeCount <= MAX_VISIBLE_ITEMS) {
                             statusHtml = '<span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">📺 YAYINDA</span>';
                         } else {
-                            // 7'den sonrakiler aktif olsa bile sırada bekler
                             statusHtml = '<span class="badge" style="background: rgba(245, 158, 11, 0.1); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3);">📁 SIRADA (YEDEK)</span>';
-                            itemOpacity = '0.6'; // Soluklaştır
+                            itemOpacity = '0.6';
                         }
                     } else {
-                        // Tamamen kapalı
                         statusHtml = '<span class="badge" style="background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3);">❌ KAPALI</span>';
-                        itemOpacity = '0.4'; // Çok soluklaştır
+                        itemOpacity = '0.4'; 
                     }
 
                     const isFirst = (index === 0);
@@ -605,7 +604,6 @@
                 });
             }
 
-            // --- İÇERİK SIRALAMA (TAŞIMA) MANTIĞI ---
             async function moveItem(rowIndex, direction) {
                 const scriptUrl = localStorage.getItem('kiosk_script_url');
                 const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
@@ -627,7 +625,7 @@
                     const data = await response.json();
                     if(data.status === 'error') throw new Error(data.message);
                     
-                    fetchExistingContents(); // Listeyi yenile
+                    fetchExistingContents(); 
                     overlay.style.display = 'none';
 
                 } catch(e) {
@@ -692,7 +690,7 @@
                     const data = await response.json();
                     if(data.status === 'error') throw new Error(data.message);
                     
-                    fetchExistingContents(); // Listeyi yenile
+                    fetchExistingContents(); 
                     overlay.style.display = 'none';
 
                 } catch(e) {
@@ -701,7 +699,6 @@
                 }
             }
 
-            // --- İÇERİK DÜZENLEME MANTIĞI ---
             function startEditing(rowIndex, row) {
                 currentEditRowIndex = rowIndex;
                 document.getElementById('form-title').textContent = `İÇERİĞİ DÜZENLE`;
@@ -729,10 +726,10 @@
                 document.getElementById('form-title').style.color = 'var(--accent-blue)';
                 document.getElementById('btn-submit-content').innerHTML = '🚀 İçeriği Tabloya Ekle';
                 document.getElementById('btn-cancel-edit').style.display = 'none';
+                document.getElementById('upload-progress-container').style.display = 'none';
                 document.getElementById('content-form').reset();
             }
 
-            // --- İÇERİK SİLME MANTIĞI ---
             async function deleteItem(rowIndex) {
                 if(!confirm('Bu içeriği tamamen silmek istediğinize emin misiniz?')) return;
                 
@@ -766,8 +763,6 @@
                 }
             }
 
-
-            // --- Sihirli Kurulum Motoru ---
             function runMagicSetup(sheetInput, isSilentLoad) {
                 let cleanSheetId = sheetInput;
                 if (cleanSheetId.includes('docs.google.com/spreadsheets/d/')) {
@@ -897,7 +892,6 @@
                 }
             });
 
-            // Settings Save
             const settingsForm = document.getElementById('settings-form');
             if (settingsForm) {
                 settingsForm.addEventListener('submit', async function(e) {
@@ -935,7 +929,11 @@
 
                         const payload = { sheetId: cleanSheetId, action: 'updateSettings', settings: newSettings };
 
-                        const fetchPromise = fetch(currentScriptUrl, { method: 'POST', body: JSON.stringify(payload) });
+                        const fetchPromise = fetch(currentScriptUrl, { 
+                            method: 'POST', 
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify(payload) 
+                        });
                         const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('İstek zaman aşımına uğradı.')), 15000));
                         
                         const response = await Promise.race([fetchPromise, timeoutPromise]);
@@ -966,7 +964,7 @@
                 });
             }
 
-            // --- YENİ & DÜZENLENMİŞ İÇERİK EKLEME/GÜNCELLEME FORMU ---
+            // --- YOUTUBE YÜKLEME VE İÇERİK KAYDETME ALANI (CORS FIX) ---
             const contentForm = document.getElementById('content-form');
             if (contentForm) {
                 contentForm.addEventListener('submit', async function(e) {
@@ -1012,25 +1010,100 @@
                         if(currentEditRowIndex) payload.rowIndex = currentEditRowIndex;
                         
                         const fileInput = document.getElementById('c-file');
+                        
                         if (fileInput.files.length > 0) {
                             const file = fileInput.files[0];
-                            const reader = new FileReader();
                             
-                            const filePromise = new Promise((resolve, reject) => {
-                                reader.onload = (ev) => resolve(ev.target.result);
-                                reader.onerror = (err) => reject(err);
-                                reader.readAsDataURL(file);
-                            });
-                            
-                            const base64Data = await filePromise;
-                            payload.file = { name: file.name, mimeType: file.type, content: base64Data };
-                            document.getElementById('loading-text').textContent = 'Dosya Drive\'a yükleniyor, lütfen bekleyin...';
+                            // 🎬 VİDEO YÜKLEME 
+                            if (file.type.startsWith('video/')) {
+                                document.getElementById('loading-text').textContent = 'YouTube yükleme bileti alınıyor...';
+                                
+                                // GÜNCELLEME: Preflight/CORS hatasını önlemek için Origin bildiriliyor
+                                const urlResp = await fetch(scriptUrl, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                    body: JSON.stringify({
+                                        sheetId: cleanSheetId,
+                                        action: 'getYouTubeUploadUrl',
+                                        videoTitle: itemData.baslik || 'Okul Duyuru Videosu',
+                                        mimeType: file.type,
+                                        size: file.size,
+                                        origin: window.location.origin
+                                    })
+                                });
+                                const urlData = await urlResp.json();
+                                if (urlData.status !== 'success') throw new Error(urlData.message || 'YouTube yükleme bağlantısı alınamadı');
+
+                                const uploadUrl = urlData.uploadUrl;
+                                
+                                document.getElementById('loading-text').textContent = 'Video doğrudan YouTube kanalınıza yükleniyor...';
+                                const progressContainer = document.getElementById('upload-progress-container');
+                                const progressBar = document.getElementById('upload-progress-bar');
+                                const progressText = document.getElementById('upload-progress-text');
+                                const progressSize = document.getElementById('upload-progress-size');
+                                
+                                progressContainer.style.display = 'block';
+                                
+                                const CHUNK_SIZE = 2097152; // 2 MB
+                                let uploaded = 0;
+                                let videoId = null;
+
+                                while (uploaded < file.size) {
+                                    const end = Math.min(uploaded + CHUNK_SIZE, file.size);
+                                    const chunk = file.slice(uploaded, end);
+                                    
+                                    const putResp = await fetch(uploadUrl, {
+                                        method: 'PUT',
+                                        headers: {
+                                            'Content-Range': `bytes ${uploaded}-${end - 1}/${file.size}`
+                                        },
+                                        body: chunk
+                                    });
+                                    
+                                    if (putResp.status === 308) {
+                                        uploaded = end;
+                                        const percent = Math.round((uploaded / file.size) * 100);
+                                        progressBar.style.width = percent + '%';
+                                        progressText.textContent = `YouTube'a Yükleniyor: %${percent}`;
+                                        progressSize.textContent = `${(uploaded/1024/1024).toFixed(1)} MB / ${(file.size/1024/1024).toFixed(1)} MB`;
+                                    } else if (putResp.status === 200 || putResp.status === 201) {
+                                        const putData = await putResp.json();
+                                        videoId = putData.id;
+                                        break;
+                                    } else {
+                                        throw new Error('YouTube yükleme sırasında hata: KOD ' + putResp.status);
+                                    }
+                                }
+                                
+                                payload.item.video = `https://www.youtube.com/watch?v=${videoId}`;
+                                progressContainer.style.display = 'none';
+                                document.getElementById('loading-text').textContent = 'Kayıt tamamlanıyor...';
+                                
+                            } 
+                            // 🖼️ GÖRSEL YÜKLEME
+                            else if (file.type.startsWith('image/')) {
+                                document.getElementById('loading-text').textContent = 'Görsel Drive sistemine aktarılıyor...';
+                                const reader = new FileReader();
+                                const filePromise = new Promise((resolve, reject) => {
+                                    reader.onload = (ev) => resolve(ev.target.result);
+                                    reader.onerror = (err) => reject(err);
+                                    reader.readAsDataURL(file);
+                                });
+                                
+                                const base64Data = await filePromise;
+                                payload.file = { name: file.name, mimeType: file.type, content: base64Data };
+                            }
                         } else {
                             document.getElementById('loading-text').textContent = currentEditRowIndex ? 'Değişiklikler kaydediliyor...' : 'Duyuru tabloya kaydediliyor...';
                         }
                         
-                        const fetchPromise = fetch(scriptUrl, { method: 'POST', body: JSON.stringify(payload) });
-                        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('İstek zaman aşımına uğradı.')), 30000));
+                        // GÜNCELLEME: CORS preflight engellemek için Content-Type eklendi
+                        const fetchPromise = fetch(scriptUrl, { 
+                            method: 'POST', 
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify(payload) 
+                        });
+                        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Sistem yanıt vermedi veya zaman aşımına uğradı.')), 30000));
                         
                         const response = await Promise.race([fetchPromise, timeoutPromise]);
                         const data = await response.json();
