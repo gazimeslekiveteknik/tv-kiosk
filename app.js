@@ -263,22 +263,15 @@
             let innerHtml = '';
             
             if (media.mediaType === 'image') {
-                // SİNEMATİK "YÜZEN TABLO" EFEKTİ
+                // SİNEMATİK EFEKT: Arkaya bulanıklaştırılmış dev görsel, öne ise kırpılmamış (contain) net görsel
                 innerHtml = `
-                    <div style="position:absolute; top:0; left:0; width:100%; height:100%; background-image:url('${escapeAttr(media.url)}'); background-size:cover; background-position:center; filter:blur(40px); opacity:0.5; transform:scale(1.2);"></div>
-                    <div style="position:relative; z-index:1; width:100%; height:100%; display:flex; align-items:center; justify-content:center; padding:40px; box-sizing:border-box;">
-                        <img src="${escapeAttr(media.url)}" loading="lazy" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:16px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.6); display:block;">
-                    </div>
+                    <div style="position:absolute; top:0; left:0; width:100%; height:100%; background-image:url('${escapeAttr(media.url)}'); background-size:cover; background-position:center; filter:blur(40px); opacity:0.6; transform:scale(1.1);"></div>
+                    <img src="${escapeAttr(media.url)}" loading="lazy" style="position:relative; z-index:1; width:100%; height:100%; object-fit:contain; display:block;">
                 `;
             } 
             else if (media.mediaType === 'video') {
-                // VİDEOLAR İÇİN YÜZEN EFEKT (Arka plan karanlık cam efekti)
-                innerHtml = `
-                    <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg, #1e293b, #0f172a);"></div>
-                    <div style="position:relative; z-index:1; width:100%; height:100%; display:flex; align-items:center; justify-content:center; padding:40px; box-sizing:border-box;">
-                        <video id="html-video-${slideIndex}-${albumIndex}" src="${escapeAttr(media.url)}" playsinline style="max-width:100%; max-height:100%; object-fit:contain; border-radius:16px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.6); background:#000;"></video>
-                    </div>
-                `;
+                // Videolar için de zoom yapmayı engelle ve tam sığdır (contain)
+                innerHtml = `<video id="html-video-${slideIndex}-${albumIndex}" src="${escapeAttr(media.url)}" playsinline style="width:100%;height:100%;object-fit:contain;background:#000;"></video>`;
             } 
             else if (media.mediaType === 'youtube') {
                 innerHtml = `<div id="yt-player-${slideIndex}-${albumIndex}" data-vid="${getYouTubeId(media.url)}" style="width:100%;height:100%;pointer-events:none;"></div>`;
@@ -289,7 +282,6 @@
         
         return html + `</div>`;
     }
-
     function renderSlides() {
         destroyAllPlayers(); els.slidesContainer.innerHTML = '';
         slides.forEach((item, index) => {
