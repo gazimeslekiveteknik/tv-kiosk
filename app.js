@@ -417,7 +417,10 @@
 
     function showError(message) { els.slidesContainer.innerHTML = `<div class="slide active"><div class="slide-card cat-onemli no-media"><div class="slide-text"><div class="slide-icon">⚠️</div><h2 class="slide-title">Bilgi Ekranı</h2><p class="slide-content">${escapeHtml(message)}</p></div></div></div>`; }
     function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+    
+    // Hatanın düzeltildiği yer burası:
     function escapeAttr(text) { return text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    
     function fetchFreeWeather() { if (!navigator.onLine) return; fetch(`https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.WEATHER_LAT}&longitude=${CONFIG.WEATHER_LON}&current_weather=true`).then(r => r.json()).then(data => { if (data.current_weather) { const temp = Math.round(data.current_weather.temperature); if (els.weatherTemp) els.weatherTemp.textContent = `${temp}°C`; if (els.weatherCity) els.weatherCity.textContent = CONFIG.WEATHER_CITY; if (els.weatherDesc) els.weatherDesc.textContent = 'Güncel'; } }).catch(() => { }); }
     function fetchWeather() { fetchFreeWeather(); }
 
