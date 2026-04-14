@@ -282,6 +282,7 @@
         
         return html + `</div>`;
     }
+   
     function renderSlides() {
         destroyAllPlayers(); els.slidesContainer.innerHTML = '';
         slides.forEach((item, index) => {
