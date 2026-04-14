@@ -21,7 +21,6 @@
         .form-group input, .form-group select { width: 100%; padding: 14px 18px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 15px; outline: none; transition: all 0.3s; }
         .form-group select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; }
         .form-group select option { background: #1e293b; color: white; } .form-group input:focus, .form-group select:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
-        .form-hint { font-size: 12px; color: var(--text-secondary); margin-top: 8px; opacity: 0.7; }
         .media-section { background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: var(--radius-sm); margin-bottom: 24px; border: 1px dashed rgba(255, 255, 255, 0.1); }
         .media-section-title { font-size: 13px; font-weight: 700; color: #cbd5e1; margin-bottom: 16px; text-transform: uppercase; }
         .btn-save { width: 100%; padding: 16px 32px; background: var(--gradient-primary); color: white; border: none; border-radius: var(--radius-sm); font-size: 17px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
@@ -32,7 +31,6 @@
         .btn-reset { padding: 14px 24px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; }
         .content-list { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 12px; }
         .content-item { background: rgba(0, 0, 0, 0.2); padding: 16px; border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255, 255, 255, 0.05); }
-        .content-item.dragging { opacity: 0.5; transform: scale(0.98); } .content-item.drag-over { border: 2px dashed var(--accent-blue); background: rgba(59, 130, 246, 0.1); }
         .content-item-info h4 { margin-bottom: 6px; color: var(--text-primary); font-size: 15px; display: flex; align-items: center; gap: 8px; }
         .content-item-actions { display: flex; gap: 6px; } .btn-icon { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
         .btn-icon.move { background: rgba(245, 158, 11, 0.15); color: #fcd34d; font-size: 14px; } .btn-icon.edit { background: rgba(59, 130, 246, 0.2); color: #60a5fa; } .btn-icon.delete { background: rgba(239, 68, 68, 0.2); color: #f87171; }
@@ -148,8 +146,6 @@
     <script>
         (function () {
             let isAuthenticated = false; let savedPassword = localStorage.getItem('kiosk_admin_password'); let currentEditRowIndex = null; const MAX_VISIBLE_ITEMS = 7;
-            let draggedRowIndex = null; let dragSourceEl = null;
-
             const loginOverlay = document.getElementById('login-overlay'); const tabBtns = document.querySelectorAll('.tab-btn'); const tabContents = document.querySelectorAll('.tab-content');
 
             function switchTab(tabId) {
@@ -200,17 +196,14 @@
                 rows.forEach((row, index) => {
                     const rowIndex = index + 2; const baslik = row.c[0] ? (row.c[0].v || '') : ''; const kategori = row.c[2] ? (row.c[2].v || 'duyuru') : 'duyuru'; const isAktif = (row.c[4] ? (row.c[4].v || 'EVET') : 'EVET').toString().toUpperCase() === 'EVET';
                     let statusHtml = ''; if (isAktif) { activeCount++; statusHtml = activeCount <= MAX_VISIBLE_ITEMS ? '<span class="badge" style="color: #10b981;">📺 YAYINDA</span>' : '<span class="badge" style="color: #fbbf24;">📁 YEDEK</span>'; } else { statusHtml = '<span class="badge" style="color: #f87171;">❌ KAPALI</span>'; }
-                    const itemDiv = document.createElement('div'); itemDiv.className = 'content-item'; itemDiv.style.opacity = isAktif ? '1' : '0.4'; itemDiv.setAttribute('draggable', 'true'); itemDiv.dataset.rowIndex = rowIndex;
+                    const itemDiv = document.createElement('div'); itemDiv.className = 'content-item'; itemDiv.style.opacity = isAktif ? '1' : '0.4';
                     itemDiv.innerHTML = `<div class="content-item-info"><h4>${statusHtml} ${baslik} <span class="badge category-badge">${kategori}</span></h4></div><div class="content-item-actions"><button type="button" class="btn-icon move move-up" data-index="${rowIndex}" ${index === 0 ? 'disabled' : ''}>▲</button><button type="button" class="btn-icon move move-down" data-index="${rowIndex}" ${index === rows.length - 1 ? 'disabled' : ''}>▼</button><button type="button" class="btn-icon edit" data-index="${rowIndex}">Düzenle</button><button type="button" class="btn-icon delete" data-index="${rowIndex}">Sil</button></div>`;
                     
                     itemDiv.querySelector('.edit').addEventListener('click', () => startEditing(rowIndex, row));
-                    
                     const gorselUrl = row.c[6] ? (row.c[6].v || '') : ''; const videoUrl = row.c[7] ? (row.c[7].v || '') : '';
                     itemDiv.querySelector('.delete').addEventListener('click', () => deleteItem(rowIndex, gorselUrl, videoUrl));
-                    
                     itemDiv.querySelector('.move-up').addEventListener('click', (e) => { if (!e.target.disabled) moveItem(rowIndex, 'up'); });
                     itemDiv.querySelector('.move-down').addEventListener('click', (e) => { if (!e.target.disabled) moveItem(rowIndex, 'down'); });
-                    itemDiv.addEventListener('dragstart', handleDragStart); itemDiv.addEventListener('dragover', handleDragOver); itemDiv.addEventListener('dragleave', handleDragLeave); itemDiv.addEventListener('drop', handleDrop); itemDiv.addEventListener('dragend', handleDragEnd);
                     container.appendChild(itemDiv);
                 });
             }
@@ -220,31 +213,17 @@
                 try { await fetch(scriptUrl, { method: 'POST', body: JSON.stringify({ sheetId: localStorage.getItem('kiosk_sheet_id'), action: 'moveContent', rowIndex: rowIndex, direction: direction }) }); fetchExistingContents(); document.getElementById('loading-overlay').style.display = 'none'; } catch (e) { alert('Hata: ' + e.message); }
             }
 
-            function handleDragStart(e) { dragSourceEl = this; draggedRowIndex = this.dataset.rowIndex; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/html', this.innerHTML); this.classList.add('dragging'); }
-            function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; this.classList.add('drag-over'); return false; }
-            function handleDragLeave(e) { this.classList.remove('drag-over'); }
-            function handleDrop(e) { e.stopPropagation(); this.classList.remove('drag-over'); if (dragSourceEl !== this && draggedRowIndex) reorderItemDrop(draggedRowIndex, this.dataset.rowIndex); return false; }
-            function handleDragEnd(e) { this.classList.remove('dragging'); document.querySelectorAll('.content-item').forEach(el => el.classList.remove('drag-over')); }
-
-            async function reorderItemDrop(fromRow, toRow) {
-                document.getElementById('loading-overlay').style.display = 'flex';
-                try { await fetch(localStorage.getItem('kiosk_script_url'), { method: 'POST', body: JSON.stringify({ sheetId: localStorage.getItem('kiosk_sheet_id'), action: 'reorderContent', fromRow: fromRow, toRow: toRow }) }); fetchExistingContents(); document.getElementById('loading-overlay').style.display = 'none'; } catch (e) { alert('Hata!'); }
-            }
-
             function startEditing(rowIndex, row) {
                 currentEditRowIndex = rowIndex; document.getElementById('form-title').textContent = `İÇERİĞİ DÜZENLE`; document.getElementById('btn-submit-content').innerHTML = '💾 Kaydet'; document.getElementById('btn-cancel-edit').style.display = 'block';
                 document.getElementById('c-baslik').value = row.c[0] ? (row.c[0].v || '') : ''; document.getElementById('c-icerik').value = row.c[1] ? (row.c[1].v || '') : ''; document.getElementById('c-kategori').value = (row.c[2] ? (row.c[2].v || 'duyuru') : 'duyuru').toString().toLowerCase(); document.getElementById('c-aktif').value = (row.c[4] ? (row.c[4].v || 'EVET') : 'EVET').toString().toUpperCase(); document.getElementById('c-bant').value = (row.c[5] ? (row.c[5].v || 'HAYIR') : 'HAYIR').toString().toUpperCase(); document.getElementById('c-gorsel-url').value = row.c[6] ? (row.c[6].v || '') : ''; document.getElementById('c-video-url').value = row.c[7] ? (row.c[7].v || '') : ''; window.scrollTo({ top: 0, behavior: 'smooth' });
             }
 
-            document.getElementById('btn-cancel-edit').addEventListener('click', () => { currentEditRowIndex = null; document.getElementById('form-title').textContent = 'YENİ İÇERİK EKLE'; document.getElementById('btn-submit-content').innerHTML = '🚀 Tabloya Ekle'; document.getElementById('btn-cancel-edit').style.display = 'none'; document.getElementById('content-form').reset(); });
+            document.getElementById('btn-cancel-edit').addEventListener('click', () => { currentEditRowIndex = null; document.getElementById('form-title').textContent = 'YENİ İÇERİK EKLE'; document.getElementById('btn-submit-content').innerHTML = '🚀 Tabloya Ekle'; document.getElementById('btn-cancel-edit').style.display = 'none'; document.getElementById('content-form').reset(); document.getElementById('upload-progress-container').style.display = 'none'; });
 
             async function deleteItem(rowIndex, gorselUrl, videoUrl) {
                 if (!confirm('Bu içeriği tamamen silmek istediğinize emin misiniz?')) return;
-                let deleteMedia = false;
-                if (gorselUrl || videoUrl) { deleteMedia = confirm('Bu duyuruya ait bir medya dosyası var.\n\nSistemden (Drive / YouTube) tamamen SİLİNSİN Mİ?\n\n(Dosyayı silmek için Tamam\'a, sadece tablodan kaldırmak için İptal\'e tıklayın.)'); }
-                
+                let deleteMedia = false; if (gorselUrl || videoUrl) { deleteMedia = confirm('Bu duyuruya ait bir medya dosyası var.\n\nSistemden (Drive / YouTube) tamamen SİLİNSİN Mİ?'); }
                 const overlay = document.getElementById('loading-overlay'); overlay.style.display = 'flex';
-                document.getElementById('loading-text').textContent = deleteMedia ? 'İçerik ve medya siliniyor...' : 'İçerik siliniyor...';
                 try {
                     await fetch(localStorage.getItem('kiosk_script_url'), { method: 'POST', body: JSON.stringify({ sheetId: localStorage.getItem('kiosk_sheet_id'), action: 'deleteContent', rowIndex: rowIndex, deleteMedia: deleteMedia }) });
                     fetchExistingContents(); overlay.style.display = 'none'; if (currentEditRowIndex === rowIndex) document.getElementById('btn-cancel-edit').click();
@@ -273,16 +252,12 @@
                 const script = document.createElement('script'); script.src = url; document.body.appendChild(script);
             }
 
-            const magicId = new URLSearchParams(window.location.search).get('id'); const localSheetId = localStorage.getItem('kiosk_sheet_id');
-            if (magicId) { document.getElementById('sheet-id').value = magicId; runMagicSetup(magicId, true); } 
-            else if (localSheetId) { document.getElementById('sheet-id').value = localSheetId; runMagicSetup(localSheetId, true); } 
-            else { switchTab('tab-kurulum'); }
-
+            const localSheetId = localStorage.getItem('kiosk_sheet_id'); if (localSheetId) { document.getElementById('sheet-id').value = localSheetId; runMagicSetup(localSheetId, true); } else { switchTab('tab-kurulum'); }
             document.getElementById('setup-form').addEventListener('submit', function (e) { e.preventDefault(); runMagicSetup(document.getElementById('sheet-id').value.trim(), false); });
             document.getElementById('btn-demo').addEventListener('click', function () { window.location.href = 'index.html'; });
             document.getElementById('btn-reset').addEventListener('click', function () { if (confirm('Sıfırlansın mı?')) { localStorage.clear(); window.location.reload(); } });
 
-            // GÜNCELLEME: ÇOKLU (MULTIPLE) DOSYALAR İÇİN SIRALI YÜKLEME 
+            // --- İÇERİK FORMU GÖNDERME (GÖRSEL LİNK SORUNU DÜZELTİLDİ) ---
             const contentForm = document.getElementById('content-form');
             if (contentForm) {
                 contentForm.addEventListener('submit', async function (e) {
@@ -299,25 +274,25 @@
                     btnSubmit.disabled = true;
 
                     try {
-                        let currentGorselLinks = document.getElementById('c-gorsel-url').value.trim();
-                        let currentVideoLinks = document.getElementById('c-video-url').value.trim();
+                        let manualGorsel = document.getElementById('c-gorsel-url').value.trim();
+                        let manualVideo = document.getElementById('c-video-url').value.trim();
                         const fileInput = document.getElementById('c-file');
+                        
+                        let uploadedGLinks = [];
+                        let uploadedVLinks = [];
 
                         if (fileInput.files.length > 0) {
                             progContainer.style.display = 'block';
-                            let gLinks = [];
-                            let vLinks = [];
-
                             for (let i = 0; i < fileInput.files.length; i++) {
                                 const file = fileInput.files[i];
-                                progText.textContent = `Yükleniyor: ${i+1}/${fileInput.files.length} - ${file.name}`;
+                                progText.textContent = `Yükleniyor (${i+1}/${fileInput.files.length}): ${file.name}`;
                                 progBar.style.width = '0%';
 
                                 if (file.type.startsWith('image/')) {
                                     const base64 = await new Promise(r => { const rd = new FileReader(); rd.onload = e => r(e.target.result); rd.readAsDataURL(file); });
                                     const resp = await fetch(scriptUrl, { method: 'POST', body: JSON.stringify({ sheetId: cleanSheetId, action: 'uploadFile', file: { name: file.name, mimeType: file.type, content: base64 } }) });
                                     const res = await resp.json();
-                                    if (res.status === 'success') gLinks.push(res.url);
+                                    if (res.status === 'success' && res.url) uploadedGLinks.push(res.url);
                                     progBar.style.width = '100%';
                                 } 
                                 else if (file.type.startsWith('video/')) {
@@ -328,18 +303,17 @@
                                         const end = Math.min(uploaded + CHUNK, file.size);
                                         const put = await fetch(uploadUrl, { method: 'PUT', headers: { 'Content-Range': `bytes ${uploaded}-${end - 1}/${file.size}` }, body: file.slice(uploaded, end) });
                                         if (put.status === 308) { uploaded = end; progBar.style.width = Math.round((uploaded/file.size)*100) + '%'; }
-                                        else if (put.status === 200 || put.status === 201) { const vid = (await put.json()).id; vLinks.push(`https://www.youtube.com/watch?v=${vid}`); break; }
+                                        else if (put.status === 200 || put.status === 201) { const vid = (await put.json()).id; uploadedVLinks.push(`https://www.youtube.com/watch?v=${vid}`); break; }
                                     }
                                 }
                             }
-                            // Mevcut linklerin üzerine yenileri ekle
-                            currentGorselLinks = currentGorselLinks ? (currentGorselLinks + ',' + gLinks.join(',')) : gLinks.join(',');
-                            currentVideoLinks = currentVideoLinks ? (currentVideoLinks + ',' + vLinks.join(',')) : vLinks.join(',');
-                            progContainer.style.display = 'none';
                         }
 
-                        // Son Aşama: Duyuruyu Tabloya Kaydet
-                        document.getElementById('loading-text').textContent = 'Tablo güncelleniyor...';
+                        // LİNKLERİ GARANTİ ALTINA ALARAK BİRLEŞTİR
+                        let finalGorsel = [manualGorsel, ...uploadedGLinks].filter(Boolean).join(',');
+                        let finalVideo = [manualVideo, ...uploadedVLinks].filter(Boolean).join(',');
+
+                        document.getElementById('loading-text').textContent = 'Google Sheet güncelleniyor...';
                         const finalPayload = {
                             sheetId: cleanSheetId,
                             action: currentEditRowIndex ? 'editContent' : 'addContent',
@@ -351,27 +325,22 @@
                                 tarih: document.getElementById('c-tarih').value,
                                 aktif: document.getElementById('c-aktif').value,
                                 bant: document.getElementById('c-bant').value,
-                                gorsel: currentGorselLinks,
-                                video: currentVideoLinks
+                                gorsel: finalGorsel,
+                                video: finalVideo
                             }
                         };
 
-                        const finalResp = await fetch(scriptUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(finalPayload) });
+                        const finalResp = await fetch(scriptUrl, { method: 'POST', body: JSON.stringify(finalPayload) });
                         const finalData = await finalResp.json();
                         
                         if (finalData.status === 'success') {
-                            overlay.style.display = 'none';
-                            btnSubmit.disabled = false;
-                            document.getElementById('btn-cancel-edit').click();
-                            fetchExistingContents();
-                            document.getElementById('content-success-msg').style.display = 'block';
-                            setTimeout(() => { document.getElementById('content-success-msg').style.display = 'none'; }, 4000);
+                            overlay.style.display = 'none'; btnSubmit.disabled = false;
+                            document.getElementById('btn-cancel-edit').click(); fetchExistingContents();
+                            document.getElementById('content-success-msg').style.display = 'block'; setTimeout(() => { document.getElementById('content-success-msg').style.display = 'none'; }, 4000);
                         } else { throw new Error(finalData.message); }
 
                     } catch (error) {
-                        console.error(error);
-                        overlay.style.display = 'none';
-                        btnSubmit.disabled = false;
+                        overlay.style.display = 'none'; btnSubmit.disabled = false;
                         document.getElementById('content-error-msg').style.display = 'block';
                     }
                 });
