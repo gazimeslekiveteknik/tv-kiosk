@@ -148,26 +148,6 @@
         .login-card { background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 40px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
         .login-card h2 { margin-bottom: 12px; font-size: 24px; }
         .login-error { color: #ef4444; font-size: 14px; margin-top: 12px; display: none; }
-
-        /* Album Toggle */
-        .album-toggle-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 14px 18px; background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.25); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; }
-        .album-toggle-row:hover { background: rgba(139, 92, 246, 0.15); }
-        .album-toggle-row input[type=checkbox] { width: 20px; height: 20px; accent-color: #8b5cf6; cursor: pointer; }
-        .album-toggle-label { font-size: 14px; font-weight: 700; color: #c4b5fd; }
-        .album-toggle-hint { font-size: 11px; color: var(--text-secondary); margin-left: auto; }
-        #single-media-section { transition: opacity 0.3s; }
-        #album-media-section { display: none; }
-        #album-media-section.active { display: block; }
-        .album-file-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; max-height: 240px; overflow-y: auto; }
-        .album-file-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; font-size: 13px; color: var(--text-primary); }
-        .album-file-item .afi-icon { font-size: 18px; }
-        .album-file-item .afi-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .album-file-item .afi-status { font-size: 11px; color: var(--text-secondary); }
-        .album-file-item .afi-remove { background: none; border: none; color: #f87171; cursor: pointer; font-size: 16px; padding: 2px 6px; border-radius: 4px; }
-        .album-file-item .afi-remove:hover { background: rgba(239,68,68,0.2); }
-        .album-file-item.uploading { border-color: rgba(59,130,246,0.3); background: rgba(59,130,246,0.05); }
-        .album-file-item.uploaded { border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.05); }
-        .album-file-item.upload-error { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.05); }
     </style>
 </head>
 <body>
@@ -293,38 +273,24 @@
                 </div>
                 
                 <div class="media-section">
-                    <div class="media-section-title">🎬 Medya Ekleme</div>
-
-                    <label class="album-toggle-row" for="c-album-toggle">
-                        <input type="checkbox" id="c-album-toggle">
-                        <span class="album-toggle-label">📸 Albüm Modu</span>
-                        <span class="album-toggle-hint">Birden fazla fotoğraf/video yükle</span>
-                    </label>
-
-                    <div id="single-media-section">
-                        <div class="form-group">
-                            <label for="c-video-url" style="color:#60a5fa;">▶️ Video Linki (YouTube, Drive, mp4)</label>
-                            <input type="text" id="c-video-url" placeholder="Örn: https://youtube.com/watch?v=...">
-                        </div>
-                        <div class="form-group">
-                            <label for="c-gorsel-url" style="color:#34d399;">🖼️ İnternetten Görsel Linki</label>
-                            <input type="text" id="c-gorsel-url" placeholder="Örn: https://site.com/resim.jpg">
-                        </div>
-                        <div style="text-align:center; color:rgba(255,255,255,0.3); font-size:12px; margin-bottom:12px;">-- VEYA BİLGİSAYARDAN YÜKLE --</div>
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label for="c-file">📁 Dosya Seç (Resim / Video)</label>
-                            <input type="file" id="c-file" accept="image/*,video/mp4,video/webm">
-                            <p class="form-hint">Seçtiğiniz dosya otomatik olarak Google Drive klasörüne yüklenecektir.</p>
-                        </div>
+                    <div class="media-section-title">🎬 Medya Ekleme (Sadece birini tercih edin)</div>
+                    
+                    <div class="form-group">
+                        <label for="c-video-url" style="color:#60a5fa;">▶️ Video Linki (YouTube, Drive, mp4)</label>
+                        <input type="text" id="c-video-url" placeholder="Örn: https://youtube.com/watch?v=...">
                     </div>
 
-                    <div id="album-media-section">
-                        <div class="form-group">
-                            <label for="c-album-files" style="color:#c4b5fd;">📂 Albüm Dosyaları Seç (Çoklu seçim yapabilirsiniz)</label>
-                            <input type="file" id="c-album-files" accept="image/*,video/mp4,video/webm" multiple>
-                            <p class="form-hint">Birden fazla fotoğraf ve video seçebilirsiniz. Dosyalar sırayla gösterilecektir. (Maks 10 dosya)</p>
-                        </div>
-                        <div class="album-file-list" id="album-file-list"></div>
+                    <div class="form-group">
+                        <label for="c-gorsel-url" style="color:#34d399;">🖼️ İnternetten Görsel Linki</label>
+                        <input type="text" id="c-gorsel-url" placeholder="Örn: https://site.com/resim.jpg">
+                    </div>
+
+                    <div style="text-align:center; color:rgba(255,255,255,0.3); font-size:12px; margin-bottom:12px;">-- VEYA BİLGİSAYARDAN YÜKLE --</div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="c-file">📁 Dosya Seç (Resim / Video)</label>
+                        <input type="file" id="c-file" accept="image/*,video/mp4,video/webm">
+                        <p class="form-hint">Seçtiğiniz dosya otomatik olarak Google Drive klasörüne yüklenecektir.</p>
                     </div>
                 </div>
 
@@ -420,79 +386,14 @@
             let isAuthenticated = false;
             let savedPassword = localStorage.getItem('kiosk_admin_password');
             let currentEditRowIndex = null; 
-            const MAX_VISIBLE_ITEMS = 7;
+            const MAX_VISIBLE_ITEMS = 7; // MİLLER YASASI: İdeal Görünür Sınır
             
             let draggedRowIndex = null;
             let dragSourceEl = null;
             
-            // ALBÜM STATE
-            let albumMode = false;
-            let albumFileEntries = []; // [{file, name, type, status, url}]
-            
             const loginOverlay = document.getElementById('login-overlay');
             const tabBtns = document.querySelectorAll('.tab-btn');
             const tabContents = document.querySelectorAll('.tab-content');
-            const albumToggle = document.getElementById('c-album-toggle');
-            const singleMediaSection = document.getElementById('single-media-section');
-            const albumMediaSection = document.getElementById('album-media-section');
-            const albumFileInput = document.getElementById('c-album-files');
-            const albumFileListEl = document.getElementById('album-file-list');
-
-            // ALBÜM TOGGLE MANTIĞI
-            albumToggle.addEventListener('change', function() {
-                albumMode = this.checked;
-                if (albumMode) {
-                    singleMediaSection.style.display = 'none';
-                    albumMediaSection.classList.add('active');
-                } else {
-                    singleMediaSection.style.display = 'block';
-                    albumMediaSection.classList.remove('active');
-                    albumFileEntries = [];
-                    renderAlbumFileList();
-                }
-            });
-
-            // ALBÜM DOSYA SEÇİMİ
-            albumFileInput.addEventListener('change', function() {
-                const files = Array.from(this.files);
-                const remaining = 10 - albumFileEntries.length;
-                if (remaining <= 0) { alert('Maksimum 10 dosya ekleyebilirsiniz.'); return; }
-                const toAdd = files.slice(0, remaining);
-                toAdd.forEach(f => {
-                    albumFileEntries.push({
-                        file: f,
-                        name: f.name,
-                        type: f.type.startsWith('video') ? 'video' : 'image',
-                        status: 'pending',
-                        url: ''
-                    });
-                });
-                if (files.length > remaining) alert(`En fazla 10 dosya eklenebilir. ${files.length - remaining} dosya atlandı.`);
-                renderAlbumFileList();
-                this.value = '';
-            });
-
-            function renderAlbumFileList() {
-                albumFileListEl.innerHTML = '';
-                if (albumFileEntries.length === 0) return;
-                albumFileEntries.forEach((entry, idx) => {
-                    const div = document.createElement('div');
-                    div.className = 'album-file-item' + (entry.status === 'uploading' ? ' uploading' : '') + (entry.status === 'uploaded' ? ' uploaded' : '') + (entry.status === 'error' ? ' upload-error' : '');
-                    const icon = entry.type === 'video' ? '🎬' : '🖼️';
-                    const statusText = entry.status === 'pending' ? 'Bekliyor' : entry.status === 'uploading' ? 'Yükleniyor...' : entry.status === 'uploaded' ? '✅ Yüklendi' : '❌ Hata';
-                    div.innerHTML = `
-                        <span class="afi-icon">${icon}</span>
-                        <span class="afi-name">${entry.name}</span>
-                        <span class="afi-status">${statusText}</span>
-                        <button type="button" class="afi-remove" data-idx="${idx}" title="Kaldır">✕</button>
-                    `;
-                    div.querySelector('.afi-remove').addEventListener('click', () => {
-                        albumFileEntries.splice(idx, 1);
-                        renderAlbumFileList();
-                    });
-                    albumFileListEl.appendChild(div);
-                });
-            }
             
             function switchTab(tabId) {
                 tabBtns.forEach(b => b.classList.remove('active'));
@@ -634,9 +535,6 @@
                     const baslik = row.c[0] ? (row.c[0].v || '') : '';
                     const kategori = row.c[2] ? (row.c[2].v || 'duyuru') : 'duyuru';
                     const aktif = row.c[4] ? (row.c[4].v || 'EVET') : 'EVET';
-                    const albumRaw = row.c[8] ? (row.c[8].v || '') : '';
-                    let albumCount = 0;
-                    try { if (albumRaw) { const ap = JSON.parse(albumRaw); if (Array.isArray(ap)) albumCount = ap.length; } } catch(e) {}
                     
                     const isAktif = aktif.toString().toUpperCase() === 'EVET';
                     let statusHtml = '';
@@ -675,7 +573,6 @@
                                     ${statusHtml}
                                     ${baslik || '(Başlıksız)'} 
                                     <span class="badge category-badge">${kategori}</span>
-                                    ${albumCount > 0 ? `<span class="badge" style="background:rgba(139,92,246,0.15); color:#c4b5fd; border:1px solid rgba(139,92,246,0.3);">📸 Albüm (${albumCount})</span>` : ''}
                                 </h4>
                             </div>
                         </div>
@@ -821,32 +718,6 @@
                 document.getElementById('c-gorsel-url').value = row.c[6] ? (row.c[6].v || '') : '';
                 document.getElementById('c-video-url').value = row.c[7] ? (row.c[7].v || '') : '';
 
-                // Albüm verisini yükle
-                const albumRaw = row.c[8] ? (row.c[8].v || '') : '';
-                if (albumRaw) {
-                    try {
-                        const parsed = JSON.parse(albumRaw);
-                        if (Array.isArray(parsed) && parsed.length > 0) {
-                            albumMode = true;
-                            albumToggle.checked = true;
-                            singleMediaSection.style.display = 'none';
-                            albumMediaSection.classList.add('active');
-                            albumFileEntries = parsed.map(item => ({
-                                file: null, name: item.url.split('/').pop() || 'medya', type: item.type || 'image',
-                                status: 'uploaded', url: item.url
-                            }));
-                            renderAlbumFileList();
-                        }
-                    } catch(e) {}
-                } else {
-                    albumMode = false;
-                    albumToggle.checked = false;
-                    singleMediaSection.style.display = 'block';
-                    albumMediaSection.classList.remove('active');
-                    albumFileEntries = [];
-                    renderAlbumFileList();
-                }
-
                 window.scrollTo({top: 0, behavior: 'smooth'});
             }
 
@@ -859,13 +730,6 @@
                 document.getElementById('btn-submit-content').innerHTML = '🚀 İçeriği Tabloya Ekle';
                 document.getElementById('btn-cancel-edit').style.display = 'none';
                 document.getElementById('content-form').reset();
-                // Albüm state sıfırla
-                albumMode = false;
-                albumToggle.checked = false;
-                singleMediaSection.style.display = 'block';
-                albumMediaSection.classList.remove('active');
-                albumFileEntries = [];
-                renderAlbumFileList();
             }
 
             // --- İÇERİK SİLME MANTIĞI ---
@@ -1139,88 +1003,30 @@
                             aktif: document.getElementById('c-aktif').value,
                             bant: document.getElementById('c-bant').value,
                             gorsel: document.getElementById('c-gorsel-url').value.trim(),
-                            video: document.getElementById('c-video-url').value.trim(),
-                            album: ''
+                            video: document.getElementById('c-video-url').value.trim()
                         };
-
-                        // --- ALBÜM MODU: Dosyaları teker teker yükle ---
-                        if (albumMode && albumFileEntries.length > 0) {
-                            document.getElementById('loading-text').textContent = 'Albüm dosyaları yükleniyor (0/' + albumFileEntries.length + ')...';
-                            
-                            const albumResult = [];
-                            for (let i = 0; i < albumFileEntries.length; i++) {
-                                const entry = albumFileEntries[i];
-                                
-                                // Zaten yüklenmiş dosyaları atla
-                                if (entry.status === 'uploaded' && entry.url) {
-                                    albumResult.push({ url: entry.url, type: entry.type });
-                                    continue;
-                                }
-                                
-                                // Dosyayı yükle
-                                entry.status = 'uploading';
-                                renderAlbumFileList();
-                                document.getElementById('loading-text').textContent = `Albüm dosyası yükleniyor (${i + 1}/${albumFileEntries.length}): ${entry.name}`;
-                                
-                                try {
-                                    const reader = new FileReader();
-                                    const base64Data = await new Promise((resolve, reject) => {
-                                        reader.onload = (ev) => resolve(ev.target.result);
-                                        reader.onerror = (err) => reject(err);
-                                        reader.readAsDataURL(entry.file);
-                                    });
-                                    
-                                    const uploadPayload = {
-                                        sheetId: cleanSheetId,
-                                        action: 'addContent',
-                                        uploadOnly: true,
-                                        file: { name: entry.file.name, mimeType: entry.file.type, content: base64Data }
-                                    };
-                                    
-                                    const uploadResp = await fetch(scriptUrl, { method: 'POST', body: JSON.stringify(uploadPayload) });
-                                    const uploadData = await uploadResp.json();
-                                    
-                                    if (uploadData.status === 'error') throw new Error(uploadData.message);
-                                    
-                                    entry.status = 'uploaded';
-                                    entry.url = uploadData.url;
-                                    albumResult.push({ url: uploadData.url, type: uploadData.type || entry.type });
-                                    renderAlbumFileList();
-                                } catch(uploadErr) {
-                                    entry.status = 'error';
-                                    renderAlbumFileList();
-                                    throw new Error(`"${entry.name}" yüklenemedi: ${uploadErr.message}`);
-                                }
-                            }
-                            
-                            itemData.album = JSON.stringify(albumResult);
-                            itemData.gorsel = '';
-                            itemData.video = '';
-                        }
                         
                         const actionType = currentEditRowIndex ? 'editContent' : 'addContent';
                         const payload = { sheetId: cleanSheetId, action: actionType, item: itemData };
                         
                         if(currentEditRowIndex) payload.rowIndex = currentEditRowIndex;
                         
-                        // Tekli dosya yükleme (albüm modu kapalıysa)
-                        if (!albumMode) {
-                            const fileInput = document.getElementById('c-file');
-                            if (fileInput.files.length > 0) {
-                                const file = fileInput.files[0];
-                                const base64Data = await new Promise((resolve, reject) => {
-                                    const reader = new FileReader();
-                                    reader.onload = (ev) => resolve(ev.target.result);
-                                    reader.onerror = (err) => reject(err);
-                                    reader.readAsDataURL(file);
-                                });
-                                payload.file = { name: file.name, mimeType: file.type, content: base64Data };
-                                document.getElementById('loading-text').textContent = 'Dosya Drive\'a yükleniyor, lütfen bekleyin...';
-                            } else {
-                                document.getElementById('loading-text').textContent = currentEditRowIndex ? 'Değişiklikler kaydediliyor...' : 'Duyuru tabloya kaydediliyor...';
-                            }
+                        const fileInput = document.getElementById('c-file');
+                        if (fileInput.files.length > 0) {
+                            const file = fileInput.files[0];
+                            const reader = new FileReader();
+                            
+                            const filePromise = new Promise((resolve, reject) => {
+                                reader.onload = (ev) => resolve(ev.target.result);
+                                reader.onerror = (err) => reject(err);
+                                reader.readAsDataURL(file);
+                            });
+                            
+                            const base64Data = await filePromise;
+                            payload.file = { name: file.name, mimeType: file.type, content: base64Data };
+                            document.getElementById('loading-text').textContent = 'Dosya Drive\'a yükleniyor, lütfen bekleyin...';
                         } else {
-                            document.getElementById('loading-text').textContent = 'İçerik tabloya kaydediliyor...';
+                            document.getElementById('loading-text').textContent = currentEditRowIndex ? 'Değişiklikler kaydediliyor...' : 'Duyuru tabloya kaydediliyor...';
                         }
                         
                         const fetchPromise = fetch(scriptUrl, { method: 'POST', body: JSON.stringify(payload) });
