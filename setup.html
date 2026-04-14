@@ -584,7 +584,9 @@
                     `;
                     
                     itemDiv.querySelector('.edit').addEventListener('click', () => startEditing(rowIndex, row));
-                    itemDiv.querySelector('.delete').addEventListener('click', () => deleteItem(rowIndex));
+                    const gorselUrl = row.c[6] ? (row.c[6].v || '') : '';
+                    const videoUrl = row.c[7] ? (row.c[7].v || '') : '';
+                    itemDiv.querySelector('.delete').addEventListener('click', () => deleteItem(rowIndex, gorselUrl, videoUrl));
                     
                     itemDiv.querySelector('.move-up').addEventListener('click', (e) => {
                         if (!e.target.disabled) moveItem(rowIndex, 'up');
