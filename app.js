@@ -258,31 +258,16 @@
     function buildMediaHtml(item, slideIndex) {
         if (!item.album || item.album.length === 0) return '';
         let html = `<div class="slide-media" id="media-container-${slideIndex}">`;
-        
         item.album.forEach((media, albumIndex) => {
             let innerHtml = '';
-            
-            if (media.mediaType === 'image') {
-                // SİNEMATİK EFEKT: Arkaya bulanıklaştırılmış dev görsel, öne ise kırpılmamış (contain) net görsel
-                innerHtml = `
-                    <div style="position:absolute; top:0; left:0; width:100%; height:100%; background-image:url('${escapeAttr(media.url)}'); background-size:cover; background-position:center; filter:blur(40px); opacity:0.6; transform:scale(1.1);"></div>
-                    <img src="${escapeAttr(media.url)}" loading="lazy" style="position:relative; z-index:1; width:100%; height:100%; object-fit:contain; display:block;">
-                `;
-            } 
-            else if (media.mediaType === 'video') {
-                // Videolar için de zoom yapmayı engelle ve tam sığdır (contain)
-                innerHtml = `<video id="html-video-${slideIndex}-${albumIndex}" src="${escapeAttr(media.url)}" playsinline style="width:100%;height:100%;object-fit:contain;background:#000;"></video>`;
-            } 
-            else if (media.mediaType === 'youtube') {
-                innerHtml = `<div id="yt-player-${slideIndex}-${albumIndex}" data-vid="${getYouTubeId(media.url)}" style="width:100%;height:100%;pointer-events:none;"></div>`;
-            }
-            
+            if (media.mediaType === 'image') innerHtml = `<img src="${escapeAttr(media.url)}" loading="lazy">`;
+            else if (media.mediaType === 'video') innerHtml = `<video id="html-video-${slideIndex}-${albumIndex}" src="${escapeAttr(media.url)}" playsinline style="width:100%;height:100%;object-fit:cover;"></video>`;
+            else if (media.mediaType === 'youtube') innerHtml = `<div id="yt-player-${slideIndex}-${albumIndex}" data-vid="${getYouTubeId(media.url)}" style="width:100%;height:100%;pointer-events:none;"></div>`;
             html += `<div class="album-item" id="album-item-${slideIndex}-${albumIndex}">${innerHtml}</div>`;
         });
-        
         return html + `</div>`;
     }
-   
+
     function renderSlides() {
         destroyAllPlayers(); els.slidesContainer.innerHTML = '';
         slides.forEach((item, index) => {
