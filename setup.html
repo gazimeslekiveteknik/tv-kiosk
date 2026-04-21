@@ -4,59 +4,197 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bilgi Ekranı Yönetim Paneli</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        :root { --bg-primary: #0a0e1a; --bg-card: rgba(255, 255, 255, 0.06); --text-primary: #f1f5f9; --text-secondary: #94a3b8; --accent-blue: #3b82f6; --accent-purple: #8b5cf6; --accent-emerald: #10b981; --gradient-primary: linear-gradient(135deg, #3b82f6, #8b5cf6); --glass-border: rgba(255, 255, 255, 0.08); --radius-md: 20px; --radius-sm: 12px; }
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-card: rgba(255, 255, 255, 0.06);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-emerald: #10b981;
+            --gradient-primary: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --radius-md: 20px;
+            --radius-sm: 12px;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 40px; position: relative; overflow-x: hidden; }
-        body::before, body::after { content: ''; position: fixed; border-radius: 50%; filter: blur(120px); opacity: 0.15; z-index: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 40px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before, body::after {
+            content: ''; position: fixed; border-radius: 50%; filter: blur(120px); opacity: 0.15; z-index: 0;
+        }
         body::before { width: 500px; height: 500px; background: var(--accent-blue); top: -200px; right: -100px; }
         body::after { width: 400px; height: 400px; background: var(--accent-purple); bottom: -150px; left: -100px; }
-        .setup-container { position: relative; z-index: 1; width: 100%; max-width: 660px; }
-        .setup-header { text-align: center; margin-bottom: 40px; } .setup-header-icon { font-size: 64px; margin-bottom: 16px; }
-        .setup-header h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .setup-container { position: relative; z-index: 1; width: 100%; max-width: 900px; }
+
+        .setup-header { text-align: center; margin-bottom: 40px; }
+        .setup-header-icon { font-size: 64px; margin-bottom: 16px; }
+        .setup-header h1 {
+            font-size: 32px; font-weight: 800; margin-bottom: 8px;
+            background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
         .setup-header p { color: var(--text-secondary); font-size: 16px; }
-        .setup-form { background: var(--bg-card); backdrop-filter: blur(40px); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 40px; }
-        .form-group { margin-bottom: 24px; } .form-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1.5px; }
-        .form-group input, .form-group select { width: 100%; padding: 14px 18px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 15px; outline: none; transition: all 0.3s; }
-        .form-group select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; }
-        .form-group select option { background: #1e293b; color: white; } .form-group input:focus, .form-group select:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
-        .media-section { background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: var(--radius-sm); margin-bottom: 24px; border: 1px dashed rgba(255, 255, 255, 0.1); }
-        .media-section-title { font-size: 13px; font-weight: 700; color: #cbd5e1; margin-bottom: 16px; text-transform: uppercase; }
-        .btn-save { width: 100%; padding: 16px 32px; background: var(--gradient-primary); color: white; border: none; border-radius: var(--radius-sm); font-size: 17px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4); } .btn-save:disabled { opacity: 0.7; cursor: not-allowed; }
-        .btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706); } .success-message { display: none; text-align: center; padding: 20px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-sm); color: #10b981; margin-top: 16px; font-weight: 600; }
-        .divider { border: none; border-top: 1px solid var(--glass-border); margin: 28px 0; } .btn-group { display: flex; gap: 12px; }
-        .btn-demo { flex: 1; padding: 14px 24px; background: linear-gradient(135deg, #10b981, #06b6d4); color: white; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; }
-        .btn-reset { padding: 14px 24px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; }
+
+        .setup-form {
+            background: var(--bg-card); backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 40px;
+        }
+
+        .form-group { margin-bottom: 24px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1.5px; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 14px 18px; background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+            color: var(--text-primary); font-size: 15px; font-family: inherit; outline: none; transition: all 0.3s;
+        }
+        .form-group select {
+            cursor: pointer; appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 16px center;
+        }
+        .form-group select option { background: #1e293b; color: white; }
+        .form-group input::placeholder { color: rgba(255, 255, 255, 0.2); }
+        .form-group input:focus, .form-group select:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+
+        .form-hint { font-size: 12px; color: var(--text-secondary); margin-top: 8px; line-height: 1.6; opacity: 0.7; }
+
+        .media-section {
+            background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: var(--radius-sm); margin-bottom: 24px; border: 1px dashed rgba(255,255,255,0.1);
+        }
+        .media-section-title { font-size: 13px; font-weight: 700; color: #cbd5e1; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+
+        .btn-save {
+            width: 100%; padding: 16px 32px; background: var(--gradient-primary); color: white;
+            border: none; border-radius: var(--radius-sm); font-size: 17px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 8px;
+        }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4); }
+        .btn-save:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+        
+        .btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .btn-warning:hover { box-shadow: 0 8px 30px rgba(245, 158, 11, 0.4); }
+
+        .success-message {
+            display: none; text-align: center; padding: 20px; background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-sm); color: #10b981; margin-top: 16px; font-weight: 600;
+        }
+
+        .divider { border: none; border-top: 1px solid var(--glass-border); margin: 28px 0; }
+        .btn-group { display: flex; gap: 12px; }
+        .btn-demo { flex: 1; padding: 14px 24px; background: linear-gradient(135deg, #10b981, #06b6d4); color: white; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-demo:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4); }
+        .btn-reset { padding: 14px 24px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-reset:hover { transform: translateY(-2px); background: rgba(239, 68, 68, 0.25); }
+        
+        /* Listeleme ve Düzenleme CSS */
         .content-list { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 12px; }
-        .content-item { background: rgba(0, 0, 0, 0.2); padding: 16px; border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255, 255, 255, 0.05); }
+        .content-item { background: rgba(0, 0, 0, 0.2); padding: 16px; border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.2s; }
+        .content-item:hover { background: rgba(255, 255, 255, 0.05); border-color: var(--glass-border); }
+        .content-item.dragging { opacity: 0.5 !important; transform: scale(0.98); z-index: 10; cursor: grabbing; }
+        .content-item.drag-over { border: 2px dashed var(--accent-blue); background: rgba(59, 130, 246, 0.1); }
         .content-item-info h4 { margin-bottom: 6px; color: var(--text-primary); font-size: 15px; display: flex; align-items: center; gap: 8px; }
-        .content-item-actions { display: flex; gap: 6px; } .btn-icon { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
-        .btn-icon.move { background: rgba(245, 158, 11, 0.15); color: #fcd34d; font-size: 14px; } .btn-icon.edit { background: rgba(59, 130, 246, 0.2); color: #60a5fa; } .btn-icon.delete { background: rgba(239, 68, 68, 0.2); color: #f87171; }
-        .badge { font-size: 11px; padding: 4px 8px; border-radius: 6px; font-weight: 700; } .category-badge { background: rgba(255, 255, 255, 0.1); font-size: 10px; }
+        .content-item-info p { font-size: 13px; color: var(--text-secondary); }
+        .content-item-actions { display: flex; gap: 6px; }
+        .btn-icon { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        
+        .btn-icon.move { background: rgba(245, 158, 11, 0.15); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); padding: 8px; font-size: 14px; }
+        .btn-icon.move:hover:not(:disabled) { background: rgba(245, 158, 11, 0.3); }
+        .btn-icon.move:disabled { opacity: 0.3; cursor: not-allowed; background: transparent; border-color: rgba(255,255,255,0.1); color: #94a3b8; }
+        
+        .btn-icon.edit { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .btn-icon.edit:hover { background: rgba(59, 130, 246, 0.4); }
+        .btn-icon.delete { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .btn-icon.delete:hover { background: rgba(239, 68, 68, 0.4); }
+        .badge { font-size: 11px; padding: 4px 8px; border-radius: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .category-badge { background: rgba(255,255,255,0.1); font-weight: 500; font-size: 10px; }
+
+        /* Tabs */
         .setup-tabs { display: flex; gap: 8px; margin-bottom: 24px; background: rgba(0, 0, 0, 0.2); padding: 6px; border-radius: var(--radius-sm); overflow-x: auto; }
-        .tab-btn { flex: 1; padding: 12px; background: transparent; color: var(--text-secondary); border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; } .tab-btn.active { background: var(--bg-card); color: var(--text-primary); }
-        .tab-content { display: none; } .tab-content.active { display: block; }
-        #loading-overlay, #setup-loading { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 14, 26, 0.8); z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: var(--radius-md); color: white; }
-        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255, 255, 255, 0.1); border-left-color: var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
+        .tab-btn { flex: 1; padding: 12px; background: transparent; color: var(--text-secondary); border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; white-space: nowrap; }
+        .tab-btn:hover { color: var(--text-primary); }
+        .tab-btn.active { background: var(--bg-card); color: var(--text-primary); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        #loading-overlay, #setup-loading {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 14, 26, 0.8); backdrop-filter: blur(4px);
+            z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: var(--radius-md); color: white;
+        }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        #login-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 14, 26, 0.95); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .login-card { background: var(--bg-card); border-radius: var(--radius-md); padding: 40px; width: 100%; max-width: 400px; text-align: center; }
+
+        /* Login Overlay */
+        #login-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10,14,26,0.95);
+            z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px);
+        }
+        .login-card { background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 40px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+        .login-card h2 { margin-bottom: 12px; font-size: 24px; }
         .login-error { color: #ef4444; font-size: 14px; margin-top: 12px; display: none; }
+
+        /* Nöbet & Ders Saatleri Sekmesi */
+        .section-title { font-size: 16px; font-weight: 700; color: var(--accent-blue); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+        .section-title .section-icon { font-size: 22px; }
+        .data-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 24px; }
+        .data-table th { background: rgba(59, 130, 246, 0.15); color: #93c5fd; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--glass-border); }
+        .data-table th:first-child { border-radius: 8px 0 0 0; }
+        .data-table th:last-child { border-radius: 0 8px 0 0; }
+        .data-table td { padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        .data-table input[type="text"], .data-table input[type="time"], .data-table input[type="number"] {
+            width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+            border-radius: 8px; color: var(--text-primary); font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.3s;
+        }
+        .data-table input:focus { border-color: var(--accent-blue); }
+        .data-table .row-label { font-size: 13px; font-weight: 700; color: var(--text-secondary); white-space: nowrap; min-width: 60px; }
+        .btn-add-row { display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .btn-add-row:hover { background: rgba(16, 185, 129, 0.25); }
+        .btn-remove-row { padding: 6px 10px; background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+        .btn-remove-row:hover { background: rgba(239, 68, 68, 0.3); }
+        .section-divider { border: none; border-top: 1px solid var(--glass-border); margin: 32px 0; }
+        .student-entry-row { display: flex; gap: 12px; align-items: flex-end; margin-bottom: 16px; }
+        .student-entry-row .form-group { flex: 1; margin-bottom: 0; }
+        .student-list { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+        .student-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; }
+        .student-item-info { display: flex; align-items: center; gap: 12px; }
+        .student-item-badge { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #059669, #10b981); color: white; font-size: 11px; font-weight: 800; }
+        .student-item-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+        .student-item-class { font-size: 12px; color: var(--text-secondary); }
+        .today-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 20px; font-size: 12px; font-weight: 700; color: #93c5fd; margin-bottom: 16px; }
     </style>
 </head>
-
 <body>
     <div class="setup-container">
+        
         <div id="login-overlay" style="display: none;">
             <div class="login-card">
                 <h2>Yönetici Girişi</h2>
-                <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 14px;">Ayarlara erişmek için şifre gereklidir.</p>
+                <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 14px;">Kurulum ayarlarına erişmek için şifre gereklidir.</p>
                 <form id="login-form">
-                    <div class="form-group" style="text-align: left;"><input type="password" id="login-password" required></div>
-                    <div class="btn-group" style="margin-top: 16px;"><button type="button" class="btn-reset" id="btn-login-cancel">Vazgeç</button><button type="submit" class="btn-save">Giriş Yap</button></div>
-                    <div class="login-error" id="login-error">Hatalı şifre.</div>
+                    <div class="form-group" style="text-align: left;">
+                        <input type="password" id="login-password" placeholder="Yönetici Şifrenizi Girin" required>
+                    </div>
+                    <div class="btn-group" style="margin-top: 16px;">
+                        <button type="button" class="btn-reset" id="btn-login-cancel" style="flex: 1;">Vazgeç</button>
+                        <button type="submit" class="btn-save" style="margin-top: 0; flex: 1;">Giriş Yap</button>
+                    </div>
+                    <div class="login-error" id="login-error">Hatalı şifre, lütfen tekrar deneyin.</div>
                 </form>
             </div>
         </div>
@@ -66,307 +204,1386 @@
             <h1>Bilgi Ekranı Yönetim Paneli</h1>
             <p>Sistemi yapılandırın ve içerik ekleyin</p>
         </div>
-
+        
         <div class="setup-tabs" id="main-tabs">
             <button class="tab-btn" data-tab="tab-kurulum">Bağlantı</button>
             <button class="tab-btn active" data-tab="tab-icerik">İçerik Yönetimi</button>
+            <button class="tab-btn" data-tab="tab-nobet">📋 Nöbet & Ders</button>
             <button class="tab-btn" data-tab="tab-ayarlar">Sistem Ayarları</button>
         </div>
 
         <div id="tab-kurulum" class="tab-content">
             <form class="setup-form" id="setup-form" style="position: relative;">
-                <div id="setup-loading" style="display: none;"><div class="spinner"></div><div id="setup-loading-text">Bağlantı Kuruluyor...</div></div>
-                <div class="form-group"><label>Google Sheet URL / ID</label><input type="text" id="sheet-id" required></div>
+                <div id="setup-loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <div id="setup-loading-text">Bağlantı Kuruluyor...</div>
+                </div>
+
+                <div class="form-group" style="text-align: center; margin-bottom: 30px;">
+                    <div style="font-size: 48px; margin-bottom: 10px;">✨</div>
+                    <h3 style="color: var(--accent-blue); font-size: 20px; margin-bottom: 10px;">Google Sheet Bağlantısı</h3>
+                    <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
+                        Google Sheet Linkinizi yapıştırın; AppScript, Şifre ve diğer tüm ayarlar otomatik çekilsin.
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label for="sheet-id">Sihirli Link (Google Sheet URL / ID)</label>
+                    <input type="text" id="sheet-id" placeholder="Google Sheet linkini buraya yapıştırın" required>
+                </div>
+
                 <button type="submit" class="btn-save" id="btn-save">🪄 Bağlantıyı Sağla</button>
-                <div class="success-message" id="success-msg">✅ Başarılı! Sisteme yönlendiriliyorsunuz...</div>
-                <hr class="divider"><div class="btn-group"><button type="button" class="btn-demo" id="btn-demo">Kiosku Aç</button><button type="button" class="btn-reset" id="btn-reset">Cihazı Sıfırla</button></div>
+
+                <div class="success-message" id="success-msg">
+                    ✅ Ayarlar tablodan başarıyla çekildi! Sisteme yönlendiriliyorsunuz...
+                </div>
+
+                <hr class="divider">
+                <div style="text-align: center;">
+                    <div class="btn-group" style="justify-content: center;">
+                        <button type="button" class="btn-demo" id="btn-demo">Kiosku Aç</button>
+                        <button type="button" class="btn-reset" id="btn-reset">Cihazı Sıfırla</button>
+                    </div>
+                </div>
             </form>
         </div>
 
         <div id="tab-icerik" class="tab-content active">
             <form class="setup-form" id="content-form" style="position: relative;">
-                <div id="loading-overlay" style="display: none;"><div class="spinner"></div><div id="loading-text">Yükleniyor... Lütfen bekleyin.</div></div>
+                <div id="loading-overlay" style="display: none;">
+                    <div class="spinner"></div>
+                    <div id="loading-text">Yükleniyor... Lütfen bekleyin.</div>
+                </div>
+                
                 <div id="form-title" style="margin-bottom: 24px; font-size: 18px; font-weight: 700; color: var(--accent-blue); text-align: center;">YENİ İÇERİK EKLE</div>
 
-                <div class="form-group"><label>Başlık</label><input type="text" id="c-baslik" required></div>
-                <div class="form-group"><label>Açıklama</label><input type="text" id="c-icerik"></div>
-                <div style="display: flex; gap: 16px;">
-                    <div class="form-group" style="flex: 1;"><label>Kategori</label><select id="c-kategori"><option value="duyuru">Duyuru</option><option value="etkinlik">Etkinlik</option><option value="sinav">Sınav</option><option value="onemli">Önemli</option></select></div>
-                    <div class="form-group" style="flex: 1;"><label>Tarih</label><input type="date" id="c-tarih"></div>
+                <div class="form-group">
+                    <label for="c-baslik">Duyuru / İçerik Başlığı</label>
+                    <input type="text" id="c-baslik" required placeholder="İçerik başlığını girin">
                 </div>
-                <div style="display: flex; gap: 16px;">
-                    <div class="form-group" style="flex: 1;"><label>Yayında mı?</label><select id="c-aktif"><option value="EVET">Evet</option><option value="HAYIR">Hayır</option></select></div>
-                    <div class="form-group" style="flex: 1;"><label>Alt Bantta Göster?</label><select id="c-bant"><option value="HAYIR">Hayır</option><option value="EVET">Evet</option></select></div>
+                
+                <div class="form-group">
+                    <label for="c-icerik">Detay / Açıklama</label>
+                    <input type="text" id="c-icerik" placeholder="Varsa açıklama metni girin">
                 </div>
-
-                <div class="media-section">
-                    <div class="media-section-title">🎬 Medya Ekleme</div>
-                    <div class="form-group"><label style="color:#60a5fa;">▶️ Video Linki (Çoklu İçin Virgül Kullanın)</label><input type="text" id="c-video-url"></div>
-                    <div class="form-group"><label style="color:#34d399;">🖼️ İnternetten Görsel Linki (Virgülle Ayırın)</label><input type="text" id="c-gorsel-url"></div>
-                    <div style="text-align:center; color:rgba(255,255,255,0.3); font-size:12px; margin-bottom:12px;">-- VEYA YÜKLE --</div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>📁 Dosya Seç (Çoklu Albüm Desteği)</label>
-                        <input type="file" id="c-file" accept="image/*,video/mp4,video/webm" multiple>
+                
+                <div style="display: flex; gap: 16px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="c-kategori">Kategori</label>
+                        <select id="c-kategori">
+                            <option value="duyuru">Duyuru</option>
+                            <option value="etkinlik">Etkinlik</option>
+                            <option value="sinav">Sınav</option>
+                            <option value="onemli">Önemli / Acil</option>
+                            <option value="spor">Spor</option>
+                            <option value="bilim">Bilim</option>
+                        </select>
                     </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="c-tarih">Tarih</label>
+                        <input type="date" id="c-tarih">
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 16px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="c-aktif">Yayında mı?</label>
+                        <select id="c-aktif">
+                            <option value="EVET">Evet</option>
+                            <option value="HAYIR">Hayır</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="c-bant">Alt Bantta Göster?</label>
+                        <select id="c-bant">
+                            <option value="HAYIR">Hayır</option>
+                            <option value="EVET">Evet</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="media-section">
+                    <div class="media-section-title">🎬 Medya Ekleme (Sadece birini tercih edin)</div>
+                    
+                    <div class="form-group">
+                        <label for="c-video-url" style="color:#60a5fa;">▶️ Video Linki (YouTube, Drive, mp4)</label>
+                        <input type="text" id="c-video-url" placeholder="Örn: https://youtube.com/watch?v=...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="c-gorsel-url" style="color:#34d399;">🖼️ İnternetten Görsel Linki</label>
+                        <input type="text" id="c-gorsel-url" placeholder="Örn: https://site.com/resim.jpg">
+                    </div>
+
+                    <div style="text-align:center; color:rgba(255,255,255,0.3); font-size:12px; margin-bottom:12px;">-- VEYA BİLGİSAYARDAN YÜKLE --</div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="c-file">📁 Dosya Seç (Resim / Video)</label>
+                        <input type="file" id="c-file" accept="image/*,video/mp4,video/webm">
+                        <p class="form-hint">Görseller Drive'a, videolar (mp4 vb.) doğrudan <b>YouTube kanalınıza (Liste Dışı)</b> otomatik yüklenir.</p>
+                    </div>
+
                     <div id="upload-progress-container" style="display: none; margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px;">
                         <div style="font-size: 13px; font-weight: 600; color: var(--accent-blue); margin-bottom: 8px; display: flex; justify-content: space-between;">
-                            <span id="upload-progress-text">Yükleniyor...</span>
+                            <span id="upload-progress-text">YouTube'a Yükleniyor: %0</span>
+                            <span id="upload-progress-size">0 MB / 0 MB</span>
                         </div>
-                        <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;"><div id="upload-progress-bar" style="width: 0%; height: 100%; background: var(--gradient-primary); transition: width 0.3s ease;"></div></div>
+                        <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                            <div id="upload-progress-bar" style="width: 0%; height: 100%; background: var(--gradient-primary); transition: width 0.3s ease;"></div>
+                        </div>
                     </div>
                 </div>
 
                 <button type="submit" class="btn-save" id="btn-submit-content">🚀 İçeriği Tabloya Ekle</button>
-                <button type="button" class="btn-reset" id="btn-cancel-edit" style="display: none; width: 100%; margin-top: 12px;">İptal Et</button>
+                <button type="button" class="btn-reset" id="btn-cancel-edit" style="display: none; width: 100%; margin-top: 12px;">İptali Et (Yeni Eklemeye Dön)</button>
+                
                 <div class="success-message" id="content-success-msg">✅ İşlem Başarılı!</div>
-                <div class="success-message" id="content-error-msg" style="color: #ef4444; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3);">❌ Bir hata oluştu.</div>
+                <div class="success-message" id="content-error-msg" style="color: #ef4444; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3);">
+                    ❌ Bir hata oluştu.
+                </div>
+                
                 <div class="content-list" id="content-list-container"></div>
             </form>
         </div>
 
         <div id="tab-ayarlar" class="tab-content">
             <form class="setup-form" id="settings-form" style="position: relative;">
-                <div id="settings-loading-overlay" style="display: none; position: absolute; top:0; left:0; right:0; bottom:0; background:rgba(10,14,26,0.8); z-index:10; flex-direction:column; align-items:center; justify-content:center; color:white;"><div class="spinner"></div><div>Kaydediliyor...</div></div>
-                <div class="form-group"><label>Okul Adı</label><input type="text" id="s-okuladi" required></div>
-                <div class="form-group"><label>Yönetici Şifresi</label><input type="text" id="s-sifre" required></div>
-                <div class="form-group"><label>App Script URL</label><input type="text" id="s-scripturl" required></div>
-                <div style="display: flex; gap: 16px;">
-                    <div class="form-group" style="flex: 1;"><label>Şehir</label><select id="s-sehir" required><option value="İstanbul" data-lat="41.0082" data-lon="28.9784">İstanbul</option><option value="Ankara" data-lat="39.9334" data-lon="32.8597">Ankara</option></select></div>
-                    <div class="form-group" style="flex: 1;"><label>Enlem</label><input type="text" id="s-enlem" readonly></div>
-                    <div class="form-group" style="flex: 1;"><label>Boylam</label><input type="text" id="s-boylam" readonly></div>
+                <div id="settings-loading-overlay" style="display: none; position: absolute; top:0; left:0; right:0; bottom:0; background:rgba(10,14,26,0.8); backdrop-filter:blur(4px); z-index:10; flex-direction:column; align-items:center; justify-content:center; border-radius:var(--radius-md); color:white;">
+                    <div class="spinner"></div>
+                    <div>Ayarlar Tabloya Yazılıyor...</div>
                 </div>
-                <div class="form-group"><label>Okul Logo URL</label><input type="text" id="s-logourl"></div>
-                <button type="submit" class="btn-save btn-warning" id="btn-submit-settings">💾 Ayarları Kaydet</button>
-                <div class="success-message" id="settings-success-msg">✅ Ayarlar kaydedildi!</div>
-                <div class="success-message" id="settings-error-msg" style="color: #ef4444; background: rgba(239, 68, 68, 0.1);">❌ Bir hata oluştu.</div>
+
+                <div class="form-group">
+                    <label>Okul Adı</label>
+                    <input type="text" id="s-okuladi" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Yönetici Şifresi</label>
+                    <input type="text" id="s-sifre" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>App Script URL</label>
+                    <input type="text" id="s-scripturl" required>
+                </div>
+
+                <div style="display: flex; gap: 16px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Şehir</label>
+                        <select id="s-sehir" required>
+                            <option value="">Şehir Seçin</option>
+                            <option value="Ankara" data-lat="39.9334" data-lon="32.8597">Ankara</option>
+                            <option value="İstanbul" data-lat="41.0082" data-lon="28.9784">İstanbul</option>
+                            <option value="İzmir" data-lat="38.4237" data-lon="27.1428">İzmir</option>
+                            <option value="Bursa" data-lat="40.1826" data-lon="29.0665">Bursa</option>
+                            <option value="Antalya" data-lat="36.8969" data-lon="30.7133">Antalya</option>
+                            <option value="Adana" data-lat="37.0000" data-lon="35.3213">Adana</option>
+                            <option value="Konya" data-lat="37.8746" data-lon="32.4932">Konya</option>
+                            <option value="Gaziantep" data-lat="37.0660" data-lon="37.3781">Gaziantep</option>
+                            <option value="Mersin" data-lat="36.8121" data-lon="34.6415">Mersin</option>
+                            <option value="Kayseri" data-lat="38.7312" data-lon="35.4787">Kayseri</option>
+                            <option value="Eskişehir" data-lat="39.7668" data-lon="30.5256">Eskişehir</option>
+                            <option value="Diyarbakır" data-lat="37.9144" data-lon="40.2306">Diyarbakır</option>
+                            <option value="Samsun" data-lat="41.2928" data-lon="36.3313">Samsun</option>
+                            <option value="Trabzon" data-lat="41.0027" data-lon="39.7168">Trabzon</option>
+                            <option value="Erzurum" data-lat="39.9055" data-lon="41.2658">Erzurum</option>
+                            <option value="Malatya" data-lat="38.3554" data-lon="38.3335">Malatya</option>
+                            <option value="Van" data-lat="38.4956" data-lon="43.3832">Van</option>
+                            <option value="Denizli" data-lat="37.7765" data-lon="29.0864">Denizli</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Enlem</label>
+                        <input type="text" id="s-enlem" readonly style="opacity: 0.7; cursor: not-allowed;">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Boylam</label>
+                        <input type="text" id="s-boylam" readonly style="opacity: 0.7; cursor: not-allowed;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Okul Logo URL</label>
+                    <input type="text" id="s-logourl" placeholder="Logo linkini buraya yapıştırın">
+                </div>
+
+                <button type="submit" class="btn-save btn-warning" id="btn-submit-settings">💾 Ayarları Doğrudan Tabloya Kaydet</button>
+                <div class="success-message" id="settings-success-msg">
+                    ✅ Ayarlarınız hem cihaza hem de Google Sheet tablosuna başarıyla kaydedildi!
+                </div>
+                <div class="success-message" id="settings-error-msg" style="color: #ef4444; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3);">
+                    ❌ Bir hata oluştu.
+                </div>
             </form>
         </div>
+
+        <!-- ========== NÖBET & DERS SAATLERİ SEKMESİ ========== -->
+        <div id="tab-nobet" class="tab-content">
+            <div class="setup-form" style="position: relative;">
+                <div id="nobet-loading-overlay" style="display: none; position: absolute; top:0; left:0; right:0; bottom:0; background:rgba(10,14,26,0.8); backdrop-filter:blur(4px); z-index:10; display:none; flex-direction:column; align-items:center; justify-content:center; border-radius:var(--radius-md); color:white;">
+                    <div class="spinner"></div>
+                    <div id="nobet-loading-text">Kaydediliyor...</div>
+                </div>
+
+                <!-- ===== DERS SAATLERİ ===== -->
+                <div class="section-title"><span class="section-icon">🕐</span> Ders Saatleri Programı</div>
+                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">Okulunuzun ders saatlerini girin. Bu program haftalık olarak uygulanır ve nadiren değişir.</p>
+                
+                <table class="data-table" id="lesson-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 70px;">Ders</th>
+                            <th>Başlangıç</th>
+                            <th>Bitiş</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lesson-table-body">
+                        <!-- JS ile doldurulacak -->
+                    </tbody>
+                </table>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <button type="button" class="btn-add-row" id="btn-add-lesson">＋ Ders Ekle</button>
+                    <button type="button" class="btn-save" id="btn-save-lessons" style="flex: 1; margin-top: 0;">💾 Ders Saatlerini Kaydet</button>
+                </div>
+                <div class="success-message" id="lesson-success-msg">✅ Ders saatleri kaydedildi!</div>
+
+                <hr class="section-divider">
+
+                <!-- ===== NÖBETÇİ ÖĞRETMENLER ===== -->
+                <div class="section-title"><span class="section-icon">👨‍🏫</span> Nöbetçi Öğretmenler (Haftalık)</div>
+                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">Her kat/bölge için haftanın her günü nöbetçi öğretmen adlarını girin.</p>
+                
+                <div style="overflow-x: auto; margin-bottom: 16px;">
+                    <table class="data-table" id="teacher-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 110px;">Kat / Bölge</th>
+                                <th>Pazartesi</th>
+                                <th>Salı</th>
+                                <th>Çarşamba</th>
+                                <th>Perşembe</th>
+                                <th>Cuma</th>
+                                <th style="width: 50px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="teacher-table-body">
+                            <!-- JS ile doldurulacak -->
+                        </tbody>
+                    </table>
+                </div>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <button type="button" class="btn-add-row" id="btn-add-teacher-row">＋ Kat Ekle</button>
+                    <button type="button" class="btn-save" id="btn-save-teachers" style="flex: 1; margin-top: 0;">💾 Nöbetçi Öğretmenleri Kaydet</button>
+                </div>
+                <div class="success-message" id="teacher-success-msg">✅ Nöbetçi öğretmenler kaydedildi!</div>
+
+                <hr class="section-divider">
+
+                <!-- ===== NÖBETÇİ ÖĞRENCİLER ===== -->
+                <div class="section-title"><span class="section-icon">🎒</span> Nöbetçi Öğrenciler (Günlük)</div>
+                <div class="today-badge" id="today-badge">📅 Bugün: —</div>
+                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">Bugün nöbetçi olan öğrencileri tek tek ekleyin.</p>
+                
+                <div class="student-entry-row">
+                    <div class="form-group">
+                        <label>Sınıf</label>
+                        <input type="text" id="ns-sinif" placeholder="Örn: 10-A">
+                    </div>
+                    <div class="form-group" style="flex: 2;">
+                        <label>Öğrenci Adı Soyadı</label>
+                        <input type="text" id="ns-ad" placeholder="Örn: Ali VELİ">
+                    </div>
+                    <button type="button" class="btn-save" id="btn-add-student" style="margin-top: 0; padding: 14px 24px; white-space: nowrap;">＋ Ekle</button>
+                </div>
+                <div class="success-message" id="student-success-msg">✅ Öğrenci eklendi!</div>
+                <div class="success-message" id="student-error-msg" style="color: #ef4444; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3);">❌ Hata!</div>
+
+                <div class="student-list" id="student-list-container">
+                    <!-- JS ile doldurulacak -->
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        (function () {
-            let isAuthenticated = false; let savedPassword = localStorage.getItem('kiosk_admin_password'); let currentEditRowIndex = null; const MAX_VISIBLE_ITEMS = 7;
-            const loginOverlay = document.getElementById('login-overlay'); const tabBtns = document.querySelectorAll('.tab-btn'); const tabContents = document.querySelectorAll('.tab-content');
-
+        (function() {
+            let isAuthenticated = false;
+            let savedPassword = localStorage.getItem('kiosk_admin_password');
+            let currentEditRowIndex = null; 
+            const MAX_VISIBLE_ITEMS = 7; 
+            
+            let draggedRowIndex = null;
+            let dragSourceEl = null;
+            
+            const loginOverlay = document.getElementById('login-overlay');
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
             function switchTab(tabId) {
-                tabBtns.forEach(b => b.classList.remove('active')); tabContents.forEach(c => c.classList.remove('active'));
-                const btn = document.querySelector(`[data-tab="${tabId}"]`); const content = document.getElementById(tabId);
-                if (btn) btn.classList.add('active'); if (content) content.classList.add('active');
-                if (tabId === 'tab-icerik') fetchExistingContents();
-                if (tabId === 'tab-ayarlar') {
-                    document.getElementById('s-okuladi').value = localStorage.getItem('kiosk_school_name') || ''; document.getElementById('s-sifre').value = localStorage.getItem('kiosk_admin_password') || '';
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                const btn = document.querySelector(`[data-tab="${tabId}"]`);
+                const content = document.getElementById(tabId);
+                if (btn) btn.classList.add('active');
+                if (content) content.classList.add('active');
+
+                if(tabId === 'tab-icerik') {
+                    fetchExistingContents();
+                }
+
+                if(tabId === 'tab-nobet') {
+                    loadLessonScheduleFromSheet();
+                    loadDutyTeachersFromSheet();
+                    loadDutyStudentsFromSheet();
+                    updateTodayBadge();
+                }
+
+                if(tabId === 'tab-ayarlar') {
+                    document.getElementById('s-okuladi').value = localStorage.getItem('kiosk_school_name') || '';
+                    document.getElementById('s-sifre').value = localStorage.getItem('kiosk_admin_password') || '';
                     document.getElementById('s-scripturl').value = localStorage.getItem('kiosk_script_url') || '';
-                    document.getElementById('s-sehir').value = localStorage.getItem('kiosk_weather_city') || 'İstanbul';
-                    document.getElementById('s-enlem').value = localStorage.getItem('kiosk_weather_lat') || ''; document.getElementById('s-boylam').value = localStorage.getItem('kiosk_weather_lon') || '';
+                    
+                    var savedCity = localStorage.getItem('kiosk_weather_city') || '';
+                    var citySelect = document.getElementById('s-sehir');
+                    citySelect.value = savedCity;
+                    
+                    document.getElementById('s-enlem').value = localStorage.getItem('kiosk_weather_lat') || '';
+                    document.getElementById('s-boylam').value = localStorage.getItem('kiosk_weather_lon') || '';
+                    
+                    if (savedCity && citySelect.value === savedCity) {
+                        var opt = citySelect.options[citySelect.selectedIndex];
+                        if (opt && opt.dataset.lat) {
+                            if (!document.getElementById('s-enlem').value) document.getElementById('s-enlem').value = opt.dataset.lat;
+                            if (!document.getElementById('s-boylam').value) document.getElementById('s-boylam').value = opt.dataset.lon;
+                        }
+                    }
+                    
                     document.getElementById('s-logourl').value = localStorage.getItem('kiosk_school_logo') || '';
                 }
             }
 
             tabBtns.forEach(btn => {
                 btn.addEventListener('click', () => {
-                    const targetTab = btn.dataset.tab; document.getElementById('login-error').style.display = 'none';
-                    if ((targetTab === 'tab-kurulum' || targetTab === 'tab-ayarlar') && savedPassword && !isAuthenticated) { loginOverlay.dataset.targetTab = targetTab; loginOverlay.style.display = 'flex'; } 
-                    else { switchTab(targetTab); }
+                    const targetTab = btn.dataset.tab;
+                    document.getElementById('login-error').style.display = 'none';
+                    document.getElementById('login-password').value = '';
+
+                    if ((targetTab === 'tab-kurulum' || targetTab === 'tab-ayarlar') && savedPassword && !isAuthenticated) {
+                        loginOverlay.dataset.targetTab = targetTab;
+                        loginOverlay.style.display = 'flex';
+                    } else {
+                        switchTab(targetTab);
+                    }
                 });
             });
 
-            document.getElementById('login-form').addEventListener('submit', function (e) {
+            document.getElementById('login-form').addEventListener('submit', function(e) {
                 e.preventDefault();
-                if (document.getElementById('login-password').value === savedPassword) { isAuthenticated = true; loginOverlay.style.display = 'none'; switchTab(loginOverlay.dataset.targetTab || 'tab-kurulum'); } 
-                else { document.getElementById('login-error').style.display = 'block'; }
+                const enteredPwd = document.getElementById('login-password').value;
+                if (enteredPwd === savedPassword) {
+                    isAuthenticated = true;
+                    loginOverlay.style.display = 'none';
+                    const targetTab = loginOverlay.dataset.targetTab || 'tab-kurulum';
+                    switchTab(targetTab);
+                    
+                    const existingSheet = localStorage.getItem('kiosk_sheet_id');
+                    if (existingSheet && targetTab === 'tab-kurulum') document.getElementById('sheet-id').value = existingSheet;
+                } else {
+                    document.getElementById('login-error').style.display = 'block';
+                }
             });
-            document.getElementById('btn-login-cancel').addEventListener('click', function () { loginOverlay.style.display = 'none'; switchTab('tab-icerik'); });
 
-            document.getElementById('s-sehir').addEventListener('change', function () {
-                var s = this.options[this.selectedIndex]; if (s && s.dataset.lat) { document.getElementById('s-enlem').value = s.dataset.lat; document.getElementById('s-boylam').value = s.dataset.lon; }
+            document.getElementById('btn-login-cancel').addEventListener('click', function() {
+                loginOverlay.style.display = 'none';
+                const currentlyActive = document.querySelector('.tab-content.active');
+                if (!currentlyActive) switchTab('tab-icerik');
+            });
+
+            document.getElementById('s-sehir').addEventListener('change', function() {
+                var selected = this.options[this.selectedIndex];
+                if (selected && selected.dataset.lat) {
+                    document.getElementById('s-enlem').value = selected.dataset.lat;
+                    document.getElementById('s-boylam').value = selected.dataset.lon;
+                } else {
+                    document.getElementById('s-enlem').value = '';
+                    document.getElementById('s-boylam').value = '';
+                }
             });
 
             function fetchExistingContents() {
-                const sheetId = localStorage.getItem('kiosk_sheet_id'); if (!sheetId) return;
+                const sheetId = localStorage.getItem('kiosk_sheet_id');
+                if (!sheetId) return;
+
                 const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:loadContentsCallback&sheet=DUYURULAR&headers=1&t=${new Date().getTime()}`;
-                window.loadContentsCallback = function (json) { try { renderContentList(json.table.rows); } catch (e) {} delete window.loadContentsCallback; };
-                const script = document.createElement('script'); script.src = url; document.body.appendChild(script);
+                const scriptId = 'jsonp-load-contents';
+                
+                let oldScript = document.getElementById(scriptId);
+                if (oldScript) oldScript.remove();
+
+                window.loadContentsCallback = function(json) {
+                    try {
+                        renderContentList(json.table.rows);
+                    } catch(e) {
+                        console.error("İçerik çekilemedi", e);
+                    }
+                    delete window.loadContentsCallback;
+                };
+
+                const script = document.createElement('script');
+                script.id = scriptId;
+                script.src = url;
+                document.body.appendChild(script);
             }
 
             function renderContentList(rows) {
-                const container = document.getElementById('content-list-container'); if (!container) return;
-                container.innerHTML = `<div style="border-bottom:1px solid var(--glass-border); padding-bottom:12px; margin-bottom:16px;"><h3>Yayın Akışı Yönetimi</h3></div>`;
-                if (!rows || rows.length === 0) { container.innerHTML += '<p>Tabloda içerik bulunmuyor.</p>'; return; }
-                let activeCount = 0;
+                const container = document.getElementById('content-list-container');
+                if (!container) return;
+                
+                container.innerHTML = `
+                    <div style="border-bottom:1px solid var(--glass-border); padding-bottom:12px; margin-bottom:16px;">
+                        <h3 style="font-size:16px; color:var(--text-primary); margin-bottom:4px;">Yayın Akışı Yönetimi</h3>
+                        <p style="font-size:12px; color:var(--text-secondary);">Dikkat dağınıklığını önlemek için ekranda maksimum <b>${MAX_VISIBLE_ITEMS} aktif içerik</b> gösterilir. Sıralamayı ▲ ▼ butonlarıyla düzenleyebilirsiniz.</p>
+                    </div>
+                `;
+                
+                if (!rows || rows.length === 0) {
+                    container.innerHTML += '<p style="color: var(--text-secondary); font-size: 14px;">Tabloda henüz yayınlanmış içerik bulunmuyor.</p>';
+                    return;
+                }
+
+                let activeCount = 0; 
+
                 rows.forEach((row, index) => {
-                    const rowIndex = index + 2; const baslik = row.c[0] ? (row.c[0].v || '') : ''; const kategori = row.c[2] ? (row.c[2].v || 'duyuru') : 'duyuru'; const isAktif = (row.c[4] ? (row.c[4].v || 'EVET') : 'EVET').toString().toUpperCase() === 'EVET';
-                    let statusHtml = ''; if (isAktif) { activeCount++; statusHtml = activeCount <= MAX_VISIBLE_ITEMS ? '<span class="badge" style="color: #10b981;">📺 YAYINDA</span>' : '<span class="badge" style="color: #fbbf24;">📁 YEDEK</span>'; } else { statusHtml = '<span class="badge" style="color: #f87171;">❌ KAPALI</span>'; }
-                    const itemDiv = document.createElement('div'); itemDiv.className = 'content-item'; itemDiv.style.opacity = isAktif ? '1' : '0.4';
-                    itemDiv.innerHTML = `<div class="content-item-info"><h4>${statusHtml} ${baslik} <span class="badge category-badge">${kategori}</span></h4></div><div class="content-item-actions"><button type="button" class="btn-icon move move-up" data-index="${rowIndex}" ${index === 0 ? 'disabled' : ''}>▲</button><button type="button" class="btn-icon move move-down" data-index="${rowIndex}" ${index === rows.length - 1 ? 'disabled' : ''}>▼</button><button type="button" class="btn-icon edit" data-index="${rowIndex}">Düzenle</button><button type="button" class="btn-icon delete" data-index="${rowIndex}">Sil</button></div>`;
+                    const rowIndex = index + 2; 
+                    const baslik = row.c[0] ? (row.c[0].v || '') : '';
+                    const kategori = row.c[2] ? (row.c[2].v || 'duyuru') : 'duyuru';
+                    const aktif = row.c[4] ? (row.c[4].v || 'EVET') : 'EVET';
+                    
+                    const isAktif = aktif.toString().toUpperCase() === 'EVET';
+                    let statusHtml = '';
+                    let itemOpacity = '1';
+
+                    if (isAktif) {
+                        activeCount++;
+                        if (activeCount <= MAX_VISIBLE_ITEMS) {
+                            statusHtml = '<span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">📺 YAYINDA</span>';
+                        } else {
+                            statusHtml = '<span class="badge" style="background: rgba(245, 158, 11, 0.1); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3);">📁 SIRADA (YEDEK)</span>';
+                            itemOpacity = '0.6';
+                        }
+                    } else {
+                        statusHtml = '<span class="badge" style="background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3);">❌ KAPALI</span>';
+                        itemOpacity = '0.4'; 
+                    }
+
+                    const isFirst = (index === 0);
+                    const isLast = (index === rows.length - 1);
+
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'content-item';
+                    itemDiv.style.opacity = itemOpacity;
+                    itemDiv.setAttribute('draggable', 'true');
+                    itemDiv.dataset.rowIndex = rowIndex;
+                    
+                    itemDiv.innerHTML = `
+                        <div class="content-item-info" style="display: flex; align-items: center; gap: 8px;">
+                            <div class="drag-handle" style="cursor: grab; font-size: 20px; color: var(--text-secondary); padding-right: 8px;" title="Sürüklemek için tutun">☰</div>
+                            <div>
+                                <h4>
+                                    ${statusHtml}
+                                    ${baslik || '(Başlıksız)'} 
+                                    <span class="badge category-badge">${kategori}</span>
+                                </h4>
+                            </div>
+                        </div>
+                        <div class="content-item-actions">
+                            <button type="button" class="btn-icon move move-up" data-index="${rowIndex}" title="Yukarı Taşı" ${isFirst ? 'disabled' : ''}>▲</button>
+                            <button type="button" class="btn-icon move move-down" data-index="${rowIndex}" title="Aşağı Taşı" ${isLast ? 'disabled' : ''}>▼</button>
+                            <button type="button" class="btn-icon edit" data-index="${rowIndex}">Düzenle</button>
+                            <button type="button" class="btn-icon delete" data-index="${rowIndex}">Sil</button>
+                        </div>
+                    `;
                     
                     itemDiv.querySelector('.edit').addEventListener('click', () => startEditing(rowIndex, row));
-                    const gorselUrl = row.c[6] ? (row.c[6].v || '') : ''; const videoUrl = row.c[7] ? (row.c[7].v || '') : '';
+                    const gorselUrl = row.c[6] ? (row.c[6].v || '') : '';
+                    const videoUrl = row.c[7] ? (row.c[7].v || '') : '';
                     itemDiv.querySelector('.delete').addEventListener('click', () => deleteItem(rowIndex, gorselUrl, videoUrl));
-                    itemDiv.querySelector('.move-up').addEventListener('click', (e) => { if (!e.target.disabled) moveItem(rowIndex, 'up'); });
-                    itemDiv.querySelector('.move-down').addEventListener('click', (e) => { if (!e.target.disabled) moveItem(rowIndex, 'down'); });
+                    
+                    itemDiv.querySelector('.move-up').addEventListener('click', (e) => {
+                        if (!e.target.disabled) moveItem(rowIndex, 'up');
+                    });
+                    
+                    itemDiv.querySelector('.move-down').addEventListener('click', (e) => {
+                        if (!e.target.disabled) moveItem(rowIndex, 'down');
+                    });
+
+                    itemDiv.addEventListener('dragstart', handleDragStart);
+                    itemDiv.addEventListener('dragover', handleDragOver);
+                    itemDiv.addEventListener('dragleave', handleDragLeave);
+                    itemDiv.addEventListener('drop', handleDrop);
+                    itemDiv.addEventListener('dragend', handleDragEnd);
+
                     container.appendChild(itemDiv);
                 });
             }
 
             async function moveItem(rowIndex, direction) {
-                const scriptUrl = localStorage.getItem('kiosk_script_url'); document.getElementById('loading-overlay').style.display = 'flex';
-                try { await fetch(scriptUrl, { method: 'POST', body: JSON.stringify({ sheetId: localStorage.getItem('kiosk_sheet_id'), action: 'moveContent', rowIndex: rowIndex, direction: direction }) }); fetchExistingContents(); document.getElementById('loading-overlay').style.display = 'none'; } catch (e) { alert('Hata: ' + e.message); }
+                const scriptUrl = localStorage.getItem('kiosk_script_url');
+                const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
+                const overlay = document.getElementById('loading-overlay');
+                
+                overlay.style.display = 'flex';
+                document.getElementById('loading-text').textContent = 'Sıralama güncelleniyor...';
+
+                try {
+                    const response = await fetch(scriptUrl, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            sheetId: cleanSheetId,
+                            action: 'moveContent',
+                            rowIndex: rowIndex,
+                            direction: direction
+                        })
+                    });
+                    const data = await response.json();
+                    if(data.status === 'error') throw new Error(data.message);
+                    
+                    fetchExistingContents(); 
+                    overlay.style.display = 'none';
+
+                } catch(e) {
+                    overlay.style.display = 'none';
+                    alert('Sıralama işlemi başarısız: ' + e.message);
+                }
+            }
+
+            function handleDragStart(e) {
+                dragSourceEl = this;
+                draggedRowIndex = this.dataset.rowIndex;
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', this.innerHTML);
+                this.classList.add('dragging');
+            }
+
+            function handleDragOver(e) {
+                if (e.preventDefault) e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                this.classList.add('drag-over');
+                return false;
+            }
+
+            function handleDragLeave(e) {
+                this.classList.remove('drag-over');
+            }
+
+            function handleDrop(e) {
+                if (e.stopPropagation) e.stopPropagation();
+                this.classList.remove('drag-over');
+                
+                const targetRowIndex = this.dataset.rowIndex;
+                if (dragSourceEl !== this && draggedRowIndex && targetRowIndex) {
+                    reorderItemDrop(draggedRowIndex, targetRowIndex);
+                }
+                return false;
+            }
+
+            function handleDragEnd(e) {
+                this.classList.remove('dragging');
+                document.querySelectorAll('.content-item').forEach(el => el.classList.remove('drag-over'));
+            }
+
+            async function reorderItemDrop(fromRow, toRow) {
+                const scriptUrl = localStorage.getItem('kiosk_script_url');
+                const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
+                const overlay = document.getElementById('loading-overlay');
+                
+                overlay.style.display = 'flex';
+                document.getElementById('loading-text').textContent = 'Sürükle-bırak ile sıralama güncelleniyor...';
+
+                try {
+                    const response = await fetch(scriptUrl, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            sheetId: cleanSheetId,
+                            action: 'reorderContent',
+                            fromRow: fromRow,
+                            toRow: toRow
+                        })
+                    });
+                    const data = await response.json();
+                    if(data.status === 'error') throw new Error(data.message);
+                    
+                    fetchExistingContents(); 
+                    overlay.style.display = 'none';
+
+                } catch(e) {
+                    overlay.style.display = 'none';
+                    alert('Sürükle-bırak başarısız: ' + e.message);
+                }
             }
 
             function startEditing(rowIndex, row) {
-                currentEditRowIndex = rowIndex; document.getElementById('form-title').textContent = `İÇERİĞİ DÜZENLE`; document.getElementById('btn-submit-content').innerHTML = '💾 Kaydet'; document.getElementById('btn-cancel-edit').style.display = 'block';
-                document.getElementById('c-baslik').value = row.c[0] ? (row.c[0].v || '') : ''; document.getElementById('c-icerik').value = row.c[1] ? (row.c[1].v || '') : ''; document.getElementById('c-kategori').value = (row.c[2] ? (row.c[2].v || 'duyuru') : 'duyuru').toString().toLowerCase(); document.getElementById('c-aktif').value = (row.c[4] ? (row.c[4].v || 'EVET') : 'EVET').toString().toUpperCase(); document.getElementById('c-bant').value = (row.c[5] ? (row.c[5].v || 'HAYIR') : 'HAYIR').toString().toUpperCase(); document.getElementById('c-gorsel-url').value = row.c[6] ? (row.c[6].v || '') : ''; document.getElementById('c-video-url').value = row.c[7] ? (row.c[7].v || '') : ''; window.scrollTo({ top: 0, behavior: 'smooth' });
+                currentEditRowIndex = rowIndex;
+                document.getElementById('form-title').textContent = `İÇERİĞİ DÜZENLE`;
+                document.getElementById('form-title').style.color = 'var(--accent-purple)';
+                document.getElementById('btn-submit-content').innerHTML = '💾 Değişiklikleri Kaydet';
+                document.getElementById('btn-cancel-edit').style.display = 'block';
+
+                document.getElementById('c-baslik').value = row.c[0] ? (row.c[0].v || '') : '';
+                document.getElementById('c-icerik').value = row.c[1] ? (row.c[1].v || '') : '';
+                document.getElementById('c-kategori').value = (row.c[2] ? (row.c[2].v || 'duyuru') : 'duyuru').toString().toLowerCase();
+                document.getElementById('c-tarih').value = ''; 
+                document.getElementById('c-aktif').value = (row.c[4] ? (row.c[4].v || 'EVET') : 'EVET').toString().toUpperCase();
+                document.getElementById('c-bant').value = (row.c[5] ? (row.c[5].v || 'HAYIR') : 'HAYIR').toString().toUpperCase();
+                document.getElementById('c-gorsel-url').value = row.c[6] ? (row.c[6].v || '') : '';
+                document.getElementById('c-video-url').value = row.c[7] ? (row.c[7].v || '') : '';
+
+                window.scrollTo({top: 0, behavior: 'smooth'});
             }
 
-            document.getElementById('btn-cancel-edit').addEventListener('click', () => { currentEditRowIndex = null; document.getElementById('form-title').textContent = 'YENİ İÇERİK EKLE'; document.getElementById('btn-submit-content').innerHTML = '🚀 Tabloya Ekle'; document.getElementById('btn-cancel-edit').style.display = 'none'; document.getElementById('content-form').reset(); document.getElementById('upload-progress-container').style.display = 'none'; });
+            document.getElementById('btn-cancel-edit').addEventListener('click', cancelEditing);
 
+            function cancelEditing() {
+                currentEditRowIndex = null;
+                document.getElementById('form-title').textContent = 'YENİ İÇERİK EKLE';
+                document.getElementById('form-title').style.color = 'var(--accent-blue)';
+                document.getElementById('btn-submit-content').innerHTML = '🚀 İçeriği Tabloya Ekle';
+                document.getElementById('btn-cancel-edit').style.display = 'none';
+                document.getElementById('upload-progress-container').style.display = 'none';
+                document.getElementById('content-form').reset();
+            }
             async function deleteItem(rowIndex, gorselUrl, videoUrl) {
                 if (!confirm('Bu içeriği tamamen silmek istediğinize emin misiniz?')) return;
-                let deleteMedia = false; if (gorselUrl || videoUrl) { deleteMedia = confirm('Bu duyuruya ait bir medya dosyası var.\n\nSistemden (Drive / YouTube) tamamen SİLİNSİN Mİ?'); }
-                const overlay = document.getElementById('loading-overlay'); overlay.style.display = 'flex';
+            
+                let deleteMedia = false;
+                // Eğer görsel veya video URL'si varsa medyayı da silmek isteyip istemediğini sor
+                if (gorselUrl || videoUrl) {
+                    deleteMedia = confirm('Bu duyuruya ait bir medya dosyası (Görsel veya Video) bulunuyor.\n\nYüklenmiş bu dosya sistemden (Drive / YouTube) tamamen SİLİNSİN Mİ?\n\n(Dosyayı silmek için Tamam\'a, sadece tablodan kaldırmak için İptal\'e tıklayın.)');
+                }
+            
+                const scriptUrl = localStorage.getItem('kiosk_script_url');
+                const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
+                const overlay = document.getElementById('loading-overlay');
+            
+                overlay.style.display = 'flex';
+                document.getElementById('loading-text').textContent = deleteMedia ? 'İçerik ve medya dosyası siliniyor...' : 'İçerik tablodan siliniyor...';
+            
                 try {
-                    await fetch(localStorage.getItem('kiosk_script_url'), { method: 'POST', body: JSON.stringify({ sheetId: localStorage.getItem('kiosk_sheet_id'), action: 'deleteContent', rowIndex: rowIndex, deleteMedia: deleteMedia }) });
-                    fetchExistingContents(); overlay.style.display = 'none'; if (currentEditRowIndex === rowIndex) document.getElementById('btn-cancel-edit').click();
-                } catch (e) { overlay.style.display = 'none'; alert('Silme başarısız!'); }
+                    const response = await fetch(scriptUrl, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            sheetId: cleanSheetId,
+                            action: 'deleteContent',
+                            rowIndex: rowIndex,
+                            deleteMedia: deleteMedia
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.status === 'error') throw new Error(data.message);
+            
+                    fetchExistingContents();
+                    overlay.style.display = 'none';
+            
+                    if (currentEditRowIndex === rowIndex) cancelEditing();
+            
+                } catch (e) {
+                    overlay.style.display = 'none';
+                    alert('Silme işlemi başarısız: ' + e.message);
+                }
             }
 
             function runMagicSetup(sheetInput, isSilentLoad) {
-                let cleanSheetId = sheetInput.includes('docs.google.com') ? sheetInput.match(/\/d\/([a-zA-Z0-9_-]+)/)[1] : sheetInput;
+                let cleanSheetId = sheetInput;
+                if (cleanSheetId.includes('docs.google.com/spreadsheets/d/')) {
+                    const match = cleanSheetId.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                    if (match) cleanSheetId = match[1];
+                }
+
+                const setupLoading = document.getElementById('setup-loading');
+                const btn = document.getElementById('btn-save');
+                
+                if(!isSilentLoad) setupLoading.style.display = 'flex';
+                if(btn) btn.disabled = true;
+
                 const url = `https://docs.google.com/spreadsheets/d/${cleanSheetId}/gviz/tq?tqx=out:json;responseHandler:magicSetupCallback&sheet=AYARLAR&headers=0`;
-                if (!isSilentLoad) document.getElementById('setup-loading').style.display = 'flex';
-                window.magicSetupCallback = function (json) {
+                const scriptId = 'jsonp-magic-setup';
+                
+                let oldScript = document.getElementById(scriptId);
+                if (oldScript) oldScript.remove();
+
+                window.magicSetupCallback = function(json) {
                     try {
-                        let settings = {}; json.table.rows.forEach(row => { if (row.c && row.c.length >= 2) { let k = (row.c[0]?.v || '').toString().replace(/\s+/g, '').toLowerCase(); if (k) settings[k] = (row.c[1]?.v || '').toString().trim(); } });
+                        const rows = json.table.rows;
+                        let settings = {};
+
+                        rows.forEach(row => {
+                            if (row.c && row.c.length >= 2) {
+                                let c0 = row.c[0];
+                                let c1 = row.c[1];
+                                let rawKey = c0 ? (c0.f || c0.v || '').toString() : '';
+                                let val = c1 ? (c1.f || c1.v || '').toString().trim() : '';
+                                let cleanKey = rawKey.replace(/\s+/g, '').toLowerCase();
+                                if(cleanKey) settings[cleanKey] = val;
+                            }
+                        });
+
                         localStorage.setItem('kiosk_sheet_id', cleanSheetId);
+                        localStorage.removeItem('kiosk_demo_mode');
+
+                        let scriptFound = false;
+
                         for (let key in settings) {
-                            if (key.includes('scripturl')) localStorage.setItem('kiosk_script_url', settings[key]);
-                            else if (key.includes('okuladi')) localStorage.setItem('kiosk_school_name', settings[key]);
-                            else if (key.includes('sifre')) { localStorage.setItem('kiosk_admin_password', settings[key]); savedPassword = settings[key]; }
-                            else if (key.includes('logourl')) localStorage.setItem('kiosk_school_logo', settings[key]);
+                            let val = settings[key];
+                            if (key.includes('scripturl') || key.includes('appscript')) {
+                                localStorage.setItem('kiosk_script_url', val);
+                                scriptFound = true;
+                            } else if (key.includes('okuladi') || key.includes('okuladı')) {
+                                localStorage.setItem('kiosk_school_name', val);
+                            } else if (key.includes('sifre') || key.includes('şifre')) {
+                                localStorage.setItem('kiosk_admin_password', val);
+                                savedPassword = val;
+                            } else if (key.includes('logourl')) {
+                                localStorage.setItem('kiosk_school_logo', val);
+                            } else if (key.includes('sehir') || key.includes('şehir')) {
+                                localStorage.setItem('kiosk_weather_city', val);
+                            } else if (key.includes('enlem')) {
+                                localStorage.setItem('kiosk_weather_lat', val.replace(',', '.'));
+                            } else if (key.includes('boylam')) {
+                                localStorage.setItem('kiosk_weather_lon', val.replace(',', '.'));
+                            }
                         }
-                        if (!isSilentLoad) { document.getElementById('setup-loading').style.display = 'none'; document.getElementById('success-msg').style.display = 'block'; setTimeout(() => switchTab('tab-icerik'), 1500); } 
-                        else switchTab('tab-icerik');
-                    } catch (e) { if (!isSilentLoad) { alert("Hata!"); document.getElementById('setup-loading').style.display = 'none'; } }
+
+                        if(!isSilentLoad) {
+                            setupLoading.style.display = 'none';
+                            if (!scriptFound) alert("BAŞARILI! Ancak tablonuzda 'ScriptURL' satırı bulunamadığı için sadece ayarlar çekilebildi. İçerik ekleyebilmek için lütfen tablonuza ScriptURL değerini giriniz.");
+                            else document.getElementById('success-msg').style.display = 'block';
+                            btn.textContent = '✅ Ayarlar Kaydedildi!';
+                            setTimeout(() => { switchTab('tab-icerik'); }, 1500);
+                        } else {
+                            switchTab('tab-icerik');
+                            if (window.history && window.history.replaceState && window.location.search.includes('id=')) {
+                                const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                                window.history.replaceState({}, document.title, cleanUrl);
+                            }
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        if(!isSilentLoad) {
+                            alert("Hata! Tablonuzda 'AYARLAR' sekmesi bulunamadı veya veriler okunamadı.");
+                            setupLoading.style.display = 'none';
+                        }
+                    }
+                    if(btn) btn.disabled = false;
                     delete window.magicSetupCallback;
                 };
-                const script = document.createElement('script'); script.src = url; document.body.appendChild(script);
+
+                const script = document.createElement('script');
+                script.id = scriptId;
+                script.src = url;
+                script.onerror = function() {
+                    if(!isSilentLoad) {
+                        alert("Google Sheets'e bağlanılamadı. Linkin erişime açık olduğundan emin olun.");
+                        setupLoading.style.display = 'none';
+                        if(btn) btn.disabled = false;
+                    }
+                };
+                document.body.appendChild(script);
             }
 
-            const localSheetId = localStorage.getItem('kiosk_sheet_id'); if (localSheetId) { document.getElementById('sheet-id').value = localSheetId; runMagicSetup(localSheetId, true); } else { switchTab('tab-kurulum'); }
-            document.getElementById('setup-form').addEventListener('submit', function (e) { e.preventDefault(); runMagicSetup(document.getElementById('sheet-id').value.trim(), false); });
-            document.getElementById('btn-demo').addEventListener('click', function () { window.location.href = 'index.html'; });
-            document.getElementById('btn-reset').addEventListener('click', function () { if (confirm('Sıfırlansın mı?')) { localStorage.clear(); window.location.reload(); } });
+            const urlParams = new URLSearchParams(window.location.search);
+            const magicId = urlParams.get('id');
+            const localSheetId = localStorage.getItem('kiosk_sheet_id');
 
-            // --- İÇERİK FORMU GÖNDERME (HATA YAKALAMA VE TEXT/PLAIN EKLENDİ) ---
-            const contentForm = document.getElementById('content-form');
-            if (contentForm) {
-                contentForm.addEventListener('submit', async function (e) {
+            if (magicId) {
+                document.getElementById('sheet-id').value = magicId;
+                runMagicSetup(magicId, true);
+            } else if (localSheetId) {
+                document.getElementById('sheet-id').value = localSheetId;
+                switchTab('tab-icerik');
+                runMagicSetup(localSheetId, true); 
+            } else {
+                switchTab('tab-kurulum');
+            }
+
+            document.getElementById('setup-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const sheetInput = document.getElementById('sheet-id').value.trim();
+                if (!sheetInput) return;
+                runMagicSetup(sheetInput, false);
+            });
+
+            document.getElementById('btn-demo').addEventListener('click', function() { window.location.href = 'index.html'; });
+
+            document.getElementById('btn-reset').addEventListener('click', function() {
+                if (confirm('Tüm cihaz ayarları sıfırlansın mı?')) {
+                    localStorage.clear();
+                    window.location.reload();
+                }
+            });
+
+            const settingsForm = document.getElementById('settings-form');
+            if (settingsForm) {
+                settingsForm.addEventListener('submit', async function(e) {
                     e.preventDefault();
-                    const scriptUrl = localStorage.getItem('kiosk_script_url');
-                    const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
-                    const btnSubmit = document.getElementById('btn-submit-content');
-                    const overlay = document.getElementById('loading-overlay');
-                    const errorMsg = document.getElementById('content-error-msg');
-                    const progContainer = document.getElementById('upload-progress-container');
-                    const progBar = document.getElementById('upload-progress-bar');
-                    const progText = document.getElementById('upload-progress-text');
+                    if (!confirm("Dikkat! Bu işlem Google Sheet tablonuzdaki ayarları tamamen değiştirecektir. Onaylıyor musunuz?")) return;
 
-                    overlay.style.display = 'flex';
+                    const currentScriptUrl = localStorage.getItem('kiosk_script_url');
+                    const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
+                    
+                    if (!currentScriptUrl || !cleanSheetId) {
+                        alert('Ayarları değiştirebilmek için sistemin AppScript ağına daha önce bağlanmış olması gerekir.');
+                        return;
+                    }
+
+                    const btnSubmit = document.getElementById('btn-submit-settings');
+                    const overlay = document.getElementById('settings-loading-overlay');
+                    const errorMsg = document.getElementById('settings-error-msg');
+                    const successMsg = document.getElementById('settings-success-msg');
+                    
                     errorMsg.style.display = 'none';
+                    successMsg.style.display = 'none';
+                    overlay.style.display = 'flex';
                     btnSubmit.disabled = true;
 
                     try {
-                        let manualGorsel = document.getElementById('c-gorsel-url').value.trim();
-                        let manualVideo = document.getElementById('c-video-url').value.trim();
-                        const fileInput = document.getElementById('c-file');
-                        
-                        let uploadedGLinks = [];
-                        let uploadedVLinks = [];
-
-                        if (fileInput.files.length > 0) {
-                            progContainer.style.display = 'block';
-                            for (let i = 0; i < fileInput.files.length; i++) {
-                                const file = fileInput.files[i];
-                                progText.textContent = `Yükleniyor (${i+1}/${fileInput.files.length}): ${file.name}`;
-                                progBar.style.width = '0%';
-
-                                if (file.type.startsWith('image/')) {
-                                    const base64 = await new Promise(r => { const rd = new FileReader(); rd.onload = e => r(e.target.result); rd.readAsDataURL(file); });
-                                    
-                                    // HATA ÇÖZÜMÜ: Content-Type: text/plain zorunluluğu getirildi
-                                    const resp = await fetch(scriptUrl, { 
-                                        method: 'POST', 
-                                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                                        body: JSON.stringify({ sheetId: cleanSheetId, action: 'uploadFile', file: { name: file.name, mimeType: file.type, content: base64 } }) 
-                                    });
-                                    const res = await resp.json();
-                                    
-                                    if (res.status === 'success' && res.url) {
-                                        uploadedGLinks.push(res.url);
-                                    } else {
-                                        throw new Error(res.message || "Resim linki alınamadı");
-                                    }
-                                    progBar.style.width = '100%';
-                                } 
-                                else if (file.type.startsWith('video/')) {
-                                    const urlResp = await fetch(scriptUrl, { 
-                                        method: 'POST', 
-                                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                                        body: JSON.stringify({ sheetId: cleanSheetId, action: 'getYouTubeUploadUrl', videoTitle: document.getElementById('c-baslik').value, mimeType: file.type, size: file.size, origin: window.location.origin }) 
-                                    });
-                                    const uploadUrl = (await urlResp.json()).uploadUrl;
-                                    const CHUNK = 2 * 1024 * 1024; let uploaded = 0;
-                                    while (uploaded < file.size) {
-                                        const end = Math.min(uploaded + CHUNK, file.size);
-                                        const put = await fetch(uploadUrl, { method: 'PUT', headers: { 'Content-Range': `bytes ${uploaded}-${end - 1}/${file.size}` }, body: file.slice(uploaded, end) });
-                                        if (put.status === 308) { uploaded = end; progBar.style.width = Math.round((uploaded/file.size)*100) + '%'; }
-                                        else if (put.status === 200 || put.status === 201) { const vid = (await put.json()).id; uploadedVLinks.push(`https://www.youtube.com/watch?v=${vid}`); break; }
-                                    }
-                                }
-                            }
-                        }
-
-                        let finalGorsel = [manualGorsel, ...uploadedGLinks].filter(Boolean).join(',');
-                        let finalVideo = [manualVideo, ...uploadedVLinks].filter(Boolean).join(',');
-
-                        document.getElementById('loading-text').textContent = 'Google Sheet güncelleniyor...';
-                        const finalPayload = {
-                            sheetId: cleanSheetId,
-                            action: currentEditRowIndex ? 'editContent' : 'addContent',
-                            rowIndex: currentEditRowIndex,
-                            item: {
-                                baslik: document.getElementById('c-baslik').value.trim(),
-                                icerik: document.getElementById('c-icerik').value.trim(),
-                                kategori: document.getElementById('c-kategori').value,
-                                tarih: document.getElementById('c-tarih').value,
-                                aktif: document.getElementById('c-aktif').value,
-                                bant: document.getElementById('c-bant').value,
-                                gorsel: finalGorsel,
-                                video: finalVideo
-                            }
+                        const newSettings = {
+                            OkulAdi: document.getElementById('s-okuladi').value.trim(),
+                            Sifre: document.getElementById('s-sifre').value.trim(),
+                            ScriptURL: document.getElementById('s-scripturl').value.trim(),
+                            Sehir: document.getElementById('s-sehir').value.trim(),
+                            Enlem: document.getElementById('s-enlem').value.trim(),
+                            Boylam: document.getElementById('s-boylam').value.trim(),
+                            LogoURL: document.getElementById('s-logourl').value.trim()
                         };
 
-                        const finalResp = await fetch(scriptUrl, { 
+                        const payload = { sheetId: cleanSheetId, action: 'updateSettings', settings: newSettings };
+
+                        const fetchPromise = fetch(currentScriptUrl, { 
                             method: 'POST', 
                             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                            body: JSON.stringify(finalPayload) 
+                            body: JSON.stringify(payload) 
                         });
-                        const finalData = await finalResp.json();
+                        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('İstek zaman aşımına uğradı.')), 15000));
                         
-                        if (finalData.status === 'success') {
-                            overlay.style.display = 'none'; btnSubmit.disabled = false;
-                            document.getElementById('btn-cancel-edit').click(); fetchExistingContents();
-                            document.getElementById('content-success-msg').style.display = 'block'; setTimeout(() => { document.getElementById('content-success-msg').style.display = 'none'; }, 4000);
-                        } else { throw new Error(finalData.message); }
+                        const response = await Promise.race([fetchPromise, timeoutPromise]);
+                        const data = await response.json();
+                        
+                        if (data.status === 'error') throw new Error(data.message);
+                        
+                        localStorage.setItem('kiosk_school_name', newSettings.OkulAdi);
+                        localStorage.setItem('kiosk_admin_password', newSettings.Sifre);
+                        savedPassword = newSettings.Sifre;
+                        localStorage.setItem('kiosk_script_url', newSettings.ScriptURL);
+                        localStorage.setItem('kiosk_weather_city', newSettings.Sehir);
+                        localStorage.setItem('kiosk_weather_lat', newSettings.Enlem);
+                        localStorage.setItem('kiosk_weather_lon', newSettings.Boylam);
+                        localStorage.setItem('kiosk_school_logo', newSettings.LogoURL);
 
-                    } catch (error) {
-                        overlay.style.display = 'none'; 
+                        overlay.style.display = 'none';
                         btnSubmit.disabled = false;
-                        errorMsg.textContent = "❌ Hata: " + error.message;
+                        successMsg.style.display = 'block';
+                        setTimeout(() => { successMsg.style.display = 'none'; }, 6000);
+
+                    } catch(error) {
+                        overlay.style.display = 'none';
+                        btnSubmit.disabled = false;
+                        errorMsg.textContent = 'Hata: ' + error.message;
                         errorMsg.style.display = 'block';
                     }
                 });
             }
+
+            // --- YOUTUBE YÜKLEME VE İÇERİK KAYDETME ALANI (CORS FIX) ---
+            const contentForm = document.getElementById('content-form');
+            if (contentForm) {
+                contentForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const scriptUrl = localStorage.getItem('kiosk_script_url');
+                    const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
+                    
+                    if (!scriptUrl || scriptUrl === 'undefined' || scriptUrl === '') {
+                        alert('HATA: Ayarlarda "App Script URL" eksik! Lütfen Sistem Ayarları sekmesinden Script URL\'nizi girin.');
+                        return;
+                    }
+                    if (!cleanSheetId) {
+                        alert('Lütfen önce Kurulum sekmesinden bağlantı yapın.');
+                        return;
+                    }
+                    
+                    const btnSubmit = document.getElementById('btn-submit-content');
+                    const overlay = document.getElementById('loading-overlay');
+                    const errorMsg = document.getElementById('content-error-msg');
+                    const successMsg = document.getElementById('content-success-msg');
+                    
+                    errorMsg.style.display = 'none';
+                    successMsg.style.display = 'none';
+                    overlay.style.display = 'flex';
+                    btnSubmit.disabled = true;
+                    
+                    try {
+                        const itemData = {
+                            baslik: document.getElementById('c-baslik').value.trim(),
+                            icerik: document.getElementById('c-icerik').value.trim(),
+                            kategori: document.getElementById('c-kategori').value,
+                            tarih: document.getElementById('c-tarih').value,
+                            aktif: document.getElementById('c-aktif').value,
+                            bant: document.getElementById('c-bant').value,
+                            gorsel: document.getElementById('c-gorsel-url').value.trim(),
+                            video: document.getElementById('c-video-url').value.trim()
+                        };
+                        
+                        const actionType = currentEditRowIndex ? 'editContent' : 'addContent';
+                        const payload = { sheetId: cleanSheetId, action: actionType, item: itemData };
+                        
+                        if(currentEditRowIndex) payload.rowIndex = currentEditRowIndex;
+                        
+                        const fileInput = document.getElementById('c-file');
+                        
+                        if (fileInput.files.length > 0) {
+                            const file = fileInput.files[0];
+                            
+                            // 🎬 VİDEO YÜKLEME 
+                            if (file.type.startsWith('video/')) {
+                                document.getElementById('loading-text').textContent = 'YouTube yükleme bileti alınıyor...';
+                                
+                                // GÜNCELLEME: Preflight/CORS hatasını önlemek için Origin bildiriliyor
+                                const urlResp = await fetch(scriptUrl, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                    body: JSON.stringify({
+                                        sheetId: cleanSheetId,
+                                        action: 'getYouTubeUploadUrl',
+                                        videoTitle: itemData.baslik || 'Okul Duyuru Videosu',
+                                        mimeType: file.type,
+                                        size: file.size,
+                                        origin: window.location.origin
+                                    })
+                                });
+                                const urlData = await urlResp.json();
+                                if (urlData.status !== 'success') throw new Error(urlData.message || 'YouTube yükleme bağlantısı alınamadı');
+
+                                const uploadUrl = urlData.uploadUrl;
+                                
+                                document.getElementById('loading-text').textContent = 'Video doğrudan YouTube kanalınıza yükleniyor...';
+                                const progressContainer = document.getElementById('upload-progress-container');
+                                const progressBar = document.getElementById('upload-progress-bar');
+                                const progressText = document.getElementById('upload-progress-text');
+                                const progressSize = document.getElementById('upload-progress-size');
+                                
+                                progressContainer.style.display = 'block';
+                                
+                                const CHUNK_SIZE = 2097152; // 2 MB
+                                let uploaded = 0;
+                                let videoId = null;
+
+                                while (uploaded < file.size) {
+                                    const end = Math.min(uploaded + CHUNK_SIZE, file.size);
+                                    const chunk = file.slice(uploaded, end);
+                                    
+                                    const putResp = await fetch(uploadUrl, {
+                                        method: 'PUT',
+                                        headers: {
+                                            'Content-Range': `bytes ${uploaded}-${end - 1}/${file.size}`
+                                        },
+                                        body: chunk
+                                    });
+                                    
+                                    if (putResp.status === 308) {
+                                        uploaded = end;
+                                        const percent = Math.round((uploaded / file.size) * 100);
+                                        progressBar.style.width = percent + '%';
+                                        progressText.textContent = `YouTube'a Yükleniyor: %${percent}`;
+                                        progressSize.textContent = `${(uploaded/1024/1024).toFixed(1)} MB / ${(file.size/1024/1024).toFixed(1)} MB`;
+                                    } else if (putResp.status === 200 || putResp.status === 201) {
+                                        const putData = await putResp.json();
+                                        videoId = putData.id;
+                                        break;
+                                    } else {
+                                        throw new Error('YouTube yükleme sırasında hata: KOD ' + putResp.status);
+                                    }
+                                }
+                                
+                                payload.item.video = `https://www.youtube.com/watch?v=${videoId}`;
+                                progressContainer.style.display = 'none';
+                                document.getElementById('loading-text').textContent = 'Kayıt tamamlanıyor...';
+                                
+                            } 
+                            // 🖼️ GÖRSEL YÜKLEME
+                            else if (file.type.startsWith('image/')) {
+                                document.getElementById('loading-text').textContent = 'Görsel Drive sistemine aktarılıyor...';
+                                const reader = new FileReader();
+                                const filePromise = new Promise((resolve, reject) => {
+                                    reader.onload = (ev) => resolve(ev.target.result);
+                                    reader.onerror = (err) => reject(err);
+                                    reader.readAsDataURL(file);
+                                });
+                                
+                                const base64Data = await filePromise;
+                                payload.file = { name: file.name, mimeType: file.type, content: base64Data };
+                            }
+                        } else {
+                            document.getElementById('loading-text').textContent = currentEditRowIndex ? 'Değişiklikler kaydediliyor...' : 'Duyuru tabloya kaydediliyor...';
+                        }
+                        
+                        // GÜNCELLEME: CORS preflight engellemek için Content-Type eklendi
+                        const fetchPromise = fetch(scriptUrl, { 
+                            method: 'POST', 
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify(payload) 
+                        });
+                        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Sistem yanıt vermedi veya zaman aşımına uğradı.')), 30000));
+                        
+                        const response = await Promise.race([fetchPromise, timeoutPromise]);
+                        const data = await response.json();
+                        
+                        if (data.status === 'error') throw new Error(data.message);
+                        
+                        overlay.style.display = 'none';
+                        btnSubmit.disabled = false;
+                        
+                        cancelEditing();
+                        fetchExistingContents();
+                        
+                        successMsg.style.display = 'block';
+                        setTimeout(() => { successMsg.style.display = 'none'; }, 5000);
+                        
+                    } catch (error) {
+                        overlay.style.display = 'none';
+                        btnSubmit.disabled = false;
+                        errorMsg.textContent = 'Hata: ' + error.message;
+                        errorMsg.style.display = 'block';
+                    }
+                });
+            }
+
+            // ===========================================================
+            // NÖBET & DERS SAATLERİ - TAB FONKSİYONLARI
+            // ===========================================================
+
+            const TR_DAYS_SHORT = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+            const TR_MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+
+            function updateTodayBadge() {
+                const now = new Date();
+                const badge = document.getElementById('today-badge');
+                if (badge) badge.textContent = `📅 Bugün: ${now.getDate()} ${TR_MONTHS[now.getMonth()]} ${now.getFullYear()}, ${TR_DAYS_SHORT[now.getDay()]}`;
+            }
+
+            function getTodayStr() {
+                const now = new Date();
+                return `${String(now.getDate()).padStart(2,'0')}.${String(now.getMonth()+1).padStart(2,'0')}.${now.getFullYear()}`;
+            }
+
+            // --- DERS SAATLERİ ---
+            const defaultLessons = [
+                {period: 1, start: '08:30', end: '09:10'},
+                {period: 2, start: '09:20', end: '10:00'},
+                {period: 3, start: '10:10', end: '10:50'},
+                {period: 4, start: '11:00', end: '11:40'},
+                {period: 5, start: '11:50', end: '12:30'},
+                {period: 6, start: '13:10', end: '13:50'},
+                {period: 7, start: '14:00', end: '14:40'},
+                {period: 8, start: '14:50', end: '15:30'},
+            ];
+
+            function renderLessonTable(lessons) {
+                const tbody = document.getElementById('lesson-table-body');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+                lessons.forEach((l, i) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><div class="row-label">${l.period}. Ders</div></td>
+                        <td><input type="time" value="${l.start}" data-field="start" data-index="${i}"></td>
+                        <td><input type="time" value="${l.end}" data-field="end" data-index="${i}"></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            function getLessonTableData() {
+                const rows = document.querySelectorAll('#lesson-table-body tr');
+                return Array.from(rows).map((tr, i) => ({
+                    period: i + 1,
+                    start: tr.querySelector('[data-field="start"]').value,
+                    end: tr.querySelector('[data-field="end"]').value
+                }));
+            }
+
+            document.getElementById('btn-add-lesson').addEventListener('click', function() {
+                const current = getLessonTableData();
+                const last = current[current.length - 1];
+                current.push({ period: current.length + 1, start: last ? last.end.replace(/^(\d+):(\d+)$/, (m,h,min) => { let nm = parseInt(min)+10; let nh = parseInt(h); if(nm>=60){nm-=60;nh++} return `${String(nh).padStart(2,'0')}:${String(nm).padStart(2,'0')}`; }) : '15:40', end: '16:20' });
+                renderLessonTable(current);
+            });
+
+            function loadLessonScheduleFromSheet() {
+                const sheetId = localStorage.getItem('kiosk_sheet_id');
+                if (!sheetId) { renderLessonTable(defaultLessons); return; }
+
+                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler=loadLessonsCallback&sheet=DERS_SAATLERI&headers=1&t=${Date.now()}`;
+                const scriptId = 'jsonp-load-lessons';
+                let old = document.getElementById(scriptId); if (old) old.remove();
+
+                window.loadLessonsCallback = function(json) {
+                    try {
+                        const rows = json.table.rows;
+                        if (rows && rows.length > 0) {
+                            const lessons = rows.map(r => ({
+                                period: r.c[0] ? parseInt(r.c[0].v) : 0,
+                                start: r.c[1] ? (r.c[1].v || '').toString().trim() : '',
+                                end: r.c[2] ? (r.c[2].v || '').toString().trim() : ''
+                            })).filter(l => l.period > 0);
+                            renderLessonTable(lessons.length > 0 ? lessons : defaultLessons);
+                        } else {
+                            renderLessonTable(defaultLessons);
+                        }
+                    } catch(e) { renderLessonTable(defaultLessons); }
+                    delete window.loadLessonsCallback;
+                };
+                const s = document.createElement('script'); s.id = scriptId; s.src = url;
+                s.onerror = () => { renderLessonTable(defaultLessons); };
+                document.body.appendChild(s);
+            }
+
+            document.getElementById('btn-save-lessons').addEventListener('click', async function() {
+                const scriptUrl = localStorage.getItem('kiosk_script_url');
+                const sheetId = localStorage.getItem('kiosk_sheet_id');
+                if (!scriptUrl || !sheetId) { alert('Önce Bağlantı sekmesinden Sheet bağlantısı yapın.'); return; }
+
+                const overlay = document.getElementById('nobet-loading-overlay');
+                const loadingText = document.getElementById('nobet-loading-text');
+                overlay.style.display = 'flex';
+                loadingText.textContent = 'Ders saatleri kaydediliyor...';
+                this.disabled = true;
+
+                try {
+                    const lessons = getLessonTableData();
+                    const resp = await fetch(scriptUrl, { method: 'POST', headers: {'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ sheetId, action: 'saveLessonSchedule', lessons }) });
+                    const data = await resp.json();
+                    if (data.status === 'error') throw new Error(data.message);
+                    overlay.style.display = 'none';
+                    const msg = document.getElementById('lesson-success-msg');
+                    msg.style.display = 'block'; setTimeout(() => msg.style.display = 'none', 4000);
+                } catch(e) { overlay.style.display = 'none'; alert('Hata: ' + e.message); }
+                this.disabled = false;
+            });
+
+            // --- NÖBETÇİ ÖĞRETMENLER ---
+            const defaultTeacherRows = [
+                {floor: 'Zemin Kat', mon: '', tue: '', wed: '', thu: '', fri: ''},
+                {floor: '1. Kat', mon: '', tue: '', wed: '', thu: '', fri: ''},
+                {floor: '2. Kat', mon: '', tue: '', wed: '', thu: '', fri: ''},
+                {floor: '3. Kat', mon: '', tue: '', wed: '', thu: '', fri: ''},
+                {floor: 'Bahçe', mon: '', tue: '', wed: '', thu: '', fri: ''},
+            ];
+
+            function renderTeacherTable(rows) {
+                const tbody = document.getElementById('teacher-table-body');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+                rows.forEach((r, i) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><input type="text" value="${r.floor}" data-field="floor" data-idx="${i}" placeholder="Kat adı"></td>
+                        <td><input type="text" value="${r.mon}" data-field="mon" data-idx="${i}" placeholder="Ad Soyad"></td>
+                        <td><input type="text" value="${r.tue}" data-field="tue" data-idx="${i}" placeholder="Ad Soyad"></td>
+                        <td><input type="text" value="${r.wed}" data-field="wed" data-idx="${i}" placeholder="Ad Soyad"></td>
+                        <td><input type="text" value="${r.thu}" data-field="thu" data-idx="${i}" placeholder="Ad Soyad"></td>
+                        <td><input type="text" value="${r.fri}" data-field="fri" data-idx="${i}" placeholder="Ad Soyad"></td>
+                        <td><button type="button" class="btn-remove-row" data-idx="${i}">✕</button></td>
+                    `;
+                    tr.querySelector('.btn-remove-row').addEventListener('click', function() {
+                        const current = getTeacherTableData();
+                        current.splice(i, 1);
+                        renderTeacherTable(current);
+                    });
+                    tbody.appendChild(tr);
+                });
+            }
+
+            function getTeacherTableData() {
+                const rows = document.querySelectorAll('#teacher-table-body tr');
+                return Array.from(rows).map(tr => ({
+                    floor: tr.querySelector('[data-field="floor"]').value,
+                    mon: tr.querySelector('[data-field="mon"]').value,
+                    tue: tr.querySelector('[data-field="tue"]').value,
+                    wed: tr.querySelector('[data-field="wed"]').value,
+                    thu: tr.querySelector('[data-field="thu"]').value,
+                    fri: tr.querySelector('[data-field="fri"]').value,
+                }));
+            }
+
+            document.getElementById('btn-add-teacher-row').addEventListener('click', function() {
+                const current = getTeacherTableData();
+                current.push({floor: '', mon: '', tue: '', wed: '', thu: '', fri: ''});
+                renderTeacherTable(current);
+            });
+
+            function loadDutyTeachersFromSheet() {
+                const sheetId = localStorage.getItem('kiosk_sheet_id');
+                if (!sheetId) { renderTeacherTable(defaultTeacherRows); return; }
+
+                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler=loadTeachersCallback&sheet=NOBETCI_OGRETMEN&headers=1&t=${Date.now()}`;
+                const scriptId = 'jsonp-load-teachers';
+                let old = document.getElementById(scriptId); if (old) old.remove();
+
+                window.loadTeachersCallback = function(json) {
+                    try {
+                        const rows = json.table.rows;
+                        if (rows && rows.length > 0) {
+                            const teachers = rows.map(r => ({
+                                floor: r.c[0] ? (r.c[0].v || '').toString().trim() : '',
+                                mon: r.c[1] ? (r.c[1].v || '').toString().trim() : '',
+                                tue: r.c[2] ? (r.c[2].v || '').toString().trim() : '',
+                                wed: r.c[3] ? (r.c[3].v || '').toString().trim() : '',
+                                thu: r.c[4] ? (r.c[4].v || '').toString().trim() : '',
+                                fri: r.c[5] ? (r.c[5].v || '').toString().trim() : '',
+                            })).filter(t => t.floor);
+                            renderTeacherTable(teachers.length > 0 ? teachers : defaultTeacherRows);
+                        } else { renderTeacherTable(defaultTeacherRows); }
+                    } catch(e) { renderTeacherTable(defaultTeacherRows); }
+                    delete window.loadTeachersCallback;
+                };
+                const s = document.createElement('script'); s.id = scriptId; s.src = url;
+                s.onerror = () => { renderTeacherTable(defaultTeacherRows); };
+                document.body.appendChild(s);
+            }
+
+            document.getElementById('btn-save-teachers').addEventListener('click', async function() {
+                const scriptUrl = localStorage.getItem('kiosk_script_url');
+                const sheetId = localStorage.getItem('kiosk_sheet_id');
+                if (!scriptUrl || !sheetId) { alert('Önce Bağlantı sekmesinden Sheet bağlantısı yapın.'); return; }
+
+                const overlay = document.getElementById('nobet-loading-overlay');
+                const loadingText = document.getElementById('nobet-loading-text');
+                overlay.style.display = 'flex';
+                loadingText.textContent = 'Nöbetçi öğretmenler kaydediliyor...';
+                this.disabled = true;
+
+                try {
+                    const teachers = getTeacherTableData();
+                    const resp = await fetch(scriptUrl, { method: 'POST', headers: {'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ sheetId, action: 'saveDutyTeachers', teachers }) });
+                    const data = await resp.json();
+                    if (data.status === 'error') throw new Error(data.message);
+                    overlay.style.display = 'none';
+                    const msg = document.getElementById('teacher-success-msg');
+                    msg.style.display = 'block'; setTimeout(() => msg.style.display = 'none', 4000);
+                } catch(e) { overlay.style.display = 'none'; alert('Hata: ' + e.message); }
+                this.disabled = false;
+            });
+
+            // --- NÖBETÇİ ÖĞRENCİLER ---
+            function loadDutyStudentsFromSheet() {
+                const sheetId = localStorage.getItem('kiosk_sheet_id');
+                if (!sheetId) { renderStudentList([]); return; }
+
+                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler=loadStudentsCallback&sheet=NOBETCI_OGRENCI&headers=1&t=${Date.now()}`;
+                const scriptId = 'jsonp-load-students';
+                let old = document.getElementById(scriptId); if (old) old.remove();
+
+                window.loadStudentsCallback = function(json) {
+                    try {
+                        const rows = json.table.rows;
+                        const today = getTodayStr();
+                        const students = [];
+                        if (rows) {
+                            rows.forEach((r, i) => {
+                                const tarih = r.c[0] ? (r.c[0].f || r.c[0].v || '').toString().trim() : '';
+                                const sinif = r.c[1] ? (r.c[1].v || '').toString().trim() : '';
+                                const ad = r.c[2] ? (r.c[2].v || '').toString().trim() : '';
+                                if (tarih === today && ad) {
+                                    students.push({ tarih, sinif, ad, rowIndex: i + 2 });
+                                }
+                            });
+                        }
+                        renderStudentList(students);
+                    } catch(e) { renderStudentList([]); }
+                    delete window.loadStudentsCallback;
+                };
+                const s = document.createElement('script'); s.id = scriptId; s.src = url;
+                s.onerror = () => { renderStudentList([]); };
+                document.body.appendChild(s);
+            }
+
+            function renderStudentList(students) {
+                const container = document.getElementById('student-list-container');
+                if (!container) return;
+                if (students.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-secondary); font-size: 13px; text-align: center; padding: 16px;">Bugün için henüz nöbetçi öğrenci eklenmemiş.</p>';
+                    return;
+                }
+                container.innerHTML = students.map(s => `
+                    <div class="student-item">
+                        <div class="student-item-info">
+                            <div class="student-item-badge">${s.sinif}</div>
+                            <div>
+                                <div class="student-item-name">${s.ad}</div>
+                                <div class="student-item-class">Sınıf: ${s.sinif}</div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-remove-row" onclick="deleteStudentRow(${s.rowIndex})">✕ Kaldır</button>
+                    </div>
+                `).join('');
+            }
+
+            // deleteStudentRow'u global scope'a çıkar
+            window.deleteStudentRow = async function(rowIndex) {
+                if (!confirm('Bu öğrenciyi listeden kaldırmak istediğinize emin misiniz?')) return;
+                const scriptUrl = localStorage.getItem('kiosk_script_url');
+                const sheetId = localStorage.getItem('kiosk_sheet_id');
+                if (!scriptUrl || !sheetId) return;
+
+                const overlay = document.getElementById('nobet-loading-overlay');
+                overlay.style.display = 'flex';
+                document.getElementById('nobet-loading-text').textContent = 'Öğrenci siliniyor...';
+
+                try {
+                    const resp = await fetch(scriptUrl, { method: 'POST', headers: {'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ sheetId, action: 'deleteDutyStudent', rowIndex }) });
+                    const data = await resp.json();
+                    if (data.status === 'error') throw new Error(data.message);
+                    overlay.style.display = 'none';
+                    loadDutyStudentsFromSheet();
+                } catch(e) { overlay.style.display = 'none'; alert('Hata: ' + e.message); }
+            };
+
+            document.getElementById('btn-add-student').addEventListener('click', async function() {
+                const sinif = document.getElementById('ns-sinif').value.trim();
+                const ad = document.getElementById('ns-ad').value.trim();
+                if (!sinif || !ad) { alert('Lütfen sınıf ve öğrenci adını girin.'); return; }
+
+                const scriptUrl = localStorage.getItem('kiosk_script_url');
+                const sheetId = localStorage.getItem('kiosk_sheet_id');
+                if (!scriptUrl || !sheetId) { alert('Önce Bağlantı sekmesinden Sheet bağlantısı yapın.'); return; }
+
+                const overlay = document.getElementById('nobet-loading-overlay');
+                overlay.style.display = 'flex';
+                document.getElementById('nobet-loading-text').textContent = 'Öğrenci ekleniyor...';
+                this.disabled = true;
+
+                try {
+                    const resp = await fetch(scriptUrl, { method: 'POST', headers: {'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ sheetId, action: 'saveDutyStudent', student: { tarih: getTodayStr(), sinif, ad } }) });
+                    const data = await resp.json();
+                    if (data.status === 'error') throw new Error(data.message);
+                    overlay.style.display = 'none';
+                    document.getElementById('ns-sinif').value = '';
+                    document.getElementById('ns-ad').value = '';
+                    const msg = document.getElementById('student-success-msg');
+                    msg.style.display = 'block'; setTimeout(() => msg.style.display = 'none', 3000);
+                    loadDutyStudentsFromSheet();
+                } catch(e) {
+                    overlay.style.display = 'none';
+                    const errMsg = document.getElementById('student-error-msg');
+                    errMsg.textContent = '❌ Hata: ' + e.message;
+                    errMsg.style.display = 'block'; setTimeout(() => errMsg.style.display = 'none', 5000);
+                }
+                this.disabled = false;
+            });
+
         })();
     </script>
 </body>
