@@ -394,9 +394,10 @@
         els.schoolName.textContent = 'Gazi MTAL';
         startClock(); fetchFreeWeather();
         initSidebar();
-        const demoRows = [{
-            baslik: 'Örnek Duyuru', icerik: 'Sistem demo modunda çalışıyor.', kategori: 'duyuru', tarih: '', aktif: 'evet', bant: 'evet', gorsel: '', video: ''
-        }];
+        const demoRows = [
+            { baslik: 'Görsel Duyuru Örneği', icerik: 'Bu demo slayt görselli duyuru formatını gösterir.', kategori: 'etkinlik', tarih: '', aktif: 'evet', bant: 'evet', görsel: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&h=600&fit=crop', video: '' },
+            { baslik: 'Metin Duyuru Örneği', icerik: 'Sistem demo modunda çalışıyor. Görselsiz duyuru formatı.', kategori: 'duyuru', tarih: '', aktif: 'evet', bant: 'evet', görsel: '', video: '' }
+        ];
         processData(demoRows);
     }
 
@@ -565,32 +566,24 @@
         startSlideshow();
     }
 
-    function buildMediaHtml(item, slideIndex) {
-        if (!item.album || item.album.length === 0) return '';
-        let html = `<div class="slide-media" id="media-container-${slideIndex}">`;
-        
-        item.album.forEach((media, albumIndex) => {
-            let innerHtml = '';
-            
-            if (media.mediaType === 'image') {
-                // SİNEMATİK EFEKT: Arkaya bulanıklaştırılmış dev görsel, öne ise kırpılmamış (contain) net görsel
-                innerHtml = `
-                    <div style="position:absolute; top:0; left:0; width:100%; height:100%; background-image:url('${escapeAttr(media.url)}'); background-size:cover; background-position:center; filter:blur(40px); opacity:0.6; transform:scale(1.1);"></div>
-                    <img src="${escapeAttr(media.url)}" loading="lazy" style="position:relative; z-index:1; width:100%; height:100%; object-fit:contain; display:block;">
-                `;
-            } 
-            else if (media.mediaType === 'video') {
-                // Videolar için de zoom yapmayı engelle ve tam sığdır (contain)
-                innerHtml = `<video id="html-video-${slideIndex}-${albumIndex}" src="${escapeAttr(media.url)}" playsinline style="width:100%;height:100%;object-fit:contain;background:#000;"></video>`;
-            } 
-            else if (media.mediaType === 'youtube') {
-                innerHtml = `<div id="yt-player-${slideIndex}-${albumIndex}" data-vid="${getYouTubeId(media.url)}" style="width:100%;height:100%;pointer-events:none;"></div>`;
-            }
-            
-            html += `<div class="album-item" id="album-item-${slideIndex}-${albumIndex}">${innerHtml}</div>`;
-        });
-        
-        return html + `</div>`;
+    function buildMediaHtml(item, index) {
+        if (!item.mediaUrl || !item.mediaType) return '';
+        if (item.mediaType === 'image') {
+            return `<div class="slide-media image-container" id="media-container-${index}">
+                <img src="${escapeAttr(item.mediaUrl)}" loading="lazy" onerror="this.closest('.slide-media').style.display='none'; this.closest('.slide-card').classList.add('no-media');">
+            </div>`;
+        } else if (item.mediaType === 'video') {
+            return `<div class="slide-media video-container" id="media-container-${index}">
+                <video id="html-video-${index}" src="${escapeAttr(item.mediaUrl)}" playsinline style="width:100%;height:100%;object-fit:cover;"></video>
+            </div>`;
+        } else if (item.mediaType === 'youtube') {
+            const ytId = getYouTubeId(item.mediaUrl);
+            if (!ytId) return '';
+            return `<div class="slide-media yt-container" id="media-container-${index}">
+                <div id="yt-player-${index}" data-vid="${ytId}" style="width:100%;height:100%;pointer-events:none;"></div>
+            </div>`;
+        }
+        return '';
     }
 
     function renderSlides() {
