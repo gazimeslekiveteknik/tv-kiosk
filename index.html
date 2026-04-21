@@ -68,29 +68,76 @@
             </div>
         </header>
 
-        <div class="slide-nav">
-            <div class="slide-dots" id="slide-dots"></div>
-            <div class="slide-counter" id="slide-counter"><span class="current">0</span> / 0</div>
-        </div>
+        <div class="content-body">
+            <div class="content-left">
+                <div class="slide-nav">
+                    <div class="slide-dots" id="slide-dots"></div>
+                    <div class="slide-counter" id="slide-counter"><span class="current">0</span> / 0</div>
+                </div>
 
-        <main class="content-area">
-            <div id="slides-container" class="slides-container">
-                <div class="slide active" id="loading-slide">
-                    <div class="slide-card no-media">
-                        <div class="slide-text">
-                            <div class="slide-icon loading-pulse">📡</div>
-                            <h2 class="slide-title">Veriler Yükleniyor...</h2>
-                            <p class="slide-content">Sistem başlatılıyor, lütfen bekleyin</p>
+                <main class="content-area">
+                    <div id="slides-container" class="slides-container">
+                        <div class="slide active" id="loading-slide">
+                            <div class="slide-card no-media">
+                                <div class="slide-text">
+                                    <div class="slide-icon loading-pulse">📡</div>
+                                    <h2 class="slide-title">Veriler Yükleniyor...</h2>
+                                    <p class="slide-content">Sistem başlatılıyor, lütfen bekleyin</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="next-slide-preview" class="next-slide-preview">
+                        <span class="next-label">Sıradaki ▸</span>
+                        <span id="next-preview-title" class="next-title">—</span>
+                    </div>
+                </main>
+            </div>
+
+            <aside class="info-sidebar" id="info-sidebar">
+                <!-- Ders Saati Kartı -->
+                <div class="sidebar-card lesson-card">
+                    <div class="sidebar-card-header">
+                        <span class="sidebar-card-icon">🕐</span>
+                        <span class="sidebar-card-title">DERS BİLGİSİ</span>
+                    </div>
+                    <div class="lesson-info">
+                        <div class="lesson-period" id="lesson-period">—</div>
+                        <div class="lesson-status" id="lesson-status">Hesaplanıyor...</div>
+                        <div class="lesson-countdown-wrapper">
+                            <div class="lesson-countdown-label" id="lesson-countdown-label">Kalan Süre</div>
+                            <div class="lesson-countdown" id="lesson-countdown">--:--</div>
+                        </div>
+                        <div class="lesson-progress-bar">
+                            <div class="lesson-progress-fill" id="lesson-progress-fill"></div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div id="next-slide-preview" class="next-slide-preview">
-                <span class="next-label">Sıradaki ▸</span>
-                <span id="next-preview-title" class="next-title">—</span>
-            </div>
-        </main>
+                <!-- Nöbetçi Öğretmenler -->
+                <div class="sidebar-card duty-teachers-card">
+                    <div class="sidebar-card-header">
+                        <span class="sidebar-card-icon">👨‍🏫</span>
+                        <span class="sidebar-card-title">NÖBETÇİ ÖĞRETMENLER</span>
+                    </div>
+                    <div class="duty-list" id="duty-teachers-list">
+                        <!-- Dinamik olarak doldurulacak -->
+                    </div>
+                </div>
+
+                <!-- Nöbetçi Öğrenciler -->
+                <div class="sidebar-card duty-students-card">
+                    <div class="sidebar-card-header">
+                        <span class="sidebar-card-icon">🎒</span>
+                        <span class="sidebar-card-title">NÖBETÇİ ÖĞRENCİLER</span>
+                    </div>
+                    <div class="duty-list" id="duty-students-list">
+                        <!-- Dinamik olarak doldurulacak -->
+                    </div>
+                </div>
+            </aside>
+        </div>
 
         <footer class="ticker-bar">
             <div class="ticker-label">
