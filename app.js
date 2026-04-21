@@ -1,7 +1,7 @@
 /* ============================================
-   TV KIOSK - APP.JS v6.0 (Smart Offline & Sidebar)
-   beIN Sports Haber Tarzı Bilgi Paneli
-   Ders Saati, Nöbetçi Öğretmen/Öğrenci Paneli
+   TV KIOSK - APP.JS v5.6 (Smart Offline & Magic Link)
+   Gelişmiş Bellek Kontrolü, Otomatik Ölçekleme ve Hayalet Simge
+   (Sesli Video Oynatma Güncellemesi Yapıldı)
    ============================================ */
 
 (function () {
@@ -20,31 +20,7 @@
         WEATHER_LAT: 41.1075,
         WEATHER_LON: 28.8617,
         NEXT_PREVIEW_SHOW: 3000,
-        LESSON_REFRESH: 1000,
     };
-
-    // --- Ders Programı (Varsayılan Fallback) ---
-    let LESSON_SCHEDULE = [
-        { period: 1, start: '08:30', end: '09:10' },
-        { period: 2, start: '09:20', end: '10:00' },
-        { period: 3, start: '10:10', end: '10:50' },
-        { period: 4, start: '11:00', end: '11:40' },
-        { period: 5, start: '11:50', end: '12:30' },
-        { period: 6, start: '13:10', end: '13:50' },
-        { period: 7, start: '14:00', end: '14:40' },
-        { period: 8, start: '14:50', end: '15:30' },
-    ];
-
-    // --- Varsayılan Nöbetçi Verileri (Fallback) ---
-    const DEFAULT_DUTY_TEACHERS = [
-        { floor: 'Zemin Kat', name: '—' },
-        { floor: '1. Kat', name: '—' },
-        { floor: '2. Kat', name: '—' },
-        { floor: '3. Kat', name: '—' },
-        { floor: 'Bahçe', name: '—' },
-    ];
-
-    const DEFAULT_DUTY_STUDENTS = [];
 
     // --- Dynamic CSS Injection for In-Card Fullscreen ---
     const dynamicStyle = document.createElement('style');
@@ -167,16 +143,6 @@
         els.weatherCity = document.getElementById('weather-city');
         els.nextPreview = document.getElementById('next-slide-preview');
         els.nextPreviewTitle = document.getElementById('next-preview-title');
-        // Sidebar elements
-        els.infoSidebar = document.getElementById('info-sidebar');
-        els.lessonPeriod = document.getElementById('lesson-period');
-        els.lessonStatus = document.getElementById('lesson-status');
-        els.lessonCountdownLabel = document.getElementById('lesson-countdown-label');
-        els.lessonCountdown = document.getElementById('lesson-countdown');
-        els.lessonProgressFill = document.getElementById('lesson-progress-fill');
-        els.lessonCard = document.querySelector('.lesson-card');
-        els.dutyTeachersList = document.getElementById('duty-teachers-list');
-        els.dutyStudentsList = document.getElementById('duty-students-list');
     }
 
     function clearAllTimers() {
@@ -383,9 +349,6 @@
         fetchWeather();
         fetchData(sheetId);
         
-        // Sidebar başlat
-        initSidebar();
-        
         setInterval(() => fetchData(sheetId), CONFIG.DATA_REFRESH);
         setInterval(fetchWeather, CONFIG.WEATHER_REFRESH);
     }
@@ -393,11 +356,9 @@
     function startDemoMode() {
         els.schoolName.textContent = 'Gazi MTAL';
         startClock(); fetchFreeWeather();
-        initSidebar();
-        const demoRows = [
-            { baslik: 'Görsel Duyuru Örneği', icerik: 'Bu demo slayt görselli duyuru formatını gösterir.', kategori: 'etkinlik', tarih: '', aktif: 'evet', bant: 'evet', görsel: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&h=600&fit=crop', video: '' },
-            { baslik: 'Metin Duyuru Örneği', icerik: 'Sistem demo modunda çalışıyor. Görselsiz duyuru formatı.', kategori: 'duyuru', tarih: '', aktif: 'evet', bant: 'evet', görsel: '', video: '' }
-        ];
+        const demoRows = [{
+            baslik: 'Örnek Duyuru', icerik: 'Sistem demo modunda çalışıyor.', kategori: 'duyuru', tarih: '', aktif: 'evet', bant: 'evet', gorsel: '', video: ''
+        }];
         processData(demoRows);
     }
 
@@ -879,294 +840,6 @@
             }).catch(() => { });
     }
     function fetchWeather() { fetchFreeWeather(); }
-
-    // ==================================================
-    // SIDEBAR - Ders Bilgisi, Nöbetçi Öğretmen/Öğrenci
-    // ==================================================
-
-    // Gün indeksi: 0=Pazar, 1=Pazartesi, ..., 5=Cuma, 6=Cumartesi
-    // Sheet sütun sırası: Kat, Pazartesi(1), Sali(2), Carsamba(3), Persembe(4), Cuma(5)
-    function getDayColumnIndex() {
-        const day = new Date().getDay(); // 0=Pazar
-        if (day >= 1 && day <= 5) return day; // 1=Pzt -> sütun 1, 5=Cuma -> sütun 5
-        return 0; // Hafta sonu
-    }
-
-    function getTodayStrForKiosk() {
-        const now = new Date();
-        return `${String(now.getDate()).padStart(2,'0')}.${String(now.getMonth()+1).padStart(2,'0')}.${now.getFullYear()}`;
-    }
-
-    function initSidebar() {
-        // Ders timer'ını hemen başlat (varsayılan schedule ile)
-        updateLessonInfo();
-        setInterval(updateLessonInfo, CONFIG.LESSON_REFRESH);
-
-        // Varsayılan verileri göster
-        renderDutyTeachers(DEFAULT_DUTY_TEACHERS);
-        renderDutyStudents(DEFAULT_DUTY_STUDENTS);
-
-        // Google Sheets'ten gerçek verileri çek
-        const sheetId = localStorage.getItem('kiosk_sheet_id');
-        if (sheetId && navigator.onLine) {
-            fetchLessonSchedule(sheetId);
-            fetchDutyTeachers(sheetId);
-            fetchDutyStudents(sheetId);
-        }
-    }
-
-    function fetchLessonSchedule(sheetId) {
-        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler=kioskLessonsCallback&sheet=DERS_SAATLERI&headers=1&t=${Date.now()}`;
-        const scriptId = 'jsonp-kiosk-lessons';
-        let old = document.getElementById(scriptId); if (old) old.remove();
-
-        window.kioskLessonsCallback = function(json) {
-            try {
-                const rows = json.table.rows;
-                if (rows && rows.length > 0) {
-                    const lessons = rows.map(r => ({
-                        period: r.c[0] ? parseInt(r.c[0].v) : 0,
-                        start: r.c[1] ? (r.c[1].v || '').toString().trim() : '',
-                        end: r.c[2] ? (r.c[2].v || '').toString().trim() : ''
-                    })).filter(l => l.period > 0 && l.start && l.end);
-                    if (lessons.length > 0) {
-                        LESSON_SCHEDULE = lessons;
-                        console.log('Ders programı Sheet\'ten yüklendi:', lessons.length, 'ders');
-                    }
-                }
-            } catch(e) { console.warn('Ders programı okunamadı, varsayılan kullanılıyor'); }
-            delete window.kioskLessonsCallback;
-        };
-        const s = document.createElement('script'); s.id = scriptId; s.src = url;
-        s.onerror = () => { delete window.kioskLessonsCallback; };
-        document.body.appendChild(s);
-    }
-
-    function fetchDutyTeachers(sheetId) {
-        const dayCol = getDayColumnIndex();
-        if (dayCol === 0) return; // Hafta sonu
-
-        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler=kioskTeachersCallback&sheet=NOBETCI_OGRETMEN&headers=1&t=${Date.now()}`;
-        const scriptId = 'jsonp-kiosk-teachers';
-        let old = document.getElementById(scriptId); if (old) old.remove();
-
-        window.kioskTeachersCallback = function(json) {
-            try {
-                const rows = json.table.rows;
-                if (rows && rows.length > 0) {
-                    const teachers = rows.map(r => {
-                        const floor = r.c[0] ? (r.c[0].v || '').toString().trim() : '';
-                        const name = r.c[dayCol] ? (r.c[dayCol].v || '').toString().trim() : '—';
-                        return { floor, name };
-                    }).filter(t => t.floor);
-                    if (teachers.length > 0) {
-                        renderDutyTeachers(teachers);
-                        console.log('Nöbetçi öğretmenler Sheet\'ten yüklendi:', teachers.length);
-                    }
-                }
-            } catch(e) { console.warn('Nöbetçi öğretmenler okunamadı'); }
-            delete window.kioskTeachersCallback;
-        };
-        const s = document.createElement('script'); s.id = scriptId; s.src = url;
-        s.onerror = () => { delete window.kioskTeachersCallback; };
-        document.body.appendChild(s);
-    }
-
-    function fetchDutyStudents(sheetId) {
-        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler=kioskStudentsCallback&sheet=NOBETCI_OGRENCI&headers=1&t=${Date.now()}`;
-        const scriptId = 'jsonp-kiosk-students';
-        let old = document.getElementById(scriptId); if (old) old.remove();
-
-        const today = getTodayStrForKiosk();
-
-        window.kioskStudentsCallback = function(json) {
-            try {
-                const rows = json.table.rows;
-                if (rows && rows.length > 0) {
-                    const students = rows.map(r => {
-                        const tarih = r.c[0] ? (r.c[0].f || r.c[0].v || '').toString().trim() : '';
-                        const sinif = r.c[1] ? (r.c[1].v || '').toString().trim() : '';
-                        const ad = r.c[2] ? (r.c[2].v || '').toString().trim() : '';
-                        return { tarih, className: sinif, name: ad };
-                    }).filter(s => s.tarih === today && s.name);
-                    renderDutyStudents(students);
-                    console.log('Nöbetçi öğrenciler Sheet\'ten yüklendi:', students.length);
-                }
-            } catch(e) { console.warn('Nöbetçi öğrenciler okunamadı'); }
-            delete window.kioskStudentsCallback;
-        };
-        const s = document.createElement('script'); s.id = scriptId; s.src = url;
-        s.onerror = () => { delete window.kioskStudentsCallback; };
-        document.body.appendChild(s);
-    }
-
-    function timeToMinutes(timeStr) {
-        const [h, m] = timeStr.split(':').map(Number);
-        return h * 60 + m;
-    }
-
-    function formatCountdown(totalSeconds) {
-        const mins = Math.floor(totalSeconds / 60);
-        const secs = totalSeconds % 60;
-        return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-    }
-
-    function updateLessonInfo() {
-        if (!els.lessonPeriod || !els.lessonCountdown) return;
-
-        const now = new Date();
-        const currentMinutes = now.getHours() * 60 + now.getMinutes();
-        const currentSeconds = currentMinutes * 60 + now.getSeconds();
-
-        // Hafta sonu kontrolü (0=Pazar, 6=Cumartesi)
-        const dayOfWeek = now.getDay();
-        if (dayOfWeek === 0 || dayOfWeek === 6) {
-            setLessonOffHours('Hafta Sonu', 'Ders yok');
-            return;
-        }
-
-        let foundLesson = false;
-
-        for (let i = 0; i < LESSON_SCHEDULE.length; i++) {
-            const lesson = LESSON_SCHEDULE[i];
-            const startMin = timeToMinutes(lesson.start);
-            const endMin = timeToMinutes(lesson.end);
-            const startSec = startMin * 60;
-            const endSec = endMin * 60;
-
-            // Ders saatindeyiz
-            if (currentSeconds >= startSec && currentSeconds < endSec) {
-                foundLesson = true;
-                const remaining = endSec - currentSeconds;
-
-                els.lessonPeriod.textContent = `${lesson.period}. Ders`;
-                els.lessonStatus.textContent = `${lesson.start} — ${lesson.end}`;
-                els.lessonCountdownLabel.textContent = 'Teneffüse Kalan';
-                els.lessonCountdown.textContent = formatCountdown(remaining);
-
-                // Progress
-                const totalDuration = endSec - startSec;
-                const elapsed = currentSeconds - startSec;
-                const progress = (elapsed / totalDuration) * 100;
-                if (els.lessonProgressFill) els.lessonProgressFill.style.width = `${progress}%`;
-
-                // Urgent mode (son 2 dk)
-                if (remaining <= 120) {
-                    els.lessonCountdown.classList.add('urgent');
-                } else {
-                    els.lessonCountdown.classList.remove('urgent');
-                }
-
-                // Card state
-                if (els.lessonCard) {
-                    els.lessonCard.classList.remove('break-time', 'off-hours');
-                }
-                break;
-            }
-
-            // Teneffüsteyiz (bu ders bitti, sonraki başlamadı)
-            if (i < LESSON_SCHEDULE.length - 1) {
-                const nextLesson = LESSON_SCHEDULE[i + 1];
-                const nextStartMin = timeToMinutes(nextLesson.start);
-                const nextStartSec = nextStartMin * 60;
-
-                if (currentSeconds >= endSec && currentSeconds < nextStartSec) {
-                    foundLesson = true;
-                    const remaining = nextStartSec - currentSeconds;
-
-                    els.lessonPeriod.textContent = 'Teneffüs';
-                    els.lessonStatus.textContent = `${lesson.period}. ders bitti`;
-                    els.lessonCountdownLabel.textContent = `${nextLesson.period}. Derse Kalan`;
-                    els.lessonCountdown.textContent = formatCountdown(remaining);
-                    els.lessonCountdown.classList.remove('urgent');
-
-                    // Progress (teneffüs ilerlemesi)
-                    const breakDuration = nextStartSec - endSec;
-                    const breakElapsed = currentSeconds - endSec;
-                    const progress = (breakElapsed / breakDuration) * 100;
-                    if (els.lessonProgressFill) els.lessonProgressFill.style.width = `${progress}%`;
-
-                    // Card state
-                    if (els.lessonCard) {
-                        els.lessonCard.classList.remove('off-hours');
-                        els.lessonCard.classList.add('break-time');
-                    }
-                    break;
-                }
-            }
-        }
-
-        if (!foundLesson) {
-            // Öğleden sonra mola kontrolü (12:30 - 13:10)
-            const lunchStart = timeToMinutes('12:30');
-            const lunchEnd = timeToMinutes('13:10');
-            if (currentMinutes >= lunchStart && currentMinutes < lunchEnd) {
-                const remaining = (lunchEnd * 60) - currentSeconds;
-                els.lessonPeriod.textContent = 'Öğle Arası';
-                els.lessonStatus.textContent = '12:30 — 13:10';
-                els.lessonCountdownLabel.textContent = '6. Derse Kalan';
-                els.lessonCountdown.textContent = formatCountdown(remaining);
-                els.lessonCountdown.classList.remove('urgent');
-
-                const breakDuration = (lunchEnd - lunchStart) * 60;
-                const breakElapsed = currentSeconds - (lunchStart * 60);
-                const progress = (breakElapsed / breakDuration) * 100;
-                if (els.lessonProgressFill) els.lessonProgressFill.style.width = `${progress}%`;
-
-                if (els.lessonCard) {
-                    els.lessonCard.classList.remove('off-hours');
-                    els.lessonCard.classList.add('break-time');
-                }
-            } else if (currentMinutes < timeToMinutes(LESSON_SCHEDULE[0].start)) {
-                setLessonOffHours('Ders Öncesi', `İlk ders ${LESSON_SCHEDULE[0].start}\'de`);
-            } else {
-                setLessonOffHours('Dersler Bitti', 'Yarın görüşmek üzere');
-            }
-        }
-    }
-
-    function setLessonOffHours(periodText, statusText) {
-        els.lessonPeriod.textContent = periodText;
-        els.lessonStatus.textContent = statusText;
-        els.lessonCountdownLabel.textContent = '';
-        els.lessonCountdown.textContent = '—';
-        els.lessonCountdown.classList.remove('urgent');
-        if (els.lessonProgressFill) els.lessonProgressFill.style.width = '0%';
-        if (els.lessonCard) {
-            els.lessonCard.classList.remove('break-time');
-            els.lessonCard.classList.add('off-hours');
-        }
-    }
-
-    function renderDutyTeachers(teachers) {
-        if (!els.dutyTeachersList) return;
-        els.dutyTeachersList.innerHTML = teachers.map(t => `
-            <div class="duty-item">
-                <div class="duty-item-badge">${escapeHtml(t.floor.charAt(0))}</div>
-                <div class="duty-item-info">
-                    <div class="duty-item-name">${escapeHtml(t.name)}</div>
-                    <div class="duty-item-detail">${escapeHtml(t.floor)}</div>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    function renderDutyStudents(students) {
-        if (!els.dutyStudentsList) return;
-        if (!students || students.length === 0) {
-            els.dutyStudentsList.innerHTML = '<div style="text-align:center; padding:12px 0; color:#64748b; font-size:12px; font-weight:600;">Henüz kayıt yok</div>';
-            return;
-        }
-        els.dutyStudentsList.innerHTML = students.map(s => `
-            <div class="duty-item">
-                <div class="duty-item-badge">${escapeHtml(s.className)}</div>
-                <div class="duty-item-info">
-                    <div class="duty-item-name">${escapeHtml(s.name)}</div>
-                    <div class="duty-item-detail">Sınıf: ${escapeHtml(s.className)}</div>
-                </div>
-            </div>
-        `).join('');
-    }
 
     // --- İNTERNET DURUMU DİNLEYİCİLERİ ---
     window.addEventListener('online', () => {
