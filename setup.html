@@ -483,25 +483,26 @@
                 <!-- ===== NÖBETÇİ ÖĞRENCİLER ===== -->
                 <div class="section-title"><span class="section-icon">🎒</span> Nöbetçi Öğrenciler (Günlük)</div>
                 <div class="today-badge" id="today-badge">📅 Bugün: —</div>
-                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">Bugün nöbetçi olan öğrencileri tek tek ekleyin.</p>
+                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">Bugün nöbetçi olan öğrencileri tabloya girin ve kaydedin. Kaydet butonuna bastığınızda bugünün listesi güncellenir.</p>
                 
-                <div class="student-entry-row">
-                    <div class="form-group">
-                        <label>Sınıf</label>
-                        <input type="text" id="ns-sinif" placeholder="Örn: 10-A">
-                    </div>
-                    <div class="form-group" style="flex: 2;">
-                        <label>Öğrenci Adı Soyadı</label>
-                        <input type="text" id="ns-ad" placeholder="Örn: Ali VELİ">
-                    </div>
-                    <button type="button" class="btn-save" id="btn-add-student" style="margin-top: 0; padding: 14px 24px; white-space: nowrap;">＋ Ekle</button>
+                <table class="data-table" id="student-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 120px;">Sınıf</th>
+                            <th>Öğrenci Adı Soyadı</th>
+                            <th style="width: 50px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="student-table-body">
+                        <!-- JS ile doldurulacak -->
+                    </tbody>
+                </table>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <button type="button" class="btn-add-row" id="btn-add-student-row">＋ Öğrenci Ekle</button>
+                    <button type="button" class="btn-save" id="btn-save-students" style="flex: 1; margin-top: 0;">💾 Nöbetçi Öğrencileri Kaydet</button>
                 </div>
-                <div class="success-message" id="student-success-msg">✅ Öğrenci eklendi!</div>
+                <div class="success-message" id="student-success-msg">✅ Nöbetçi öğrenciler kaydedildi!</div>
                 <div class="success-message" id="student-error-msg" style="color: #ef4444; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3);">❌ Hata!</div>
-
-                <div class="student-list" id="student-list-container">
-                    <!-- JS ile doldurulacak -->
-                </div>
             </div>
         </div>
 
@@ -1477,10 +1478,48 @@
                 this.disabled = false;
             });
 
-            // --- NÖBETÇİ ÖĞRENCİLER ---
+            // --- NÖBETÇİ ÖĞRENCİLER (Tablo Yapısı) ---
+            function renderStudentTable(students) {
+                const tbody = document.getElementById('student-table-body');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+                if (students.length === 0) {
+                    // En az 1 boş satır göster
+                    students = [{ sinif: '', ad: '' }];
+                }
+                students.forEach((s, i) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><input type="text" value="${s.sinif || ''}" data-field="sinif" data-idx="${i}" placeholder="Örn: 10-A"></td>
+                        <td><input type="text" value="${s.ad || ''}" data-field="ad" data-idx="${i}" placeholder="Örn: Ali VELİ"></td>
+                        <td><button type="button" class="btn-remove-row" data-idx="${i}">✕</button></td>
+                    `;
+                    tr.querySelector('.btn-remove-row').addEventListener('click', function() {
+                        const current = getStudentTableData();
+                        current.splice(i, 1);
+                        renderStudentTable(current.length > 0 ? current : [{ sinif: '', ad: '' }]);
+                    });
+                    tbody.appendChild(tr);
+                });
+            }
+
+            function getStudentTableData() {
+                const rows = document.querySelectorAll('#student-table-body tr');
+                return Array.from(rows).map(tr => ({
+                    sinif: tr.querySelector('[data-field="sinif"]').value.trim(),
+                    ad: tr.querySelector('[data-field="ad"]').value.trim(),
+                })).filter(s => s.sinif && s.ad);
+            }
+
+            document.getElementById('btn-add-student-row').addEventListener('click', function() {
+                const current = getStudentTableData();
+                current.push({ sinif: '', ad: '' });
+                renderStudentTable(current);
+            });
+
             function loadDutyStudentsFromSheet() {
                 const sheetId = localStorage.getItem('kiosk_sheet_id');
-                if (!sheetId) { renderStudentList([]); return; }
+                if (!sheetId) { renderStudentTable([{ sinif: '', ad: '' }]); return; }
 
                 const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler=loadStudentsCallback&sheet=NOBETCI_OGRENCI&headers=1&t=${Date.now()}`;
                 const scriptId = 'jsonp-load-students';
@@ -1497,84 +1536,44 @@
                                 const sinif = r.c[1] ? (r.c[1].v || '').toString().trim() : '';
                                 const ad = r.c[2] ? (r.c[2].v || '').toString().trim() : '';
                                 if (tarih === today && ad) {
-                                    students.push({ tarih, sinif, ad, rowIndex: i + 2 });
+                                    students.push({ sinif, ad });
                                 }
                             });
                         }
-                        renderStudentList(students);
-                    } catch(e) { renderStudentList([]); }
+                        renderStudentTable(students.length > 0 ? students : [{ sinif: '', ad: '' }]);
+                    } catch(e) { renderStudentTable([{ sinif: '', ad: '' }]); }
                     delete window.loadStudentsCallback;
                 };
                 const s = document.createElement('script'); s.id = scriptId; s.src = url;
-                s.onerror = () => { renderStudentList([]); };
+                s.onerror = () => { renderStudentTable([{ sinif: '', ad: '' }]); };
                 document.body.appendChild(s);
             }
 
-            function renderStudentList(students) {
-                const container = document.getElementById('student-list-container');
-                if (!container) return;
-                if (students.length === 0) {
-                    container.innerHTML = '<p style="color: var(--text-secondary); font-size: 13px; text-align: center; padding: 16px;">Bugün için henüz nöbetçi öğrenci eklenmemiş.</p>';
-                    return;
-                }
-                container.innerHTML = students.map(s => `
-                    <div class="student-item">
-                        <div class="student-item-info">
-                            <div class="student-item-badge">${s.sinif}</div>
-                            <div>
-                                <div class="student-item-name">${s.ad}</div>
-                                <div class="student-item-class">Sınıf: ${s.sinif}</div>
-                            </div>
-                        </div>
-                        <button type="button" class="btn-remove-row" onclick="deleteStudentRow(${s.rowIndex})">✕ Kaldır</button>
-                    </div>
-                `).join('');
-            }
-
-            // deleteStudentRow'u global scope'a çıkar
-            window.deleteStudentRow = async function(rowIndex) {
-                if (!confirm('Bu öğrenciyi listeden kaldırmak istediğinize emin misiniz?')) return;
-                const scriptUrl = localStorage.getItem('kiosk_script_url');
-                const sheetId = localStorage.getItem('kiosk_sheet_id');
-                if (!scriptUrl || !sheetId) return;
-
-                const overlay = document.getElementById('nobet-loading-overlay');
-                overlay.style.display = 'flex';
-                document.getElementById('nobet-loading-text').textContent = 'Öğrenci siliniyor...';
-
-                try {
-                    const resp = await fetch(scriptUrl, { method: 'POST', headers: {'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ sheetId, action: 'deleteDutyStudent', rowIndex }) });
-                    const data = await resp.json();
-                    if (data.status === 'error') throw new Error(data.message);
-                    overlay.style.display = 'none';
-                    loadDutyStudentsFromSheet();
-                } catch(e) { overlay.style.display = 'none'; alert('Hata: ' + e.message); }
-            };
-
-            document.getElementById('btn-add-student').addEventListener('click', async function() {
-                const sinif = document.getElementById('ns-sinif').value.trim();
-                const ad = document.getElementById('ns-ad').value.trim();
-                if (!sinif || !ad) { alert('Lütfen sınıf ve öğrenci adını girin.'); return; }
-
+            document.getElementById('btn-save-students').addEventListener('click', async function() {
                 const scriptUrl = localStorage.getItem('kiosk_script_url');
                 const sheetId = localStorage.getItem('kiosk_sheet_id');
                 if (!scriptUrl || !sheetId) { alert('Önce Bağlantı sekmesinden Sheet bağlantısı yapın.'); return; }
 
+                const students = getStudentTableData();
+                if (students.length === 0) { alert('Lütfen en az bir öğrenci bilgisi girin.'); return; }
+
                 const overlay = document.getElementById('nobet-loading-overlay');
                 overlay.style.display = 'flex';
-                document.getElementById('nobet-loading-text').textContent = 'Öğrenci ekleniyor...';
+                document.getElementById('nobet-loading-text').textContent = 'Nöbetçi öğrenciler kaydediliyor...';
                 this.disabled = true;
 
                 try {
-                    const resp = await fetch(scriptUrl, { method: 'POST', headers: {'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ sheetId, action: 'saveDutyStudent', student: { tarih: getTodayStr(), sinif, ad } }) });
+                    const resp = await fetch(scriptUrl, { method: 'POST', headers: {'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({
+                        sheetId,
+                        action: 'saveDutyStudents',
+                        tarih: getTodayStr(),
+                        students: students
+                    }) });
                     const data = await resp.json();
                     if (data.status === 'error') throw new Error(data.message);
                     overlay.style.display = 'none';
-                    document.getElementById('ns-sinif').value = '';
-                    document.getElementById('ns-ad').value = '';
                     const msg = document.getElementById('student-success-msg');
-                    msg.style.display = 'block'; setTimeout(() => msg.style.display = 'none', 3000);
-                    loadDutyStudentsFromSheet();
+                    msg.style.display = 'block'; setTimeout(() => msg.style.display = 'none', 4000);
                 } catch(e) {
                     overlay.style.display = 'none';
                     const errMsg = document.getElementById('student-error-msg');
