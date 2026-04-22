@@ -12,20 +12,22 @@
         body::before, body::after { content: ''; position: fixed; border-radius: 50%; filter: blur(120px); opacity: 0.15; z-index: 0; }
         body::before { width: 500px; height: 500px; background: var(--accent-blue); top: -200px; right: -100px; }
         body::after { width: 400px; height: 400px; background: var(--accent-purple); bottom: -150px; left: -100px; }
+        
         .setup-container { position: relative; z-index: 1; width: 100%; max-width: 800px; }
-        .setup-header { text-align: center; margin-bottom: 40px; } .setup-header-icon { font-size: 64px; margin-bottom: 16px; }
+        .setup-header { text-align: center; margin-bottom: 40px; } 
+        .setup-header-icon { font-size: 64px; margin-bottom: 16px; }
         .setup-header h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .setup-header p { color: var(--text-secondary); font-size: 16px; }
-        .setup-form { background: var(--bg-card); backdrop-filter: blur(40px); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 40px; }
         
+        .setup-form { background: var(--bg-card); backdrop-filter: blur(40px); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 40px; }
         .form-group { margin-bottom: 24px; } 
         .form-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1.5px; }
-        .form-group input, .form-group select { width: 100%; padding: 14px 18px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 15px; outline: none; transition: all 0.3s; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 14px 18px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 15px; outline: none; transition: all 0.3s; }
         .form-group select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; }
         .form-group select option { background: #1e293b; color: white; } 
-        .form-group input:focus, .form-group select:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
         
-        /* Yenilenen Dinamik Form UI Stilleri */
+        /* Dinamik Liste Stilleri */
         .dynamic-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
         .dynamic-row { display: flex; gap: 10px; align-items: center; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
         .dynamic-row input { padding: 10px; font-size: 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 6px; color: white; }
@@ -33,37 +35,134 @@
         .btn-add { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px dashed #60a5fa; padding: 10px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600; transition: all 0.2s; }
         .btn-add:hover { background: rgba(59, 130, 246, 0.4); }
         .btn-del { background: rgba(239, 68, 68, 0.2); color: #f87171; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        
-        .setup-tabs { display: flex; gap: 8px; margin-bottom: 24px; background: rgba(0, 0, 0, 0.2); padding: 6px; border-radius: var(--radius-sm); overflow-x: auto; }
-        .tab-btn { flex: 1; padding: 12px; background: transparent; color: var(--text-secondary); border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; } .tab-btn.active { background: var(--bg-card); color: var(--text-primary); }
-        .tab-content { display: none; } .tab-content.active { display: block; }
+
+        .media-section { background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: var(--radius-sm); margin-bottom: 24px; border: 1px dashed rgba(255, 255, 255, 0.1); }
+        .media-section-title { font-size: 13px; font-weight: 700; color: #cbd5e1; margin-bottom: 16px; text-transform: uppercase; }
         
         .btn-save { width: 100%; padding: 16px 32px; background: var(--gradient-primary); color: white; border: none; border-radius: var(--radius-sm); font-size: 17px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4); } .btn-save:disabled { opacity: 0.7; cursor: not-allowed; }
         .btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706); margin-top: 20px;} 
+        
         .success-message { display: none; text-align: center; padding: 20px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-sm); color: #10b981; margin-top: 16px; font-weight: 600; }
+        .divider { border: none; border-top: 1px solid var(--glass-border); margin: 28px 0; } 
+        .btn-group { display: flex; gap: 12px; }
+        .btn-demo { flex: 1; padding: 14px 24px; background: linear-gradient(135deg, #10b981, #06b6d4); color: white; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; }
+        .btn-reset { padding: 14px 24px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; }
+        
+        .content-list { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 12px; }
+        .content-item { background: rgba(0, 0, 0, 0.2); padding: 16px; border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255, 255, 255, 0.05); }
+        .content-item-info h4 { margin-bottom: 6px; color: var(--text-primary); font-size: 15px; display: flex; align-items: center; gap: 8px; }
+        .content-item-actions { display: flex; gap: 6px; } 
+        .btn-icon { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
+        .btn-icon.move { background: rgba(245, 158, 11, 0.15); color: #fcd34d; font-size: 14px; } 
+        .btn-icon.edit { background: rgba(59, 130, 246, 0.2); color: #60a5fa; } 
+        .btn-icon.delete { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+        .badge { font-size: 11px; padding: 4px 8px; border-radius: 6px; font-weight: 700; } 
+        .category-badge { background: rgba(255, 255, 255, 0.1); font-size: 10px; }
+        
+        .setup-tabs { display: flex; gap: 8px; margin-bottom: 24px; background: rgba(0, 0, 0, 0.2); padding: 6px; border-radius: var(--radius-sm); overflow-x: auto; }
+        .tab-btn { flex: 1; padding: 12px; background: transparent; color: var(--text-secondary); border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; } 
+        .tab-btn.active { background: var(--bg-card); color: var(--text-primary); }
+        .tab-content { display: none; } .tab-content.active { display: block; }
         
         #loading-overlay, #setup-loading { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 14, 26, 0.8); z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: var(--radius-md); color: white; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(255, 255, 255, 0.1); border-left-color: var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        #login-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 14, 26, 0.95); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .login-card { background: var(--bg-card); border-radius: var(--radius-md); padding: 40px; width: 100%; max-width: 400px; text-align: center; }
+        .login-error { color: #ef4444; font-size: 14px; margin-top: 12px; display: none; }
     </style>
 </head>
 <body>
     <div class="setup-container">
+        <div id="login-overlay" style="display: none;">
+            <div class="login-card">
+                <h2>Yönetici Girişi</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 14px;">Ayarlara erişmek için şifre gereklidir.</p>
+                <form id="login-form">
+                    <div class="form-group" style="text-align: left;"><input type="password" id="login-password" required></div>
+                    <div class="btn-group" style="margin-top: 16px;"><button type="button" class="btn-reset" id="btn-login-cancel">Vazgeç</button><button type="submit" class="btn-save">Giriş Yap</button></div>
+                    <div class="login-error" id="login-error">Hatalı şifre.</div>
+                </form>
+            </div>
+        </div>
+
         <div class="setup-header">
             <div class="setup-header-icon">📺</div>
             <h1>Bilgi Ekranı Yönetim Paneli</h1>
+            <p>Sistemi yapılandırın ve içerik ekleyin</p>
         </div>
 
         <div class="setup-tabs" id="main-tabs">
             <button class="tab-btn" data-tab="tab-kurulum">Bağlantı</button>
             <button class="tab-btn active" data-tab="tab-icerik">İçerik Yönetimi</button>
-            <button class="tab-btn" data-tab="tab-nobet">Nöbet & Ders (GELİŞMİŞ)</button>
+            <button class="tab-btn" data-tab="tab-nobet">Nöbet & Ders Planı</button>
             <button class="tab-btn" data-tab="tab-ayarlar">Sistem Ayarları</button>
         </div>
 
-        <div id="tab-kurulum" class="tab-content">... (Kendi kodunuzu buraya koyun) ...</div>
-        <div id="tab-icerik" class="tab-content active">... (Kendi kodunuzu buraya koyun) ...</div>
-        <div id="tab-ayarlar" class="tab-content">... (Kendi kodunuzu buraya koyun) ...</div>
+        <div id="tab-kurulum" class="tab-content">
+            <form class="setup-form" id="setup-form" style="position: relative;">
+                <div id="setup-loading" style="display: none;"><div class="spinner"></div><div id="setup-loading-text">Bağlantı Kuruluyor...</div></div>
+                <div class="form-group"><label>Google Sheet URL / ID</label><input type="text" id="sheet-id" required></div>
+                <button type="submit" class="btn-save" id="btn-save">🪄 Bağlantıyı Sağla</button>
+                <div class="success-message" id="success-msg">✅ Başarılı! Sisteme yönlendiriliyorsunuz...</div>
+                <hr class="divider">
+                <div class="btn-group">
+                    <button type="button" class="btn-demo" id="btn-demo">Kiosku Aç</button>
+                    <button type="button" class="btn-reset" id="btn-reset">Cihazı Sıfırla</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="tab-icerik" class="tab-content active">
+            <form class="setup-form" id="content-form" style="position: relative;">
+                <div id="loading-overlay" style="display: none;"><div class="spinner"></div><div id="loading-text">Yükleniyor... Lütfen bekleyin.</div></div>
+                <div id="form-title" style="margin-bottom: 24px; font-size: 18px; font-weight: 700; color: var(--accent-blue); text-align: center;">YENİ İÇERİK EKLE</div>
+
+                <div class="form-group"><label>Başlık</label><input type="text" id="c-baslik" required></div>
+                <div class="form-group"><label>Açıklama</label><input type="text" id="c-icerik"></div>
+                <div style="display: flex; gap: 16px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Kategori</label>
+                        <select id="c-kategori">
+                            <option value="duyuru">Duyuru</option><option value="etkinlik">Etkinlik</option>
+                            <option value="sinav">Sınav</option><option value="onemli">Önemli</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;"><label>Tarih</label><input type="date" id="c-tarih"></div>
+                </div>
+                <div style="display: flex; gap: 16px;">
+                    <div class="form-group" style="flex: 1;"><label>Yayında mı?</label><select id="c-aktif"><option value="EVET">Evet</option><option value="HAYIR">Hayır</option></select></div>
+                    <div class="form-group" style="flex: 1;"><label>Alt Bantta Göster?</label><select id="c-bant"><option value="HAYIR">Hayır</option><option value="EVET">Evet</option></select></div>
+                </div>
+
+                <div class="media-section">
+                    <div class="media-section-title">🎬 Medya Ekleme</div>
+                    <div class="form-group"><label style="color:#60a5fa;">▶️ Video Linki (Çoklu İçin Virgül Kullanın)</label><input type="text" id="c-video-url"></div>
+                    <div class="form-group"><label style="color:#34d399;">🖼️ İnternetten Görsel Linki (Virgülle Ayırın)</label><input type="text" id="c-gorsel-url"></div>
+                    <div style="text-align:center; color:rgba(255,255,255,0.3); font-size:12px; margin-bottom:12px;">-- VEYA YÜKLE --</div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>📁 Dosya Seç (Çoklu Albüm Desteği)</label>
+                        <input type="file" id="c-file" accept="image/*,video/mp4,video/webm" multiple>
+                    </div>
+                    <div id="upload-progress-container" style="display: none; margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                        <div style="font-size: 13px; font-weight: 600; color: var(--accent-blue); margin-bottom: 8px; display: flex; justify-content: space-between;">
+                            <span id="upload-progress-text">Yükleniyor...</span>
+                        </div>
+                        <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;"><div id="upload-progress-bar" style="width: 0%; height: 100%; background: var(--gradient-primary); transition: width 0.3s ease;"></div></div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-save" id="btn-submit-content">🚀 İçeriği Tabloya Ekle</button>
+                <button type="button" class="btn-reset" id="btn-cancel-edit" style="display: none; width: 100%; margin-top: 12px;">İptal Et</button>
+                
+                <div class="success-message" id="content-success-msg">✅ İşlem Başarılı!</div>
+                <div class="success-message" id="content-error-msg" style="color: #ef4444; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3);">❌ Bir hata oluştu.</div>
+                
+                <div class="content-list" id="content-list-container"></div>
+            </form>
+        </div>
 
         <div id="tab-nobet" class="tab-content">
             <form class="setup-form" id="nobet-form" style="position: relative;">
@@ -106,164 +205,475 @@
                 <div class="success-message" id="nobet-success-msg">✅ Başarıyla Kaydedildi! Kiosk Ekranı güncellenecektir.</div>
             </form>
         </div>
+
+        <div id="tab-ayarlar" class="tab-content">
+            <form class="setup-form" id="settings-form" style="position: relative;">
+                <div id="settings-loading-overlay" style="display: none; position: absolute; top:0; left:0; right:0; bottom:0; background:rgba(10,14,26,0.8); z-index:10; flex-direction:column; align-items:center; justify-content:center; color:white;"><div class="spinner"></div><div>Kaydediliyor...</div></div>
+                <div class="form-group"><label>Okul Adı</label><input type="text" id="s-okuladi" required></div>
+                <div class="form-group"><label>Yönetici Şifresi</label><input type="text" id="s-sifre" required></div>
+                <div class="form-group"><label>App Script URL</label><input type="text" id="s-scripturl" required></div>
+                <div style="display: flex; gap: 16px;">
+                    <div class="form-group" style="flex: 1;"><label>Şehir</label>
+                        <select id="s-sehir" required>
+                            <option value="İstanbul" data-lat="41.0082" data-lon="28.9784">İstanbul</option>
+                            <option value="Ankara" data-lat="39.9334" data-lon="32.8597">Ankara</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;"><label>Enlem</label><input type="text" id="s-enlem" readonly></div>
+                    <div class="form-group" style="flex: 1;"><label>Boylam</label><input type="text" id="s-boylam" readonly></div>
+                </div>
+                <div class="form-group"><label>Okul Logo URL</label><input type="text" id="s-logourl"></div>
+                <button type="submit" class="btn-save btn-warning" id="btn-submit-settings">💾 Ayarları Kaydet</button>
+                <div class="success-message" id="settings-success-msg">✅ Ayarlar kaydedildi!</div>
+                <div class="success-message" id="settings-error-msg" style="color: #ef4444; background: rgba(239, 68, 68, 0.1);">❌ Bir hata oluştu.</div>
+            </form>
+        </div>
     </div>
 
     <script>
-        // Global Veri Deposu
+        // GLOBAL NÖBET VERİSİ
         let nobetData = {
             sabahci: [], oglenci: [],
             ogretmenler: { "Pazartesi": [], "Salı": [], "Çarşamba": [], "Perşembe": [], "Cuma": [] },
             ogrenciler: []
         };
 
-        // UI Çizim Fonksiyonları
-        function addTimeBlock(type, start = "", end = "") {
-            const container = document.getElementById(`list-${type}`);
-            const idx = container.children.length + 1;
-            const div = document.createElement('div'); div.className = 'dynamic-row';
-            div.innerHTML = `
-                <div class="lbl">${idx}. Blok</div>
-                <input type="time" class="inp-start" value="${start}" required>
-                <span style="color:#94a3b8;">-</span>
-                <input type="time" class="inp-end" value="${end}" required>
-                <button type="button" class="btn-del" onclick="this.parentElement.remove(); updateLabels('list-${type}')">X</button>
-            `;
-            container.appendChild(div);
-        }
-
-        function updateLabels(containerId) {
-            const rows = document.getElementById(containerId).querySelectorAll('.dynamic-row');
-            rows.forEach((r, i) => { r.querySelector('.lbl').textContent = `${i + 1}. Blok`; });
-        }
-
-        function addTeacherRow(loc = "", name = "") {
-            const container = document.getElementById('list-teachers');
-            const div = document.createElement('div'); div.className = 'dynamic-row';
-            div.innerHTML = `
-                <input type="text" class="inp-loc" value="${loc}" placeholder="Nöbet Yeri (Örn: Zemin Kat)" style="flex: 1;" required>
-                <input type="text" class="inp-name" value="${name}" placeholder="Öğretmen Adı Soyadı" style="flex: 2;" required>
-                <button type="button" class="btn-del" onclick="this.parentElement.remove(); saveCurrentDayTeachers();">X</button>
-            `;
-            container.appendChild(div);
-        }
-
-        function addStudentRow(loc = "", name = "") {
-            const container = document.getElementById('list-students');
-            const div = document.createElement('div'); div.className = 'dynamic-row';
-            div.innerHTML = `
-                <input type="text" class="inp-loc" value="${loc}" placeholder="Sınıf (Örn: 12-A)" style="flex: 1;" required>
-                <input type="text" class="inp-name" value="${name}" placeholder="Öğrenci Adı Soyadı" style="flex: 2;" required>
-                <button type="button" class="btn-del" onclick="this.parentElement.remove()">X</button>
-            `;
-            container.appendChild(div);
-        }
-
-        function saveCurrentDayTeachers() {
-            const day = document.getElementById('day-selector').value;
-            nobetData.ogretmenler[day] = [];
-            document.querySelectorAll('#list-teachers .dynamic-row').forEach(row => {
-                nobetData.ogretmenler[day].push({ loc: row.querySelector('.inp-loc').value, name: row.querySelector('.inp-name').value });
-            });
-        }
-
-        function renderTeachersForSelectedDay() {
-            // Önce mevcut açıktaki listeyi değişkene kaydet
-            const prevDay = document.getElementById('day-selector').dataset.prev || 'Pazartesi';
-            nobetData.ogretmenler[prevDay] = [];
-            document.querySelectorAll('#list-teachers .dynamic-row').forEach(row => {
-                nobetData.ogretmenler[prevDay].push({ loc: row.querySelector('.inp-loc').value, name: row.querySelector('.inp-name').value });
-            });
-
-            // Yeni seçilen günü ekrana çiz
-            const newDay = document.getElementById('day-selector').value;
-            document.getElementById('day-selector').dataset.prev = newDay;
-            document.getElementById('list-teachers').innerHTML = '';
+        (function () {
+            let isAuthenticated = false; 
+            let savedPassword = localStorage.getItem('kiosk_admin_password'); 
+            let currentEditRowIndex = null; 
+            const MAX_VISIBLE_ITEMS = 7;
             
-            let items = nobetData.ogretmenler[newDay] || [];
-            if(items.length === 0) { addTeacherRow(); } // Boşsa 1 tane örnek satır ekle
-            else { items.forEach(i => addTeacherRow(i.loc, i.name)); }
-        }
+            const loginOverlay = document.getElementById('login-overlay'); 
+            const tabBtns = document.querySelectorAll('.tab-btn'); 
+            const tabContents = document.querySelectorAll('.tab-content');
 
-        // Veriyi Tablodan Çekme ve Ekrana Basma
-        function fetchSidebarDataForSetup() {
-            const sheetId = localStorage.getItem('kiosk_sheet_id'); if (!sheetId) return;
-            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:loadSidebarCb&sheet=YAN_PANEL&headers=0&t=${Date.now()}`;
-            
-            window.loadSidebarCb = function (json) {
-                try {
-                    if(json.table.rows.length > 0 && json.table.rows[0].c[0]) {
-                        const savedData = JSON.parse(json.table.rows[0].c[0].v);
-                        
-                        // Parse Sabahçı
-                        document.getElementById('list-sabahci').innerHTML = '';
-                        if(savedData.sabahci) savedData.sabahci.forEach(b => addTimeBlock('sabahci', b.start, b.end));
-                        
-                        // Parse Öğlenci
-                        document.getElementById('list-oglenci').innerHTML = '';
-                        if(savedData.oglenci) savedData.oglenci.forEach(b => addTimeBlock('oglenci', b.start, b.end));
-                        
-                        // Parse Öğrenciler
-                        document.getElementById('list-students').innerHTML = '';
-                        if(savedData.ogrenciler) savedData.ogrenciler.forEach(s => addStudentRow(s.loc, s.name));
+            function switchTab(tabId) {
+                tabBtns.forEach(b => b.classList.remove('active')); 
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                const btn = document.querySelector(`[data-tab="${tabId}"]`); 
+                const content = document.getElementById(tabId);
+                if (btn) btn.classList.add('active'); 
+                if (content) content.classList.add('active');
+                
+                if (tabId === 'tab-icerik') fetchExistingContents();
+                if (tabId === 'tab-nobet') fetchSidebarDataForSetup();
+                if (tabId === 'tab-ayarlar') {
+                    document.getElementById('s-okuladi').value = localStorage.getItem('kiosk_school_name') || ''; 
+                    document.getElementById('s-sifre').value = localStorage.getItem('kiosk_admin_password') || '';
+                    document.getElementById('s-scripturl').value = localStorage.getItem('kiosk_script_url') || '';
+                    document.getElementById('s-sehir').value = localStorage.getItem('kiosk_weather_city') || 'İstanbul';
+                    document.getElementById('s-enlem').value = localStorage.getItem('kiosk_weather_lat') || ''; 
+                    document.getElementById('s-boylam').value = localStorage.getItem('kiosk_weather_lon') || '';
+                    document.getElementById('s-logourl').value = localStorage.getItem('kiosk_school_logo') || '';
+                }
+            }
 
-                        // Parse Öğretmenler
-                        if(savedData.ogretmenler) {
-                            nobetData.ogretmenler = Object.assign(nobetData.ogretmenler, savedData.ogretmenler);
-                        }
-                        
-                        // İlk günü çizdir
-                        document.getElementById('day-selector').value = 'Pazartesi';
-                        renderTeachersForSelectedDay();
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const targetTab = btn.dataset.tab; 
+                    document.getElementById('login-error').style.display = 'none';
+                    if ((targetTab === 'tab-kurulum' || targetTab === 'tab-ayarlar' || targetTab === 'tab-nobet') && savedPassword && !isAuthenticated) { 
+                        loginOverlay.dataset.targetTab = targetTab; 
+                        loginOverlay.style.display = 'flex'; 
+                    } else { 
+                        switchTab(targetTab); 
                     }
-                } catch (e) { console.error(e); }
-                delete window.loadSidebarCb;
-            };
-            const script = document.createElement('script'); script.src = url; document.body.appendChild(script);
-        }
-
-        // Gönderim Olayı
-        const nobetForm = document.getElementById('nobet-form');
-        if (nobetForm) {
-            nobetForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                saveCurrentDayTeachers(); // Açık olan sekmedeki öğretmenleri de kaydet
-                
-                // Formdaki verileri toparla
-                let finalData = { sabahci: [], oglenci: [], ogretmenler: nobetData.ogretmenler, ogrenciler: [] };
-                
-                document.querySelectorAll('#list-sabahci .dynamic-row').forEach(r => {
-                    finalData.sabahci.push({ start: r.querySelector('.inp-start').value, end: r.querySelector('.inp-end').value });
                 });
-                document.querySelectorAll('#list-oglenci .dynamic-row').forEach(r => {
-                    finalData.oglenci.push({ start: r.querySelector('.inp-start').value, end: r.querySelector('.inp-end').value });
-                });
-                document.querySelectorAll('#list-students .dynamic-row').forEach(r => {
-                    finalData.ogrenciler.push({ loc: r.querySelector('.inp-loc').value, name: r.querySelector('.inp-name').value });
-                });
-
-                const scriptUrl = localStorage.getItem('kiosk_script_url');
-                const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
-                const overlay = document.getElementById('nobet-loading');
-                overlay.style.display = 'flex';
-
-                try {
-                    const resp = await fetch(scriptUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify({ sheetId: cleanSheetId, action: 'saveSidebarData', sidebarData: finalData })
-                    });
-                    const res = await resp.json();
-                    overlay.style.display = 'none';
-                    if(res.status === 'success') {
-                        document.getElementById('nobet-success-msg').style.display = 'block';
-                        setTimeout(() => document.getElementById('nobet-success-msg').style.display = 'none', 3000);
-                    } else { alert("Hata: " + res.message); }
-                } catch (error) { overlay.style.display = 'none'; alert("Bağlantı hatası: " + error.message); }
             });
-        }
 
-        // Sekme Değişimi Dinleyicisi (Sizin kendi switchTab kodunuzun içine entegre edin)
-        // Eğer tabId === 'tab-nobet' ise fetchSidebarDataForSetup(); çalıştırılmalı.
+            document.getElementById('login-form').addEventListener('submit', function (e) {
+                e.preventDefault();
+                if (document.getElementById('login-password').value === savedPassword) { 
+                    isAuthenticated = true; loginOverlay.style.display = 'none'; 
+                    switchTab(loginOverlay.dataset.targetTab || 'tab-kurulum'); 
+                } else { document.getElementById('login-error').style.display = 'block'; }
+            });
+            
+            document.getElementById('btn-login-cancel').addEventListener('click', function () { 
+                loginOverlay.style.display = 'none'; switchTab('tab-icerik'); 
+            });
+
+            document.getElementById('s-sehir').addEventListener('change', function () {
+                var s = this.options[this.selectedIndex]; 
+                if (s && s.dataset.lat) { 
+                    document.getElementById('s-enlem').value = s.dataset.lat; 
+                    document.getElementById('s-boylam').value = s.dataset.lon; 
+                }
+            });
+
+            // ==========================================
+            // NÖBET SEKMESİ UI VE DATA MANTIĞI
+            // ==========================================
+            window.addTimeBlock = function(type, start = "", end = "") {
+                const container = document.getElementById(`list-${type}`);
+                const idx = container.children.length + 1;
+                const div = document.createElement('div'); div.className = 'dynamic-row';
+                div.innerHTML = `
+                    <div class="lbl">${idx}. Blok</div>
+                    <input type="time" class="inp-start" value="${start}" required>
+                    <span style="color:#94a3b8;">-</span>
+                    <input type="time" class="inp-end" value="${end}" required>
+                    <button type="button" class="btn-del" onclick="this.parentElement.remove(); window.updateLabels('list-${type}')">X</button>
+                `;
+                container.appendChild(div);
+            };
+
+            window.updateLabels = function(containerId) {
+                const rows = document.getElementById(containerId).querySelectorAll('.dynamic-row');
+                rows.forEach((r, i) => { r.querySelector('.lbl').textContent = `${i + 1}. Blok`; });
+            };
+
+            window.addTeacherRow = function(loc = "", name = "") {
+                const container = document.getElementById('list-teachers');
+                const div = document.createElement('div'); div.className = 'dynamic-row';
+                div.innerHTML = `
+                    <input type="text" class="inp-loc" value="${loc}" placeholder="Nöbet Yeri" style="flex: 1;" required>
+                    <input type="text" class="inp-name" value="${name}" placeholder="Öğretmen Adı Soyadı" style="flex: 2;" required>
+                    <button type="button" class="btn-del" onclick="this.parentElement.remove(); window.saveCurrentDayTeachers();">X</button>
+                `;
+                container.appendChild(div);
+            };
+
+            window.addStudentRow = function(loc = "", name = "") {
+                const container = document.getElementById('list-students');
+                const div = document.createElement('div'); div.className = 'dynamic-row';
+                div.innerHTML = `
+                    <input type="text" class="inp-loc" value="${loc}" placeholder="Sınıf" style="flex: 1;" required>
+                    <input type="text" class="inp-name" value="${name}" placeholder="Öğrenci Adı Soyadı" style="flex: 2;" required>
+                    <button type="button" class="btn-del" onclick="this.parentElement.remove()">X</button>
+                `;
+                container.appendChild(div);
+            };
+
+            window.saveCurrentDayTeachers = function() {
+                const day = document.getElementById('day-selector').value;
+                nobetData.ogretmenler[day] = [];
+                document.querySelectorAll('#list-teachers .dynamic-row').forEach(row => {
+                    nobetData.ogretmenler[day].push({ loc: row.querySelector('.inp-loc').value, name: row.querySelector('.inp-name').value });
+                });
+            };
+
+            window.renderTeachersForSelectedDay = function() {
+                const prevDay = document.getElementById('day-selector').dataset.prev || 'Pazartesi';
+                nobetData.ogretmenler[prevDay] = [];
+                document.querySelectorAll('#list-teachers .dynamic-row').forEach(row => {
+                    nobetData.ogretmenler[prevDay].push({ loc: row.querySelector('.inp-loc').value, name: row.querySelector('.inp-name').value });
+                });
+
+                const newDay = document.getElementById('day-selector').value;
+                document.getElementById('day-selector').dataset.prev = newDay;
+                document.getElementById('list-teachers').innerHTML = '';
+                
+                let items = nobetData.ogretmenler[newDay] || [];
+                if(items.length === 0) { window.addTeacherRow(); }
+                else { items.forEach(i => window.addTeacherRow(i.loc, i.name)); }
+            };
+
+            function fetchSidebarDataForSetup() {
+                const sheetId = localStorage.getItem('kiosk_sheet_id'); if (!sheetId) return;
+                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:loadSidebarCb&sheet=YAN_PANEL&headers=0&t=${Date.now()}`;
+                
+                window.loadSidebarCb = function (json) {
+                    try {
+                        if(json.table.rows.length > 0 && json.table.rows[0].c[0]) {
+                            const savedData = JSON.parse(json.table.rows[0].c[0].v);
+                            
+                            document.getElementById('list-sabahci').innerHTML = '';
+                            if(savedData.sabahci) savedData.sabahci.forEach(b => window.addTimeBlock('sabahci', b.start, b.end));
+                            
+                            document.getElementById('list-oglenci').innerHTML = '';
+                            if(savedData.oglenci) savedData.oglenci.forEach(b => window.addTimeBlock('oglenci', b.start, b.end));
+                            
+                            document.getElementById('list-students').innerHTML = '';
+                            if(savedData.ogrenciler) savedData.ogrenciler.forEach(s => window.addStudentRow(s.loc, s.name));
+
+                            if(savedData.ogretmenler) {
+                                nobetData.ogretmenler = Object.assign(nobetData.ogretmenler, savedData.ogretmenler);
+                            }
+                            
+                            document.getElementById('day-selector').value = 'Pazartesi';
+                            window.renderTeachersForSelectedDay();
+                        }
+                    } catch (e) { console.error(e); }
+                    delete window.loadSidebarCb;
+                };
+                const script = document.createElement('script'); script.src = url; document.body.appendChild(script);
+            }
+
+            const nobetForm = document.getElementById('nobet-form');
+            if (nobetForm) {
+                nobetForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    window.saveCurrentDayTeachers(); 
+                    
+                    let finalData = { sabahci: [], oglenci: [], ogretmenler: nobetData.ogretmenler, ogrenciler: [] };
+                    
+                    document.querySelectorAll('#list-sabahci .dynamic-row').forEach(r => {
+                        finalData.sabahci.push({ start: r.querySelector('.inp-start').value, end: r.querySelector('.inp-end').value });
+                    });
+                    document.querySelectorAll('#list-oglenci .dynamic-row').forEach(r => {
+                        finalData.oglenci.push({ start: r.querySelector('.inp-start').value, end: r.querySelector('.inp-end').value });
+                    });
+                    document.querySelectorAll('#list-students .dynamic-row').forEach(r => {
+                        finalData.ogrenciler.push({ loc: r.querySelector('.inp-loc').value, name: r.querySelector('.inp-name').value });
+                    });
+
+                    const scriptUrl = localStorage.getItem('kiosk_script_url');
+                    const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
+                    const overlay = document.getElementById('nobet-loading');
+                    overlay.style.display = 'flex';
+
+                    try {
+                        const resp = await fetch(scriptUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify({ sheetId: cleanSheetId, action: 'saveSidebarData', sidebarData: finalData })
+                        });
+                        const res = await resp.json();
+                        overlay.style.display = 'none';
+                        if(res.status === 'success') {
+                            document.getElementById('nobet-success-msg').style.display = 'block';
+                            setTimeout(() => document.getElementById('nobet-success-msg').style.display = 'none', 3000);
+                        } else { alert("Hata: " + res.message); }
+                    } catch (error) { overlay.style.display = 'none'; alert("Bağlantı hatası: " + error.message); }
+                });
+            }
+
+            // ==========================================
+            // İÇERİK OKUMA VE SİLME (MEVCUT)
+            // ==========================================
+            function fetchExistingContents() {
+                const sheetId = localStorage.getItem('kiosk_sheet_id'); if (!sheetId) return;
+                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:loadContentsCallback&sheet=DUYURULAR&headers=1&t=${new Date().getTime()}`;
+                window.loadContentsCallback = function (json) { try { renderContentList(json.table.rows); } catch (e) {} delete window.loadContentsCallback; };
+                const script = document.createElement('script'); script.src = url; document.body.appendChild(script);
+            }
+
+            function renderContentList(rows) {
+                const container = document.getElementById('content-list-container'); if (!container) return;
+                container.innerHTML = `<div style="border-bottom:1px solid var(--glass-border); padding-bottom:12px; margin-bottom:16px;"><h3>Yayın Akışı Yönetimi</h3></div>`;
+                if (!rows || rows.length === 0) { container.innerHTML += '<p>Tabloda içerik bulunmuyor.</p>'; return; }
+                let activeCount = 0;
+                rows.forEach((row, index) => {
+                    const rowIndex = index + 2; const baslik = row.c[0] ? (row.c[0].v || '') : ''; const kategori = row.c[2] ? (row.c[2].v || 'duyuru') : 'duyuru'; const isAktif = (row.c[4] ? (row.c[4].v || 'EVET') : 'EVET').toString().toUpperCase() === 'EVET';
+                    let statusHtml = ''; if (isAktif) { activeCount++; statusHtml = activeCount <= MAX_VISIBLE_ITEMS ? '<span class="badge" style="color: #10b981;">📺 YAYINDA</span>' : '<span class="badge" style="color: #fbbf24;">📁 YEDEK</span>'; } else { statusHtml = '<span class="badge" style="color: #f87171;">❌ KAPALI</span>'; }
+                    const itemDiv = document.createElement('div'); itemDiv.className = 'content-item'; itemDiv.style.opacity = isAktif ? '1' : '0.4';
+                    itemDiv.innerHTML = `<div class="content-item-info"><h4>${statusHtml} ${baslik} <span class="badge category-badge">${kategori}</span></h4></div><div class="content-item-actions"><button type="button" class="btn-icon move move-up" data-index="${rowIndex}" ${index === 0 ? 'disabled' : ''}>▲</button><button type="button" class="btn-icon move move-down" data-index="${rowIndex}" ${index === rows.length - 1 ? 'disabled' : ''}>▼</button><button type="button" class="btn-icon edit" data-index="${rowIndex}">Düzenle</button><button type="button" class="btn-icon delete" data-index="${rowIndex}">Sil</button></div>`;
+                    
+                    itemDiv.querySelector('.edit').addEventListener('click', () => startEditing(rowIndex, row));
+                    const gorselUrl = row.c[6] ? (row.c[6].v || '') : ''; const videoUrl = row.c[7] ? (row.c[7].v || '') : '';
+                    itemDiv.querySelector('.delete').addEventListener('click', () => deleteItem(rowIndex, gorselUrl, videoUrl));
+                    itemDiv.querySelector('.move-up').addEventListener('click', (e) => { if (!e.target.disabled) moveItem(rowIndex, 'up'); });
+                    itemDiv.querySelector('.move-down').addEventListener('click', (e) => { if (!e.target.disabled) moveItem(rowIndex, 'down'); });
+                    container.appendChild(itemDiv);
+                });
+            }
+
+            async function moveItem(rowIndex, direction) {
+                const scriptUrl = localStorage.getItem('kiosk_script_url'); document.getElementById('loading-overlay').style.display = 'flex';
+                try { await fetch(scriptUrl, { method: 'POST', body: JSON.stringify({ sheetId: localStorage.getItem('kiosk_sheet_id'), action: 'moveContent', rowIndex: rowIndex, direction: direction }) }); fetchExistingContents(); document.getElementById('loading-overlay').style.display = 'none'; } catch (e) { alert('Hata: ' + e.message); }
+            }
+
+            function startEditing(rowIndex, row) {
+                currentEditRowIndex = rowIndex; document.getElementById('form-title').textContent = `İÇERİĞİ DÜZENLE`; document.getElementById('btn-submit-content').innerHTML = '💾 Kaydet'; document.getElementById('btn-cancel-edit').style.display = 'block';
+                document.getElementById('c-baslik').value = row.c[0] ? (row.c[0].v || '') : ''; document.getElementById('c-icerik').value = row.c[1] ? (row.c[1].v || '') : ''; document.getElementById('c-kategori').value = (row.c[2] ? (row.c[2].v || 'duyuru') : 'duyuru').toString().toLowerCase(); document.getElementById('c-aktif').value = (row.c[4] ? (row.c[4].v || 'EVET') : 'EVET').toString().toUpperCase(); document.getElementById('c-bant').value = (row.c[5] ? (row.c[5].v || 'HAYIR') : 'HAYIR').toString().toUpperCase(); document.getElementById('c-gorsel-url').value = row.c[6] ? (row.c[6].v || '') : ''; document.getElementById('c-video-url').value = row.c[7] ? (row.c[7].v || '') : ''; window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            document.getElementById('btn-cancel-edit').addEventListener('click', () => { currentEditRowIndex = null; document.getElementById('form-title').textContent = 'YENİ İÇERİK EKLE'; document.getElementById('btn-submit-content').innerHTML = '🚀 Tabloya Ekle'; document.getElementById('btn-cancel-edit').style.display = 'none'; document.getElementById('content-form').reset(); document.getElementById('upload-progress-container').style.display = 'none'; });
+
+            async function deleteItem(rowIndex, gorselUrl, videoUrl) {
+                if (!confirm('Bu içeriği tamamen silmek istediğinize emin misiniz?')) return;
+                let deleteMedia = false; if (gorselUrl || videoUrl) { deleteMedia = confirm('Bu duyuruya ait bir medya dosyası var.\n\nSistemden (Drive / YouTube) tamamen SİLİNSİN Mİ?'); }
+                const overlay = document.getElementById('loading-overlay'); overlay.style.display = 'flex';
+                try {
+                    await fetch(localStorage.getItem('kiosk_script_url'), { method: 'POST', body: JSON.stringify({ sheetId: localStorage.getItem('kiosk_sheet_id'), action: 'deleteContent', rowIndex: rowIndex, deleteMedia: deleteMedia }) });
+                    fetchExistingContents(); overlay.style.display = 'none'; if (currentEditRowIndex === rowIndex) document.getElementById('btn-cancel-edit').click();
+                } catch (e) { overlay.style.display = 'none'; alert('Silme başarısız!'); }
+            }
+
+            // ==========================================
+            // SİSTEM AYARLARI VE KURULUM
+            // ==========================================
+            function runMagicSetup(sheetInput, isSilentLoad) {
+                let cleanSheetId = sheetInput.includes('docs.google.com') ? sheetInput.match(/\/d\/([a-zA-Z0-9_-]+)/)[1] : sheetInput;
+                const url = `https://docs.google.com/spreadsheets/d/${cleanSheetId}/gviz/tq?tqx=out:json;responseHandler:magicSetupCallback&sheet=AYARLAR&headers=0`;
+                if (!isSilentLoad) document.getElementById('setup-loading').style.display = 'flex';
+                window.magicSetupCallback = function (json) {
+                    try {
+                        let settings = {}; json.table.rows.forEach(row => { if (row.c && row.c.length >= 2) { let k = (row.c[0]?.v || '').toString().replace(/\s+/g, '').toLowerCase(); if (k) settings[k] = (row.c[1]?.v || '').toString().trim(); } });
+                        localStorage.setItem('kiosk_sheet_id', cleanSheetId);
+                        for (let key in settings) {
+                            if (key.includes('scripturl')) localStorage.setItem('kiosk_script_url', settings[key]);
+                            else if (key.includes('okuladi')) localStorage.setItem('kiosk_school_name', settings[key]);
+                            else if (key.includes('sifre')) { localStorage.setItem('kiosk_admin_password', settings[key]); savedPassword = settings[key]; }
+                            else if (key.includes('logourl')) localStorage.setItem('kiosk_school_logo', settings[key]);
+                        }
+                        if (!isSilentLoad) { document.getElementById('setup-loading').style.display = 'none'; document.getElementById('success-msg').style.display = 'block'; setTimeout(() => switchTab('tab-icerik'), 1500); } 
+                        else switchTab('tab-icerik');
+                    } catch (e) { if (!isSilentLoad) { alert("Hata!"); document.getElementById('setup-loading').style.display = 'none'; } }
+                    delete window.magicSetupCallback;
+                };
+                const script = document.createElement('script'); script.src = url; document.body.appendChild(script);
+            }
+
+            const localSheetId = localStorage.getItem('kiosk_sheet_id'); if (localSheetId) { document.getElementById('sheet-id').value = localSheetId; runMagicSetup(localSheetId, true); } else { switchTab('tab-kurulum'); }
+            document.getElementById('setup-form').addEventListener('submit', function (e) { e.preventDefault(); runMagicSetup(document.getElementById('sheet-id').value.trim(), false); });
+            document.getElementById('btn-demo').addEventListener('click', function () { window.location.href = 'index.html'; });
+            document.getElementById('btn-reset').addEventListener('click', function () { if (confirm('Sıfırlansın mı?')) { localStorage.clear(); window.location.reload(); } });
+
+            // İÇERİK FORMU GÖNDERME
+            const contentForm = document.getElementById('content-form');
+            if (contentForm) {
+                contentForm.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+                    const scriptUrl = localStorage.getItem('kiosk_script_url');
+                    const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
+                    const btnSubmit = document.getElementById('btn-submit-content');
+                    const overlay = document.getElementById('loading-overlay');
+                    const errorMsg = document.getElementById('content-error-msg');
+                    const progContainer = document.getElementById('upload-progress-container');
+                    const progBar = document.getElementById('upload-progress-bar');
+                    const progText = document.getElementById('upload-progress-text');
+
+                    overlay.style.display = 'flex';
+                    errorMsg.style.display = 'none';
+                    btnSubmit.disabled = true;
+
+                    try {
+                        let manualGorsel = document.getElementById('c-gorsel-url').value.trim();
+                        let manualVideo = document.getElementById('c-video-url').value.trim();
+                        const fileInput = document.getElementById('c-file');
+                        
+                        let uploadedGLinks = [];
+                        let uploadedVLinks = [];
+
+                        if (fileInput.files.length > 0) {
+                            progContainer.style.display = 'block';
+                            for (let i = 0; i < fileInput.files.length; i++) {
+                                const file = fileInput.files[i];
+                                progText.textContent = `Yükleniyor (${i+1}/${fileInput.files.length}): ${file.name}`;
+                                progBar.style.width = '0%';
+
+                                if (file.type.startsWith('image/')) {
+                                    const base64 = await new Promise(r => { const rd = new FileReader(); rd.onload = e => r(e.target.result); rd.readAsDataURL(file); });
+                                    const resp = await fetch(scriptUrl, { 
+                                        method: 'POST', 
+                                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                        body: JSON.stringify({ sheetId: cleanSheetId, action: 'uploadFile', file: { name: file.name, mimeType: file.type, content: base64 } }) 
+                                    });
+                                    const res = await resp.json();
+                                    if (res.status === 'success' && res.url) { uploadedGLinks.push(res.url); } else { throw new Error(res.message || "Resim linki alınamadı"); }
+                                    progBar.style.width = '100%';
+                                } 
+                                else if (file.type.startsWith('video/')) {
+                                    const urlResp = await fetch(scriptUrl, { 
+                                        method: 'POST', 
+                                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                        body: JSON.stringify({ sheetId: cleanSheetId, action: 'getYouTubeUploadUrl', videoTitle: document.getElementById('c-baslik').value, mimeType: file.type, size: file.size, origin: window.location.origin }) 
+                                    });
+                                    const uploadUrl = (await urlResp.json()).uploadUrl;
+                                    const CHUNK = 2 * 1024 * 1024; let uploaded = 0;
+                                    while (uploaded < file.size) {
+                                        const end = Math.min(uploaded + CHUNK, file.size);
+                                        const put = await fetch(uploadUrl, { method: 'PUT', headers: { 'Content-Range': `bytes ${uploaded}-${end - 1}/${file.size}` }, body: file.slice(uploaded, end) });
+                                        if (put.status === 308) { uploaded = end; progBar.style.width = Math.round((uploaded/file.size)*100) + '%'; }
+                                        else if (put.status === 200 || put.status === 201) { const vid = (await put.json()).id; uploadedVLinks.push(`https://www.youtube.com/watch?v=${vid}`); break; }
+                                    }
+                                }
+                            }
+                        }
+
+                        let finalGorsel = [manualGorsel, ...uploadedGLinks].filter(Boolean).join(',');
+                        let finalVideo = [manualVideo, ...uploadedVLinks].filter(Boolean).join(',');
+
+                        document.getElementById('loading-text').textContent = 'Google Sheet güncelleniyor...';
+                        const finalPayload = {
+                            sheetId: cleanSheetId,
+                            action: currentEditRowIndex ? 'editContent' : 'addContent',
+                            rowIndex: currentEditRowIndex,
+                            item: {
+                                baslik: document.getElementById('c-baslik').value.trim(),
+                                icerik: document.getElementById('c-icerik').value.trim(),
+                                kategori: document.getElementById('c-kategori').value,
+                                tarih: document.getElementById('c-tarih').value,
+                                aktif: document.getElementById('c-aktif').value,
+                                bant: document.getElementById('c-bant').value,
+                                gorsel: finalGorsel,
+                                video: finalVideo
+                            }
+                        };
+
+                        const finalResp = await fetch(scriptUrl, { 
+                            method: 'POST', 
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify(finalPayload) 
+                        });
+                        const finalData = await finalResp.json();
+                        
+                        if (finalData.status === 'success') {
+                            overlay.style.display = 'none'; btnSubmit.disabled = false;
+                            document.getElementById('btn-cancel-edit').click(); fetchExistingContents();
+                            document.getElementById('content-success-msg').style.display = 'block'; setTimeout(() => { document.getElementById('content-success-msg').style.display = 'none'; }, 4000);
+                        } else { throw new Error(finalData.message); }
+
+                    } catch (error) {
+                        overlay.style.display = 'none'; btnSubmit.disabled = false;
+                        errorMsg.textContent = "❌ Hata: " + error.message; errorMsg.style.display = 'block';
+                    }
+                });
+            }
+
+            // AYARLAR FORMU GÖNDERME
+            const settingsForm = document.getElementById('settings-form');
+            if(settingsForm) {
+                settingsForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const scriptUrl = localStorage.getItem('kiosk_script_url');
+                    const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
+                    const overlay = document.getElementById('settings-loading-overlay');
+                    overlay.style.display = 'flex';
+                    
+                    const payload = {
+                        sheetId: cleanSheetId,
+                        action: 'updateSettings',
+                        settings: {
+                            OkulAdi: document.getElementById('s-okuladi').value,
+                            Sifre: document.getElementById('s-sifre').value,
+                            ScriptURL: document.getElementById('s-scripturl').value,
+                            Sehir: document.getElementById('s-sehir').value,
+                            Enlem: document.getElementById('s-enlem').value,
+                            Boylam: document.getElementById('s-boylam').value,
+                            LogoURL: document.getElementById('s-logourl').value
+                        }
+                    };
+                    
+                    try {
+                        const resp = await fetch(scriptUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+                        const res = await resp.json();
+                        overlay.style.display = 'none';
+                        if(res.status === 'success') {
+                            localStorage.setItem('kiosk_school_name', payload.settings.OkulAdi);
+                            localStorage.setItem('kiosk_admin_password', payload.settings.Sifre);
+                            localStorage.setItem('kiosk_script_url', payload.settings.ScriptURL);
+                            localStorage.setItem('kiosk_weather_city', payload.settings.Sehir);
+                            localStorage.setItem('kiosk_weather_lat', payload.settings.Enlem);
+                            localStorage.setItem('kiosk_weather_lon', payload.settings.Boylam);
+                            localStorage.setItem('kiosk_school_logo', payload.settings.LogoURL);
+                            savedPassword = payload.settings.Sifre;
+                            
+                            const msg = document.getElementById('settings-success-msg');
+                            msg.style.display = 'block'; setTimeout(() => msg.style.display = 'none', 3000);
+                        } else { throw new Error(res.message); }
+                    } catch (e) {
+                        overlay.style.display = 'none';
+                        const err = document.getElementById('settings-error-msg');
+                        err.textContent = "Hata: " + e.message; err.style.display = 'block';
+                    }
+                });
+            }
+        })();
     </script>
 </body>
 </html>
