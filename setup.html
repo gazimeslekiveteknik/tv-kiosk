@@ -13,7 +13,7 @@
         body::before { width: 500px; height: 500px; background: var(--accent-blue); top: -200px; right: -100px; }
         body::after { width: 400px; height: 400px; background: var(--accent-purple); bottom: -150px; left: -100px; }
         
-        .setup-container { position: relative; z-index: 1; width: 100%; max-width: 800px; }
+        .setup-container { position: relative; z-index: 1; width: 100%; max-width: 860px; }
         .setup-header { text-align: center; margin-bottom: 40px; } 
         .setup-header-icon { font-size: 64px; margin-bottom: 16px; }
         .setup-header h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -30,11 +30,11 @@
         /* Dinamik Liste Stilleri */
         .dynamic-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
         .dynamic-row { display: flex; gap: 10px; align-items: center; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
-        .dynamic-row input { padding: 10px; font-size: 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 6px; color: white; }
-        .dynamic-row .lbl { font-size: 12px; font-weight: 700; color: #94a3b8; width: 60px; text-align: center; }
+        .dynamic-row input { padding: 10px; font-size: 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 6px; color: white; width: 100%; }
+        .dynamic-row .lbl { font-size: 12px; font-weight: 700; color: #94a3b8; width: 60px; text-align: center; flex-shrink: 0; }
         .btn-add { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px dashed #60a5fa; padding: 10px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600; transition: all 0.2s; }
         .btn-add:hover { background: rgba(59, 130, 246, 0.4); }
-        .btn-del { background: rgba(239, 68, 68, 0.2); color: #f87171; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-del { background: rgba(239, 68, 68, 0.2); color: #f87171; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; flex-shrink: 0; }
 
         .media-section { background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: var(--radius-sm); margin-bottom: 24px; border: 1px dashed rgba(255, 255, 255, 0.1); }
         .media-section-title { font-size: 13px; font-weight: 700; color: #cbd5e1; margin-bottom: 16px; text-transform: uppercase; }
@@ -183,16 +183,28 @@
                 </div>
 
                 <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; margin-bottom: 30px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:15px;">
-                        <label style="color:#a7f3d0; font-weight:bold; margin:0;">👨‍🏫 Haftalık Nöbetçi Öğretmenler</label>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                        <label style="color:#a7f3d0; font-weight:bold; margin:0; font-size:15px;">👨‍🏫 Haftalık Nöbetçi Öğretmenler</label>
                         <select id="day-selector" style="width: 150px; padding: 8px; font-size: 13px;" onchange="renderTeachersForSelectedDay()">
                             <option value="Pazartesi">Pazartesi</option><option value="Salı">Salı</option>
                             <option value="Çarşamba">Çarşamba</option><option value="Perşembe">Perşembe</option>
                             <option value="Cuma">Cuma</option>
                         </select>
                     </div>
-                    <div id="list-teachers" class="dynamic-list"></div>
-                    <button type="button" class="btn-add" onclick="addTeacherRow()">+ Bu Güne Yeni Nöbet Yeri Ekle</button>
+                    
+                    <div style="display: flex; gap: 20px;">
+                        <div style="flex: 1;">
+                            <label style="color:#fcd34d; font-size:12px; margin-bottom:8px; display:block;">Sabahçı Nöbetçiler</label>
+                            <div id="list-teachers-sabahci" class="dynamic-list"></div>
+                            <button type="button" class="btn-add" onclick="addTeacherRow('sabahci')">+ Sabahçı Nöbet Yeri Ekle</button>
+                        </div>
+                        
+                        <div style="flex: 1;">
+                            <label style="color:#60a5fa; font-size:12px; margin-bottom:8px; display:block;">Öğlenci Nöbetçiler</label>
+                            <div id="list-teachers-oglenci" class="dynamic-list"></div>
+                            <button type="button" class="btn-add" onclick="addTeacherRow('oglenci')">+ Öğlenci Nöbet Yeri Ekle</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px;">
@@ -231,10 +243,16 @@
     </div>
 
     <script>
-        // GLOBAL NÖBET VERİSİ
+        // GLOBAL NÖBET VERİSİ (Güncellenmiş Yapı)
         let nobetData = {
             sabahci: [], oglenci: [],
-            ogretmenler: { "Pazartesi": [], "Salı": [], "Çarşamba": [], "Perşembe": [], "Cuma": [] },
+            ogretmenler: { 
+                "Pazartesi": {sabahci: [], oglenci: []}, 
+                "Salı": {sabahci: [], oglenci: []}, 
+                "Çarşamba": {sabahci: [], oglenci: []}, 
+                "Perşembe": {sabahci: [], oglenci: []}, 
+                "Cuma": {sabahci: [], oglenci: []} 
+            },
             ogrenciler: []
         };
 
@@ -325,12 +343,12 @@
                 rows.forEach((r, i) => { r.querySelector('.lbl').textContent = `${i + 1}. Blok`; });
             };
 
-            window.addTeacherRow = function(loc = "", name = "") {
-                const container = document.getElementById('list-teachers');
+            window.addTeacherRow = function(type, loc = "", name = "") {
+                const container = document.getElementById(`list-teachers-${type}`);
                 const div = document.createElement('div'); div.className = 'dynamic-row';
                 div.innerHTML = `
-                    <input type="text" class="inp-loc" value="${loc}" placeholder="Nöbet Yeri" style="flex: 1;" required>
-                    <input type="text" class="inp-name" value="${name}" placeholder="Öğretmen Adı Soyadı" style="flex: 2;" required>
+                    <input type="text" class="inp-loc" value="${loc}" placeholder="Nöbet Yeri (Örn: Zemin)" style="flex: 1;" required>
+                    <input type="text" class="inp-name" value="${name}" placeholder="Öğretmen" style="flex: 1;" required>
                     <button type="button" class="btn-del" onclick="this.parentElement.remove(); window.saveCurrentDayTeachers();">X</button>
                 `;
                 container.appendChild(div);
@@ -349,26 +367,38 @@
 
             window.saveCurrentDayTeachers = function() {
                 const day = document.getElementById('day-selector').value;
-                nobetData.ogretmenler[day] = [];
-                document.querySelectorAll('#list-teachers .dynamic-row').forEach(row => {
-                    nobetData.ogretmenler[day].push({ loc: row.querySelector('.inp-loc').value, name: row.querySelector('.inp-name').value });
+                nobetData.ogretmenler[day] = { sabahci: [], oglenci: [] };
+                
+                document.querySelectorAll('#list-teachers-sabahci .dynamic-row').forEach(row => {
+                    nobetData.ogretmenler[day].sabahci.push({ loc: row.querySelector('.inp-loc').value, name: row.querySelector('.inp-name').value });
+                });
+                document.querySelectorAll('#list-teachers-oglenci .dynamic-row').forEach(row => {
+                    nobetData.ogretmenler[day].oglenci.push({ loc: row.querySelector('.inp-loc').value, name: row.querySelector('.inp-name').value });
                 });
             };
 
             window.renderTeachersForSelectedDay = function() {
                 const prevDay = document.getElementById('day-selector').dataset.prev || 'Pazartesi';
-                nobetData.ogretmenler[prevDay] = [];
-                document.querySelectorAll('#list-teachers .dynamic-row').forEach(row => {
-                    nobetData.ogretmenler[prevDay].push({ loc: row.querySelector('.inp-loc').value, name: row.querySelector('.inp-name').value });
+                nobetData.ogretmenler[prevDay] = { sabahci: [], oglenci: [] };
+                
+                document.querySelectorAll('#list-teachers-sabahci .dynamic-row').forEach(row => {
+                    nobetData.ogretmenler[prevDay].sabahci.push({ loc: row.querySelector('.inp-loc').value, name: row.querySelector('.inp-name').value });
+                });
+                document.querySelectorAll('#list-teachers-oglenci .dynamic-row').forEach(row => {
+                    nobetData.ogretmenler[prevDay].oglenci.push({ loc: row.querySelector('.inp-loc').value, name: row.querySelector('.inp-name').value });
                 });
 
                 const newDay = document.getElementById('day-selector').value;
                 document.getElementById('day-selector').dataset.prev = newDay;
-                document.getElementById('list-teachers').innerHTML = '';
                 
-                let items = nobetData.ogretmenler[newDay] || [];
-                if(items.length === 0) { window.addTeacherRow(); }
-                else { items.forEach(i => window.addTeacherRow(i.loc, i.name)); }
+                document.getElementById('list-teachers-sabahci').innerHTML = '';
+                document.getElementById('list-teachers-oglenci').innerHTML = '';
+                
+                let sItems = (nobetData.ogretmenler[newDay] || {}).sabahci || [];
+                let oItems = (nobetData.ogretmenler[newDay] || {}).oglenci || [];
+                
+                if(sItems.length === 0) window.addTeacherRow('sabahci'); else sItems.forEach(i => window.addTeacherRow('sabahci', i.loc, i.name));
+                if(oItems.length === 0) window.addTeacherRow('oglenci'); else oItems.forEach(i => window.addTeacherRow('oglenci', i.loc, i.name));
             };
 
             function fetchSidebarDataForSetup() {
@@ -390,7 +420,14 @@
                             if(savedData.ogrenciler) savedData.ogrenciler.forEach(s => window.addStudentRow(s.loc, s.name));
 
                             if(savedData.ogretmenler) {
-                                nobetData.ogretmenler = Object.assign(nobetData.ogretmenler, savedData.ogretmenler);
+                                // Eski formattan yeni formata geçiş koruması
+                                for(let day in savedData.ogretmenler) {
+                                    if (Array.isArray(savedData.ogretmenler[day])) {
+                                        nobetData.ogretmenler[day] = { sabahci: savedData.ogretmenler[day], oglenci: [] };
+                                    } else {
+                                        nobetData.ogretmenler[day] = savedData.ogretmenler[day];
+                                    }
+                                }
                             }
                             
                             document.getElementById('day-selector').value = 'Pazartesi';
