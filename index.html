@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1920, initial-scale=1.0">
-    <title>Okul Bilgi Ekranı - L-Layout</title>
+    <title>Okul Bilgi Ekranı</title>
+    <meta name="description" content="Okul koridoru bilgi ekranı - Duyuru ve haberler">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -26,6 +27,7 @@
     </div>
 
     <div id="layout-wrapper" class="layout-wrapper">
+        
         <div id="main-display" class="main-display">
             <header class="top-bar">
                 <div class="top-bar-left">
@@ -51,11 +53,13 @@
                             <line x1="12" y1="20" x2="12.01" y2="20"></line>
                         </svg>
                     </div>
+
                     <div class="weather-widget">
                         <div class="weather-icon" id="weather-icon">🌤️</div>
                         <div class="weather-info">
                             <div class="weather-temp" id="weather-temp">--°C</div>
                             <div class="weather-city" id="weather-city">Bekleniyor</div>
+                            <div class="weather-desc" id="weather-desc">Hava Durumu</div>
                         </div>
                     </div>
                     <div class="divider-v"></div>
@@ -83,6 +87,7 @@
                         </div>
                     </div>
                 </div>
+
                 <div id="next-slide-preview" class="next-slide-preview">
                     <span class="next-label">Sıradaki ▸</span>
                     <span id="next-preview-title" class="next-title">—</span>
@@ -92,19 +97,21 @@
             <footer class="ticker-bar">
                 <div class="ticker-label">
                     <span class="ticker-label-icon">📢</span>
-                    <span>DUYURULAR</span>
+                    <span>SON DAKİKA</span>
                 </div>
                 <div class="ticker-track">
-                    <div id="ticker-content" class="ticker-content">Yükleniyor...</div>
+                    <div id="ticker-content" class="ticker-content">
+                        Bilgi ekranına hoş geldiniz • Duyurular yükleniyor...
+                    </div>
                 </div>
             </footer>
         </div>
 
         <aside class="right-sidebar" id="right-sidebar">
             <div class="sidebar-module timer-module">
-                <div class="module-header">⏰ DERS PLANI</div>
+                <div class="module-header">⏰ DERS ZAMANI</div>
                 <div class="timer-content">
-                    <div id="lesson-status" class="lesson-status">Bekleniyor</div>
+                    <div id="lesson-status" class="lesson-status">Yükleniyor...</div>
                     <div id="lesson-countdown" class="lesson-countdown">--:--</div>
                     <div class="lesson-progress-bar"><div id="lesson-progress" style="width: 0%;"></div></div>
                 </div>
@@ -113,14 +120,14 @@
             <div class="sidebar-module">
                 <div class="module-header">👥 NÖBETÇİ ÖĞRETMENLER</div>
                 <div id="duty-teachers" class="duty-list">
-                    <div class="duty-item">Veri bekleniyor...</div>
+                    <div class="duty-item">Yükleniyor...</div>
                 </div>
             </div>
 
             <div class="sidebar-module">
                 <div class="module-header">🎓 NÖBETÇİ ÖĞRENCİLER</div>
                 <div id="duty-students" class="duty-list">
-                    <div class="duty-item">Veri bekleniyor...</div>
+                    <div class="duty-item">Yükleniyor...</div>
                 </div>
             </div>
         </aside>
