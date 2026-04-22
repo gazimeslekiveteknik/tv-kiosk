@@ -199,3 +199,24 @@ html, body {
 
 .ticker-item { display: inline-flex; align-items: center; gap: 14px; padding: 10px 28px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; font-size: 26px; font-weight: 600; flex-shrink: 0; margin-right: 24px; }
 .ticker-separator { display: inline-flex; align-items: center; color: rgba(255, 255, 255, 0.2); font-size: 10px; margin: 0 16px; flex-shrink: 0; }
+
+/* ============================================
+   YENİ DERS ZAMANI VE LİSTE STİLLERİ
+   ============================================ */
+.lesson-status-container { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; min-height: 32px; justify-content: center; align-items: center; }
+.status-row { font-size: 18px; font-weight: 700; background: rgba(255,255,255,0.1); padding: 6px 16px; border-radius: 20px; color: #bae6fd; letter-spacing: 0.5px; }
+.status-row.hidden { display: none; }
+.status-row.active-lesson { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
+.status-row.active-break { background: rgba(250, 204, 21, 0.2); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.4); }
+
+.lesson-timer-label { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #94a3b8; margin-bottom: 4px; }
+.lesson-countdown { font-size: 64px; margin-bottom: 12px; } /* Boyut biraz küçültüldü ki taşmasın */
+
+/* Listelerin taşmasını engelleme ve sayfalama efekti */
+.duty-list { display: flex; flex-direction: column; gap: 10px; overflow: hidden; position: relative; flex: 1; }
+.duty-page-fade { animation: pageFadeIn 0.8s ease-in-out; }
+@keyframes pageFadeIn { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
+
+.page-indicator { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
+.page-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border-light); }
+.page-dot.active { background: var(--vibrant-blue); transform: scale(1.5); }
