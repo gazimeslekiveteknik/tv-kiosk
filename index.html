@@ -101,7 +101,11 @@
                 <div class="sidebar-module timer-module">
                     <div class="module-header">⏰ DERS ZAMANI</div>
                     <div class="timer-content">
-                        <div id="lesson-status" class="lesson-status">Yükleniyor...</div>
+                        <div id="lesson-status-container" class="lesson-status-container">
+                            <div id="status-sabahci" class="status-row hidden">Sabahçı: -</div>
+                            <div id="status-oglenci" class="status-row hidden">Öğlenci: -</div>
+                        </div>
+                        <div class="lesson-timer-label" id="lesson-timer-label">Sonraki Zile Kalan Süre</div>
                         <div id="lesson-countdown" class="lesson-countdown">--:--</div>
                         <div class="lesson-progress-bar"><div id="lesson-progress" style="width: 0%;"></div></div>
                     </div>
@@ -134,7 +138,6 @@
                 </div>
             </div>
         </footer>
-
     </div>
 
     <script src="https://www.youtube.com/iframe_api"></script>
