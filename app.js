@@ -1,5 +1,5 @@
 /* ============================================
-   TV KIOSK - APP.JS v7.5 (Full Layout Edition & Smart Timer)
+   TV KIOSK - APP.JS v7.6 (Smart Duty Merge & Full Layout)
    ============================================ */
 
 (function () {
@@ -12,9 +12,6 @@
         PROGRESS_STEP: 50,
         TICKER_SCROLL_SPEED: 70,
         WEATHER_REFRESH: 600000,
-        WEATHER_CITY: 'Sultangazi',
-        WEATHER_LAT: 41.1075,
-        WEATHER_LON: 28.8617,
         SIDEBAR_REFRESH: 60000,
         NEXT_PREVIEW_SHOW: 3000,
     };
@@ -69,7 +66,7 @@
     let currentDataString = null;
     const els = {};
 
-    let sidebarData = { sabahci: [], oglenci: [], ogretmenler: [], ogrenciler: [] };
+    let sidebarData = { sabahci: [], oglenci: [], ogretmenler: { sabahci: [], oglenci: [] }, ogrenciler: [] };
     let dutyPages = { teachers: 0, students: 0 };
 
     function cacheDom() {
@@ -169,7 +166,10 @@
                 if (settings['logourl']) localStorage.setItem('kiosk_school_logo', settings['logourl']);
                 if (settings['sifre'] || settings['yöneticişifresi']) localStorage.setItem('kiosk_admin_password', settings['sifre'] || settings['yöneticişifresi']);
                 let city = settings['sehir'] || settings['şehir'];
+                let lat = settings['enlem']; let lon = settings['boylam'];
                 if (city) localStorage.setItem('kiosk_weather_city', city);
+                if (lat) localStorage.setItem('kiosk_weather_lat', lat);
+                if (lon) localStorage.setItem('kiosk_weather_lon', lon);
             } catch(e) {}
             delete window.magicAppCallback;
             if (window.history && window.history.replaceState) window.history.replaceState({}, document.title, window.location.protocol + "//" + window.location.host + window.location.pathname);
@@ -197,7 +197,8 @@
         setInterval(fetchSidebarData, CONFIG.SIDEBAR_REFRESH);
         setInterval(updateLessonTimer, 1000);
         setInterval(() => {
-            if(sidebarData.ogretmenler.length > 5) renderDutyPage('duty-teachers', sidebarData.ogretmenler, 'teachers');
+            const mergedT = getMergedTeachers();
+            if(mergedT.length > 5) renderDutyPage('duty-teachers', mergedT, 'teachers');
             if(sidebarData.ogrenciler.length > 5) renderDutyPage('duty-students', sidebarData.ogrenciler, 'students');
         }, 10000);
     }
@@ -207,7 +208,7 @@
     function updateClock() { const now = new Date(); els.time.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`; els.date.textContent = `${now.getDate()} ${TR_MONTHS[now.getMonth()]} ${now.getFullYear()}, ${TR_DAYS[now.getDay()]}`; }
     function getCleanSheetId(sheetId) { if (sheetId.includes('docs.google.com')) return sheetId.match(/\/d\/([a-zA-Z0-9_-]+)/)[1]; return sheetId; }
 
-    // --- YAN PANEL VE AKILLI SAYAÇ MANTIĞI ---
+    // --- YAN PANEL VE AKILLI NÖBET BİRLEŞTİRME ---
     function fetchSidebarData() {
         const id = localStorage.getItem('kiosk_sheet_id'); if(!id || !navigator.onLine) return;
         const url = `https://docs.google.com/spreadsheets/d/${getCleanSheetId(id)}/gviz/tq?tqx=out:json;responseHandler:sidebarCb&sheet=YAN_PANEL&headers=0&t=${Date.now()}`;
@@ -216,25 +217,60 @@
             try {
                 if (json.table.rows.length > 0 && json.table.rows[0].c && json.table.rows[0].c[0]) {
                     const dataObj = JSON.parse(json.table.rows[0].c[0].v);
-                    
                     sidebarData.sabahci = Array.isArray(dataObj.sabahci) ? dataObj.sabahci : [];
                     sidebarData.oglenci = Array.isArray(dataObj.oglenci) ? dataObj.oglenci : [];
                     sidebarData.ogrenciler = Array.isArray(dataObj.ogrenciler) ? dataObj.ogrenciler : [];
                     
-                    const days = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
-                    const todayName = days[new Date().getDay()];
-                    if (dataObj.ogretmenler && dataObj.ogretmenler[todayName]) {
-                        sidebarData.ogretmenler = dataObj.ogretmenler[todayName];
-                    } else { sidebarData.ogretmenler = []; }
+                    const todayName = TR_DAYS[new Date().getDay()];
+                    let todayT = (dataObj.ogretmenler || {})[todayName];
+                    
+                    // Eski yapıyı kontrol edip dönüştürme
+                    if (Array.isArray(todayT)) {
+                        sidebarData.ogretmenler = { sabahci: todayT, oglenci: [] };
+                    } else {
+                        sidebarData.ogretmenler = todayT || { sabahci: [], oglenci: [] };
+                    }
 
                     dutyPages = { teachers: 0, students: 0 };
-                    renderDutyPage('duty-teachers', sidebarData.ogretmenler, 'teachers');
+                    renderDutyPage('duty-teachers', getMergedTeachers(), 'teachers');
                     renderDutyPage('duty-students', sidebarData.ogrenciler, 'students');
                 }
             } catch(e) {}
             delete window.sidebarCb;
         };
         const script = document.createElement('script'); script.src = url; document.body.appendChild(script);
+    }
+
+    function getMergedTeachers() {
+        const now = new Date();
+        const currentMins = (now.getHours() * 60) + now.getMinutes();
+        let isSabah = true, isOglenci = true; // Program girilmemişse ikisini de göster
+        
+        if (sidebarData.sabahci.length > 0 && sidebarData.oglenci.length > 0) {
+            let sEnd = getMins(sidebarData.sabahci[sidebarData.sabahci.length - 1].end);
+            let oStart = getMins(sidebarData.oglenci[0].start);
+            
+            // Nöbet süresi bitişten 30 dk sonrasına kadar sürer varsayımı
+            isSabah = currentMins <= (sEnd + 30); 
+            isOglenci = currentMins >= (oStart - 30); 
+        }
+
+        let activeMap = {};
+        const addToList = (list) => {
+            if(!list) return;
+            list.forEach(t => {
+                let loc = t.loc.trim();
+                if(!activeMap[loc]) activeMap[loc] = [];
+                if(!activeMap[loc].includes(t.name.trim())) activeMap[loc].push(t.name.trim());
+            });
+        };
+
+        if (isSabah) addToList(sidebarData.ogretmenler.sabahci);
+        if (isOglenci) addToList(sidebarData.ogretmenler.oglenci);
+
+        return Object.keys(activeMap).map(loc => {
+            return { loc: loc, name: activeMap[loc].join(' & ') };
+        });
     }
 
     function renderDutyPage(containerId, items, typeKey) {
@@ -603,11 +639,16 @@
                    .replace(/>/g, '&gt;'); 
     }
     
-    function fetchFreeWeather() { if (!navigator.onLine) return; fetch(`https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.WEATHER_LAT}&longitude=${CONFIG.WEATHER_LON}&current_weather=true`).then(r => r.json()).then(data => { if (data.current_weather) { const temp = Math.round(data.current_weather.temperature); if (els.weatherTemp) els.weatherTemp.textContent = `${temp}°C`; if (els.weatherCity) els.weatherCity.textContent = CONFIG.WEATHER_CITY; if (els.weatherDesc) els.weatherDesc.textContent = 'Güncel'; } }).catch(() => { }); }
+    function fetchFreeWeather() { 
+        let lat = localStorage.getItem('kiosk_weather_lat') || CONFIG.WEATHER_LAT;
+        let lon = localStorage.getItem('kiosk_weather_lon') || CONFIG.WEATHER_LON;
+        let city = localStorage.getItem('kiosk_weather_city') || CONFIG.WEATHER_CITY;
+        if (!navigator.onLine) return; 
+        fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`).then(r => r.json()).then(data => { if (data.current_weather) { const temp = Math.round(data.current_weather.temperature); if (els.weatherTemp) els.weatherTemp.textContent = `${temp}°C`; if (els.weatherCity) els.weatherCity.textContent = city; if (els.weatherDesc) els.weatherDesc.textContent = 'Güncel'; } }).catch(() => { }); 
+    }
     function fetchWeather() { fetchFreeWeather(); }
 
     window.addEventListener('online', () => { if (els.offlineBadge) els.offlineBadge.classList.add('hidden'); });
     window.addEventListener('offline', () => { if (els.offlineBadge) els.offlineBadge.classList.remove('hidden'); });
-    
     document.addEventListener('DOMContentLoaded', init);
 })();
