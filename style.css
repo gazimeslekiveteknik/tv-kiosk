@@ -1,5 +1,5 @@
 /* ============================================
-   TV KIOSK BILGI EKRANI - v4 CINEMATIC LIGHT + L-BAR (TAM EKRAN KAYAN YAZI)
+   TV KIOSK BILGI EKRANI - TAM EKRAN KAYAN YAZI VE L-BAR
    ============================================ */
 
 :root {
@@ -117,11 +117,13 @@ html, body {
 .slide-card.cat-sinav::before     { background: var(--gradient-amber-orange); }
 .slide-card.cat-onemli::before    { background: var(--gradient-red-magenta); }
 .slide-card.cat-default::before   { background: var(--gradient-violet-blue); }
-.slide-card.cat-duyuru { background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(239,246,255,0.85)); }
-.slide-card.cat-etkinlik { background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(236,253,245,0.85)); }
-.slide-card.cat-sinav { background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,251,235,0.85)); }
-.slide-card.cat-onemli { background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(254,242,242,0.85)); }
-.slide-card.cat-default { background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(245,243,255,0.85)); }
+
+/* Arka plan renklerinde revizyon yapıldı, saf beyaz yerine koyu/fon oluşturacak renkler eklendi */
+.slide-card.cat-duyuru { background: linear-gradient(135deg, rgba(240,249,255,0.9), rgba(224,242,254,0.85)); }
+.slide-card.cat-etkinlik { background: linear-gradient(135deg, rgba(236,253,245,0.9), rgba(209,250,229,0.85)); }
+.slide-card.cat-sinav { background: linear-gradient(135deg, rgba(254,252,232,0.9), rgba(254,240,138,0.85)); }
+.slide-card.cat-onemli { background: linear-gradient(135deg, rgba(254,242,242,0.9), rgba(254,202,202,0.85)); }
+.slide-card.cat-default { background: linear-gradient(135deg, rgba(245,243,255,0.9), rgba(237,233,254,0.85)); }
 
 .slide-media { flex-shrink: 0; width: 620px; height: 100%; position: relative; overflow: hidden; background: #000; }
 .slide-media img, .slide-media video { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -137,11 +139,11 @@ html, body {
 .slide-card.no-media .slide-text { text-align: center; align-items: center; padding: 60px 100px; max-width: 1200px; margin: 0 auto; }
 .slide-icon { font-size: 72px; margin-bottom: 24px; line-height: 1; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.08)); }
 .slide-category { display: inline-flex; align-items: center; gap: 8px; padding: 8px 24px; border-radius: 50px; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 24px; width: fit-content; }
-.slide-category.cat-duyuru { background: #dbeafe; color: var(--vibrant-blue); border: 1px solid #bfdbfe; }
-.slide-category.cat-etkinlik { background: #d1fae5; color: var(--vibrant-emerald); border: 1px solid #a7f3d0; }
-.slide-category.cat-sinav { background: #fef3c7; color: var(--vibrant-amber); border: 1px solid #fde68a; }
-.slide-category.cat-onemli { background: #fee2e2; color: var(--vibrant-red); border: 1px solid #fecdd3; }
-.slide-category.cat-default { background: #f3e8ff; color: var(--vibrant-violet); border: 1px solid #e9d5ff; }
+.slide-category.cat-duyuru { background: #bfdbfe; color: var(--vibrant-blue); border: 1px solid #93c5fd; }
+.slide-category.cat-etkinlik { background: #a7f3d0; color: var(--vibrant-emerald); border: 1px solid #6ee7b7; }
+.slide-category.cat-sinav { background: #fde68a; color: var(--vibrant-amber); border: 1px solid #fcd34d; }
+.slide-category.cat-onemli { background: #fecdd3; color: var(--vibrant-red); border: 1px solid #fda4af; }
+.slide-category.cat-default { background: #e9d5ff; color: var(--vibrant-violet); border: 1px solid #d8b4fe; }
 .slide-title { font-size: 52px; font-weight: 800; letter-spacing: -1px; line-height: 1.15; margin-bottom: 24px; color: var(--text-primary); }
 .slide-card:not(.no-media) .slide-title { font-size: 44px; }
 .slide-content { font-size: 26px; line-height: 1.6; color: var(--text-secondary); font-weight: 500; }
@@ -171,15 +173,28 @@ html, body {
 
 /* Sayaç Stilleri */
 .timer-content { text-align: center; }
-.lesson-status { font-size: 22px; font-weight: 700; color: #38bdf8; margin-bottom: 8px; }
-.lesson-countdown { font-size: 72px; font-weight: 900; letter-spacing: -2px; font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 16px; text-shadow: 0 4px 20px rgba(56, 189, 248, 0.4); }
+.lesson-status-container { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; min-height: 32px; justify-content: center; align-items: center; }
+.status-row { font-size: 18px; font-weight: 700; background: rgba(255,255,255,0.1); padding: 6px 16px; border-radius: 20px; color: #bae6fd; letter-spacing: 0.5px; }
+.status-row.hidden { display: none; }
+.status-row.active-lesson { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
+.status-row.active-break { background: rgba(250, 204, 21, 0.2); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.4); }
+
+.lesson-timer-label { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #94a3b8; margin-bottom: 4px; }
+.lesson-countdown { font-size: 64px; font-weight: 900; letter-spacing: -2px; font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 12px; text-shadow: 0 4px 20px rgba(56, 189, 248, 0.4); }
 .lesson-progress-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
 #lesson-progress { height: 100%; background: var(--gradient-hero); transition: width 1s linear; }
 
-/* Liste Stilleri */
-.duty-list { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+/* Liste ve Sayfalama Stilleri */
+.duty-list { display: flex; flex-direction: column; gap: 10px; overflow: hidden; position: relative; flex: 1; }
+.duty-page-fade { animation: pageFadeIn 0.8s ease-in-out; }
+@keyframes pageFadeIn { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
+
 .duty-item { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: rgba(15, 23, 42, 0.03); border-radius: var(--radius-sm); border-left: 4px solid var(--vibrant-blue); font-size: 18px; font-weight: 600; }
 .duty-item .duty-loc { font-size: 14px; font-weight: 800; color: var(--vibrant-blue); text-transform: uppercase; }
+
+.page-indicator { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
+.page-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border-light); transition: all 0.3s ease; }
+.page-dot.active { background: var(--vibrant-blue); transform: scale(1.5); }
 
 /* ============================================
    ALT PANEL (TAM GENİŞLİKTE BÜYÜTÜLMÜŞ KAYAN YAZI)
@@ -199,24 +214,3 @@ html, body {
 
 .ticker-item { display: inline-flex; align-items: center; gap: 14px; padding: 10px 28px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; font-size: 26px; font-weight: 600; flex-shrink: 0; margin-right: 24px; }
 .ticker-separator { display: inline-flex; align-items: center; color: rgba(255, 255, 255, 0.2); font-size: 10px; margin: 0 16px; flex-shrink: 0; }
-
-/* ============================================
-   YENİ DERS ZAMANI VE LİSTE STİLLERİ
-   ============================================ */
-.lesson-status-container { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; min-height: 32px; justify-content: center; align-items: center; }
-.status-row { font-size: 18px; font-weight: 700; background: rgba(255,255,255,0.1); padding: 6px 16px; border-radius: 20px; color: #bae6fd; letter-spacing: 0.5px; }
-.status-row.hidden { display: none; }
-.status-row.active-lesson { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
-.status-row.active-break { background: rgba(250, 204, 21, 0.2); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.4); }
-
-.lesson-timer-label { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #94a3b8; margin-bottom: 4px; }
-.lesson-countdown { font-size: 64px; margin-bottom: 12px; } /* Boyut biraz küçültüldü ki taşmasın */
-
-/* Listelerin taşmasını engelleme ve sayfalama efekti */
-.duty-list { display: flex; flex-direction: column; gap: 10px; overflow: hidden; position: relative; flex: 1; }
-.duty-page-fade { animation: pageFadeIn 0.8s ease-in-out; }
-@keyframes pageFadeIn { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
-
-.page-indicator { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
-.page-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border-light); }
-.page-dot.active { background: var(--vibrant-blue); transform: scale(1.5); }
