@@ -245,7 +245,7 @@
     </div>
 
     <script>
-        // GLOBAL NÖBET VERİSİ (Güncellenmiş Yapı)
+        // GLOBAL NÖBET VERİSİ
         let nobetData = {
             sabahci: [], oglenci: [],
             ogretmenler: { 
@@ -323,9 +323,6 @@
                 }
             });
 
-            // ==========================================
-            // NÖBET SEKMESİ UI VE DATA MANTIĞI
-            // ==========================================
             window.addTimeBlock = function(type, start = "", end = "") {
                 const container = document.getElementById(`list-${type}`);
                 const idx = container.children.length + 1;
@@ -351,7 +348,7 @@
                 div.innerHTML = `
                     <input type="text" class="inp-loc" value="${loc}" placeholder="Nöbet Yeri (Örn: Zemin)" style="flex: 1;" required>
                     <input type="text" class="inp-name" value="${name}" placeholder="Öğretmen" style="flex: 1;" required>
-                    <button type="button" class="btn-del" onclick="this.parentElement.remove(); window.saveCurrentDayTeachers();">X</button>
+                    <button type="button" class="btn-del" onclick="this.parentElement.remove()">X</button>
                 `;
                 container.appendChild(div);
             };
@@ -367,37 +364,53 @@
                 container.appendChild(div);
             };
 
+            // DÜZELTME 1: Kaydet butonuna basıldığında o an ekranda hangi gün varsa onu zorunlu olarak kaydeder
             window.saveCurrentDayTeachers = function() {
-                const day = document.getElementById('day-selector').value;
-                nobetData.ogretmenler[day] = { sabahci: [], oglenci: [] };
+                const daySelector = document.getElementById('day-selector');
+                const currentDay = daySelector.value;
+                if(!currentDay) return;
+
+                nobetData.ogretmenler[currentDay] = { sabahci: [], oglenci: [] };
                 
                 document.querySelectorAll('#list-teachers-sabahci .dynamic-row').forEach(row => {
-                    nobetData.ogretmenler[day].sabahci.push({ loc: row.querySelector('.inp-loc').value, name: row.querySelector('.inp-name').value });
+                    const loc = row.querySelector('.inp-loc').value.trim();
+                    const name = row.querySelector('.inp-name').value.trim();
+                    if(loc || name) nobetData.ogretmenler[currentDay].sabahci.push({ loc, name });
                 });
                 document.querySelectorAll('#list-teachers-oglenci .dynamic-row').forEach(row => {
-                    nobetData.ogretmenler[day].oglenci.push({ loc: row.querySelector('.inp-loc').value, name: row.querySelector('.inp-name').value });
+                    const loc = row.querySelector('.inp-loc').value.trim();
+                    const name = row.querySelector('.inp-name').value.trim();
+                    if(loc || name) nobetData.ogretmenler[currentDay].oglenci.push({ loc, name });
                 });
             };
 
+            // DÜZELTME 2: prevDay tanımsızsa (ilk yükleme anı ise) üzerine boş veri yazmayı engeller
             window.renderTeachersForSelectedDay = function() {
-                const prevDay = document.getElementById('day-selector').dataset.prev || 'Pazartesi';
-                nobetData.ogretmenler[prevDay] = { sabahci: [], oglenci: [] };
+                const daySelector = document.getElementById('day-selector');
+                const prevDay = daySelector.dataset.prev;
                 
-                document.querySelectorAll('#list-teachers-sabahci .dynamic-row').forEach(row => {
-                    nobetData.ogretmenler[prevDay].sabahci.push({ loc: row.querySelector('.inp-loc').value, name: row.querySelector('.inp-name').value });
-                });
-                document.querySelectorAll('#list-teachers-oglenci .dynamic-row').forEach(row => {
-                    nobetData.ogretmenler[prevDay].oglenci.push({ loc: row.querySelector('.inp-loc').value, name: row.querySelector('.inp-name').value });
-                });
+                if (prevDay) {
+                    nobetData.ogretmenler[prevDay] = { sabahci: [], oglenci: [] };
+                    document.querySelectorAll('#list-teachers-sabahci .dynamic-row').forEach(row => {
+                        const loc = row.querySelector('.inp-loc').value.trim();
+                        const name = row.querySelector('.inp-name').value.trim();
+                        if(loc || name) nobetData.ogretmenler[prevDay].sabahci.push({ loc, name });
+                    });
+                    document.querySelectorAll('#list-teachers-oglenci .dynamic-row').forEach(row => {
+                        const loc = row.querySelector('.inp-loc').value.trim();
+                        const name = row.querySelector('.inp-name').value.trim();
+                        if(loc || name) nobetData.ogretmenler[prevDay].oglenci.push({ loc, name });
+                    });
+                }
 
-                const newDay = document.getElementById('day-selector').value;
-                document.getElementById('day-selector').dataset.prev = newDay;
+                const newDay = daySelector.value;
+                daySelector.dataset.prev = newDay;
                 
                 document.getElementById('list-teachers-sabahci').innerHTML = '';
                 document.getElementById('list-teachers-oglenci').innerHTML = '';
                 
-                let sItems = (nobetData.ogretmenler[newDay] || {}).sabahci || [];
-                let oItems = (nobetData.ogretmenler[newDay] || {}).oglenci || [];
+                const sItems = (nobetData.ogretmenler[newDay] || {}).sabahci || [];
+                const oItems = (nobetData.ogretmenler[newDay] || {}).oglenci || [];
                 
                 if(sItems.length === 0) window.addTeacherRow('sabahci'); else sItems.forEach(i => window.addTeacherRow('sabahci', i.loc, i.name));
                 if(oItems.length === 0) window.addTeacherRow('oglenci'); else oItems.forEach(i => window.addTeacherRow('oglenci', i.loc, i.name));
@@ -422,7 +435,6 @@
                             if(savedData.ogrenciler) savedData.ogrenciler.forEach(s => window.addStudentRow(s.loc, s.name));
 
                             if(savedData.ogretmenler) {
-                                // Eski formattan yeni formata geçiş koruması
                                 for(let day in savedData.ogretmenler) {
                                     if (Array.isArray(savedData.ogretmenler[day])) {
                                         nobetData.ogretmenler[day] = { sabahci: savedData.ogretmenler[day], oglenci: [] };
@@ -432,7 +444,10 @@
                                 }
                             }
                             
-                            document.getElementById('day-selector').value = 'Pazartesi';
+                            // DÜZELTME 3: Veriler alındıktan sonra prev flag'ini temizleyerek güvenli render işlemi
+                            const daySelector = document.getElementById('day-selector');
+                            daySelector.value = 'Pazartesi';
+                            delete daySelector.dataset.prev; 
                             window.renderTeachersForSelectedDay();
                         }
                     } catch (e) { console.error(e); }
@@ -445,7 +460,7 @@
             if (nobetForm) {
                 nobetForm.addEventListener('submit', async function(e) {
                     e.preventDefault();
-                    window.saveCurrentDayTeachers(); 
+                    window.saveCurrentDayTeachers(); // O anki ekranı güvenle kaydeder
                     
                     let finalData = { sabahci: [], oglenci: [], ogretmenler: nobetData.ogretmenler, ogrenciler: [] };
                     
@@ -480,9 +495,6 @@
                 });
             }
 
-            // ==========================================
-            // İÇERİK OKUMA VE SİLME (MEVCUT)
-            // ==========================================
             function fetchExistingContents() {
                 const sheetId = localStorage.getItem('kiosk_sheet_id'); if (!sheetId) return;
                 const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:loadContentsCallback&sheet=DUYURULAR&headers=1&t=${new Date().getTime()}`;
@@ -532,9 +544,6 @@
                 } catch (e) { overlay.style.display = 'none'; alert('Silme başarısız!'); }
             }
 
-            // ==========================================
-            // SİSTEM AYARLARI VE KURULUM
-            // ==========================================
             function runMagicSetup(sheetInput, isSilentLoad) {
                 let cleanSheetId = sheetInput.includes('docs.google.com') ? sheetInput.match(/\/d\/([a-zA-Z0-9_-]+)/)[1] : sheetInput;
                 const url = `https://docs.google.com/spreadsheets/d/${cleanSheetId}/gviz/tq?tqx=out:json;responseHandler:magicSetupCallback&sheet=AYARLAR&headers=0`;
@@ -562,7 +571,6 @@
             document.getElementById('btn-demo').addEventListener('click', function () { window.location.href = 'index.html'; });
             document.getElementById('btn-reset').addEventListener('click', function () { if (confirm('Sıfırlansın mı?')) { localStorage.clear(); window.location.reload(); } });
 
-            // İÇERİK FORMU GÖNDERME
             const contentForm = document.getElementById('content-form');
             if (contentForm) {
                 contentForm.addEventListener('submit', async function (e) {
@@ -664,7 +672,6 @@
                 });
             }
 
-            // AYARLAR FORMU GÖNDERME
             const settingsForm = document.getElementById('settings-form');
             if(settingsForm) {
                 settingsForm.addEventListener('submit', async function(e) {
