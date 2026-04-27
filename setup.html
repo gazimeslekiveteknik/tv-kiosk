@@ -141,6 +141,10 @@
 
                 <div class="media-section">
                     <div class="media-section-title">🎬 Medya Ekleme</div>
+                    <div class="form-group">
+                        <label style="color:#fcd34d;">🌟 Kapak Görseli Linki (Albümdeki ilk görsel olur)</label>
+                        <input type="text" id="c-kapak-url" placeholder="Opsiyonel: Kapak olmasını istediğiniz görsel linki">
+                    </div>
                     <div class="form-group"><label style="color:#60a5fa;">▶️ Video Linki (Çoklu İçin Virgül Kullanın)</label><input type="text" id="c-video-url"></div>
                     <div class="form-group"><label style="color:#34d399;">🖼️ İnternetten Görsel Linki (Virgülle Ayırın)</label><input type="text" id="c-gorsel-url"></div>
                     <div style="text-align:center; color:rgba(255,255,255,0.3); font-size:12px; margin-bottom:12px;">-- VEYA YÜKLE --</div>
@@ -529,7 +533,7 @@
 
             function startEditing(rowIndex, row) {
                 currentEditRowIndex = rowIndex; document.getElementById('form-title').textContent = `İÇERİĞİ DÜZENLE`; document.getElementById('btn-submit-content').innerHTML = '💾 Kaydet'; document.getElementById('btn-cancel-edit').style.display = 'block';
-                document.getElementById('c-baslik').value = row.c[0] ? (row.c[0].v || '') : ''; document.getElementById('c-icerik').value = row.c[1] ? (row.c[1].v || '') : ''; document.getElementById('c-kategori').value = (row.c[2] ? (row.c[2].v || 'duyuru') : 'duyuru').toString().toLowerCase(); document.getElementById('c-aktif').value = (row.c[4] ? (row.c[4].v || 'EVET') : 'EVET').toString().toUpperCase(); document.getElementById('c-bant').value = (row.c[5] ? (row.c[5].v || 'HAYIR') : 'HAYIR').toString().toUpperCase(); document.getElementById('c-gorsel-url').value = row.c[6] ? (row.c[6].v || '') : ''; document.getElementById('c-video-url').value = row.c[7] ? (row.c[7].v || '') : ''; window.scrollTo({ top: 0, behavior: 'smooth' });
+                document.getElementById('c-baslik').value = row.c[0] ? (row.c[0].v || '') : ''; document.getElementById('c-icerik').value = row.c[1] ? (row.c[1].v || '') : ''; document.getElementById('c-kategori').value = (row.c[2] ? (row.c[2].v || 'duyuru') : 'duyuru').toString().toLowerCase(); document.getElementById('c-aktif').value = (row.c[4] ? (row.c[4].v || 'EVET') : 'EVET').toString().toUpperCase(); document.getElementById('c-bant').value = (row.c[5] ? (row.c[5].v || 'HAYIR') : 'HAYIR').toString().toUpperCase(); document.getElementById('c-kapak-url').value = ''; document.getElementById('c-gorsel-url').value = row.c[6] ? (row.c[6].v || '') : ''; document.getElementById('c-video-url').value = row.c[7] ? (row.c[7].v || '') : ''; window.scrollTo({ top: 0, behavior: 'smooth' });
             }
 
             document.getElementById('btn-cancel-edit').addEventListener('click', () => { currentEditRowIndex = null; document.getElementById('form-title').textContent = 'YENİ İÇERİK EKLE'; document.getElementById('btn-submit-content').innerHTML = '🚀 Tabloya Ekle'; document.getElementById('btn-cancel-edit').style.display = 'none'; document.getElementById('content-form').reset(); document.getElementById('upload-progress-container').style.display = 'none'; });
@@ -589,6 +593,7 @@
                     btnSubmit.disabled = true;
 
                     try {
+                        let kapakGorsel = document.getElementById('c-kapak-url').value.trim();
                         let manualGorsel = document.getElementById('c-gorsel-url').value.trim();
                         let manualVideo = document.getElementById('c-video-url').value.trim();
                         const fileInput = document.getElementById('c-file');
@@ -632,7 +637,7 @@
                             }
                         }
 
-                        let finalGorsel = [manualGorsel, ...uploadedGLinks].filter(Boolean).join(',');
+                        let finalGorsel = [kapakGorsel, manualGorsel, ...uploadedGLinks].filter(Boolean).join(',');
                         let finalVideo = [manualVideo, ...uploadedVLinks].filter(Boolean).join(',');
 
                         document.getElementById('loading-text').textContent = 'Google Sheet güncelleniyor...';
