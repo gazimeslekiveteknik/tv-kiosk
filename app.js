@@ -534,7 +534,7 @@
         const customTitles = {
             'spor': 'SPOR HABERİ',
             'genelkultur': 'GENEL KÜLTÜR',
-            'yemek': 'GÜNÜN MENÜSÜ',
+            'proje': 'PROJE & YARIŞMA',
             'tebrik': 'TEBRİKLER',
             'sinav': 'SINAV TAKVİMİ',
             'sınav': 'SINAV TAKVİMİ'
@@ -553,7 +553,7 @@
         }
 
         let colorClass = `j-${cat}`;
-        const allowedCats = ['onemli', 'duyuru', 'sinav', 'etkinlik', 'spor', 'genelkultur', 'yemek', 'tebrik'];
+        const allowedCats = ['onemli', 'duyuru', 'sinav', 'etkinlik', 'spor', 'genelkultur', 'proje', 'tebrik'];
         if (!allowedCats.includes(cat)) {
             if (cat === 'acil') colorClass = 'j-onemli';
             else if (cat === 'bilim' || cat === 'teknoloji' || cat === 'kutlama') colorClass = 'j-etkinlik';
