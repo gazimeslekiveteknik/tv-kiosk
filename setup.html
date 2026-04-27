@@ -141,10 +141,6 @@
 
                 <div class="media-section">
                     <div class="media-section-title">🎬 Medya Ekleme</div>
-                    <div class="form-group">
-                        <label style="color:#fcd34d;">🌟 Kapak Görseli Linki (Albümdeki ilk görsel olur)</label>
-                        <input type="text" id="c-kapak-url" placeholder="Opsiyonel: Kapak olmasını istediğiniz görsel linki">
-                    </div>
                     <div class="form-group"><label style="color:#60a5fa;">▶️ Video Linki (Çoklu İçin Virgül Kullanın)</label><input type="text" id="c-video-url"></div>
                     <div class="form-group"><label style="color:#34d399;">🖼️ İnternetten Görsel Linki (Virgülle Ayırın)</label><input type="text" id="c-gorsel-url"></div>
                     <div style="text-align:center; color:rgba(255,255,255,0.3); font-size:12px; margin-bottom:12px;">-- VEYA YÜKLE --</div>
@@ -152,6 +148,12 @@
                         <label>📁 Dosya Seç (Çoklu Albüm Desteği)</label>
                         <input type="file" id="c-file" accept="image/*,video/mp4,video/webm" multiple>
                     </div>
+                    
+                    <div id="cover-selection-container" style="display: none; margin-top: 15px; padding: 15px; background: rgba(59, 130, 246, 0.1); border: 1px dashed rgba(59, 130, 246, 0.4); border-radius: 8px;">
+                        <label style="color:#fcd34d; font-weight:bold; font-size:13px; margin-bottom:10px; display:block;">🌟 Kapak Fotoğrafını Seçiniz (Ekranda ilk bu görünür)</label>
+                        <div id="cover-options" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                    </div>
+
                     <div id="upload-progress-container" style="display: none; margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px;">
                         <div style="font-size: 13px; font-weight: 600; color: var(--accent-blue); margin-bottom: 8px; display: flex; justify-content: space-between;">
                             <span id="upload-progress-text">Yükleniyor...</span>
@@ -327,6 +329,37 @@
                 }
             });
 
+            // YENİ EKLENEN: Dosya seçildiğinde kapak fotoğrafı listesini gösteren kod
+            const fileInputElem = document.getElementById('c-file');
+            if(fileInputElem) {
+                fileInputElem.addEventListener('change', function(e) {
+                    const container = document.getElementById('cover-selection-container');
+                    const optionsDiv = document.getElementById('cover-options');
+                    optionsDiv.innerHTML = '';
+                    
+                    const files = Array.from(this.files);
+                    const imageFiles = files.filter(f => f.type.startsWith('image/'));
+                    
+                    // Sadece 1'den fazla dosya varsa ve içlerinde resim varsa göster
+                    if (files.length > 1 && imageFiles.length > 0) {
+                        container.style.display = 'block';
+                        imageFiles.forEach((file, index) => {
+                            const div = document.createElement('div');
+                            div.style.display = 'flex';
+                            div.style.alignItems = 'center';
+                            div.style.gap = '8px';
+                            div.innerHTML = `
+                                <input type="radio" name="cover_file" value="${file.name}" id="cover_${index}" ${index === 0 ? 'checked' : ''} style="width: auto; margin:0; cursor:pointer;">
+                                <label for="cover_${index}" style="margin:0; font-size:13px; color:white; text-transform:none; letter-spacing:normal; cursor:pointer;">${file.name}</label>
+                            `;
+                            optionsDiv.appendChild(div);
+                        });
+                    } else {
+                        container.style.display = 'none';
+                    }
+                });
+            }
+
             window.addTimeBlock = function(type, start = "", end = "") {
                 const container = document.getElementById(`list-${type}`);
                 const idx = container.children.length + 1;
@@ -368,7 +401,6 @@
                 container.appendChild(div);
             };
 
-            // DÜZELTME 1: Kaydet butonuna basıldığında o an ekranda hangi gün varsa onu zorunlu olarak kaydeder
             window.saveCurrentDayTeachers = function() {
                 const daySelector = document.getElementById('day-selector');
                 const currentDay = daySelector.value;
@@ -388,7 +420,6 @@
                 });
             };
 
-            // DÜZELTME 2: prevDay tanımsızsa (ilk yükleme anı ise) üzerine boş veri yazmayı engeller
             window.renderTeachersForSelectedDay = function() {
                 const daySelector = document.getElementById('day-selector');
                 const prevDay = daySelector.dataset.prev;
@@ -448,7 +479,6 @@
                                 }
                             }
                             
-                            // DÜZELTME 3: Veriler alındıktan sonra prev flag'ini temizleyerek güvenli render işlemi
                             const daySelector = document.getElementById('day-selector');
                             daySelector.value = 'Pazartesi';
                             delete daySelector.dataset.prev; 
@@ -464,7 +494,7 @@
             if (nobetForm) {
                 nobetForm.addEventListener('submit', async function(e) {
                     e.preventDefault();
-                    window.saveCurrentDayTeachers(); // O anki ekranı güvenle kaydeder
+                    window.saveCurrentDayTeachers();
                     
                     let finalData = { sabahci: [], oglenci: [], ogretmenler: nobetData.ogretmenler, ogrenciler: [] };
                     
@@ -532,11 +562,31 @@
             }
 
             function startEditing(rowIndex, row) {
-                currentEditRowIndex = rowIndex; document.getElementById('form-title').textContent = `İÇERİĞİ DÜZENLE`; document.getElementById('btn-submit-content').innerHTML = '💾 Kaydet'; document.getElementById('btn-cancel-edit').style.display = 'block';
-                document.getElementById('c-baslik').value = row.c[0] ? (row.c[0].v || '') : ''; document.getElementById('c-icerik').value = row.c[1] ? (row.c[1].v || '') : ''; document.getElementById('c-kategori').value = (row.c[2] ? (row.c[2].v || 'duyuru') : 'duyuru').toString().toLowerCase(); document.getElementById('c-aktif').value = (row.c[4] ? (row.c[4].v || 'EVET') : 'EVET').toString().toUpperCase(); document.getElementById('c-bant').value = (row.c[5] ? (row.c[5].v || 'HAYIR') : 'HAYIR').toString().toUpperCase(); document.getElementById('c-kapak-url').value = ''; document.getElementById('c-gorsel-url').value = row.c[6] ? (row.c[6].v || '') : ''; document.getElementById('c-video-url').value = row.c[7] ? (row.c[7].v || '') : ''; window.scrollTo({ top: 0, behavior: 'smooth' });
+                currentEditRowIndex = rowIndex; 
+                document.getElementById('form-title').textContent = `İÇERİĞİ DÜZENLE`; 
+                document.getElementById('btn-submit-content').innerHTML = '💾 Kaydet'; 
+                document.getElementById('btn-cancel-edit').style.display = 'block';
+                document.getElementById('cover-selection-container').style.display = 'none'; // Kapak alanını gizle
+                
+                document.getElementById('c-baslik').value = row.c[0] ? (row.c[0].v || '') : ''; 
+                document.getElementById('c-icerik').value = row.c[1] ? (row.c[1].v || '') : ''; 
+                document.getElementById('c-kategori').value = (row.c[2] ? (row.c[2].v || 'duyuru') : 'duyuru').toString().toLowerCase(); 
+                document.getElementById('c-aktif').value = (row.c[4] ? (row.c[4].v || 'EVET') : 'EVET').toString().toUpperCase(); 
+                document.getElementById('c-bant').value = (row.c[5] ? (row.c[5].v || 'HAYIR') : 'HAYIR').toString().toUpperCase(); 
+                document.getElementById('c-gorsel-url').value = row.c[6] ? (row.c[6].v || '') : ''; 
+                document.getElementById('c-video-url').value = row.c[7] ? (row.c[7].v || '') : ''; 
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
 
-            document.getElementById('btn-cancel-edit').addEventListener('click', () => { currentEditRowIndex = null; document.getElementById('form-title').textContent = 'YENİ İÇERİK EKLE'; document.getElementById('btn-submit-content').innerHTML = '🚀 Tabloya Ekle'; document.getElementById('btn-cancel-edit').style.display = 'none'; document.getElementById('content-form').reset(); document.getElementById('upload-progress-container').style.display = 'none'; });
+            document.getElementById('btn-cancel-edit').addEventListener('click', () => { 
+                currentEditRowIndex = null; 
+                document.getElementById('form-title').textContent = 'YENİ İÇERİK EKLE'; 
+                document.getElementById('btn-submit-content').innerHTML = '🚀 Tabloya Ekle'; 
+                document.getElementById('btn-cancel-edit').style.display = 'none'; 
+                document.getElementById('content-form').reset(); 
+                document.getElementById('upload-progress-container').style.display = 'none'; 
+                document.getElementById('cover-selection-container').style.display = 'none'; // Kapak alanını gizle
+            });
 
             async function deleteItem(rowIndex, gorselUrl, videoUrl) {
                 if (!confirm('Bu içeriği tamamen silmek istediğinize emin misiniz?')) return;
@@ -593,13 +643,23 @@
                     btnSubmit.disabled = true;
 
                     try {
-                        let kapakGorsel = document.getElementById('c-kapak-url').value.trim();
                         let manualGorsel = document.getElementById('c-gorsel-url').value.trim();
                         let manualVideo = document.getElementById('c-video-url').value.trim();
                         const fileInput = document.getElementById('c-file');
                         
                         let uploadedGLinks = [];
                         let uploadedVLinks = [];
+                        
+                        // YENİ: Hangi dosyanın kapak seçildiğini bulma
+                        let coverFileName = null;
+                        let coverUrl = "";
+                        const coverSelectionContainer = document.getElementById('cover-selection-container');
+                        if (coverSelectionContainer.style.display === 'block') {
+                            const selectedRadio = document.querySelector('input[name="cover_file"]:checked');
+                            if (selectedRadio) {
+                                coverFileName = selectedRadio.value;
+                            }
+                        }
 
                         if (fileInput.files.length > 0) {
                             progContainer.style.display = 'block';
@@ -616,7 +676,17 @@
                                         body: JSON.stringify({ sheetId: cleanSheetId, action: 'uploadFile', file: { name: file.name, mimeType: file.type, content: base64 } }) 
                                     });
                                     const res = await resp.json();
-                                    if (res.status === 'success' && res.url) { uploadedGLinks.push(res.url); } else { throw new Error(res.message || "Resim linki alınamadı"); }
+                                    
+                                    if (res.status === 'success' && res.url) { 
+                                        // Eğer bu dosya seçilen kapaksa, ayrı değişkende tut, değilse listeye ekle
+                                        if (coverFileName === file.name) {
+                                            coverUrl = res.url;
+                                        } else {
+                                            uploadedGLinks.push(res.url); 
+                                        }
+                                    } else { 
+                                        throw new Error(res.message || "Resim linki alınamadı"); 
+                                    }
                                     progBar.style.width = '100%';
                                 } 
                                 else if (file.type.startsWith('video/')) {
@@ -637,7 +707,12 @@
                             }
                         }
 
-                        let finalGorsel = [kapakGorsel, manualGorsel, ...uploadedGLinks].filter(Boolean).join(',');
+                        // YENİ: Kaydedilen kapak URL'sini listenin en başına zorla ekliyoruz
+                        if (coverUrl) {
+                            uploadedGLinks.unshift(coverUrl);
+                        }
+
+                        let finalGorsel = [manualGorsel, ...uploadedGLinks].filter(Boolean).join(',');
                         let finalVideo = [manualVideo, ...uploadedVLinks].filter(Boolean).join(',');
 
                         document.getElementById('loading-text').textContent = 'Google Sheet güncelleniyor...';
