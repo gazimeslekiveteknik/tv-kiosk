@@ -1,5 +1,5 @@
 /* ============================================
-   TV KIOSK - APP.JS v7.6 (Smart Duty Merge & Full Layout)
+   TV KIOSK - APP.JS v7.6 (Smart Duty Merge & Full Layout + Jenerik v4)
    ============================================ */
 
 (function () {
@@ -14,6 +14,7 @@
         WEATHER_REFRESH: 600000,
         SIDEBAR_REFRESH: 60000,
         NEXT_PREVIEW_SHOW: 3000,
+        JENERIK_DURATION: 2000 // 2 Saniyelik Dinamik Jenerik Süresi
     };
 
     const dynamicStyle = document.createElement('style');
@@ -208,7 +209,6 @@
     function updateClock() { const now = new Date(); els.time.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`; els.date.textContent = `${now.getDate()} ${TR_MONTHS[now.getMonth()]} ${now.getFullYear()}, ${TR_DAYS[now.getDay()]}`; }
     function getCleanSheetId(sheetId) { if (sheetId.includes('docs.google.com')) return sheetId.match(/\/d\/([a-zA-Z0-9_-]+)/)[1]; return sheetId; }
 
-    // --- YAN PANEL VE AKILLI NÖBET BİRLEŞTİRME ---
     function fetchSidebarData() {
         const id = localStorage.getItem('kiosk_sheet_id'); if(!id || !navigator.onLine) return;
         const url = `https://docs.google.com/spreadsheets/d/${getCleanSheetId(id)}/gviz/tq?tqx=out:json;responseHandler:sidebarCb&sheet=YAN_PANEL&headers=0&t=${Date.now()}`;
@@ -224,7 +224,6 @@
                     const todayName = TR_DAYS[new Date().getDay()];
                     let todayT = (dataObj.ogretmenler || {})[todayName];
                     
-                    // Eski yapıyı kontrol edip dönüştürme
                     if (Array.isArray(todayT)) {
                         sidebarData.ogretmenler = { sabahci: todayT, oglenci: [] };
                     } else {
@@ -244,13 +243,11 @@
     function getMergedTeachers() {
         const now = new Date();
         const currentMins = (now.getHours() * 60) + now.getMinutes();
-        let isSabah = true, isOglenci = true; // Program girilmemişse ikisini de göster
+        let isSabah = true, isOglenci = true; 
         
         if (sidebarData.sabahci.length > 0 && sidebarData.oglenci.length > 0) {
             let sEnd = getMins(sidebarData.sabahci[sidebarData.sabahci.length - 1].end);
             let oStart = getMins(sidebarData.oglenci[0].start);
-            
-            // Nöbet süresi bitişten 30 dk sonrasına kadar sürer varsayımı
             isSabah = currentMins <= (sEnd + 30); 
             isOglenci = currentMins >= (oStart - 30); 
         }
@@ -372,7 +369,6 @@
 
     function getMins(t) { let p = t.split(':').map(Number); return (p[0] * 60) + p[1]; }
 
-    // --- DUYURU VE SLAYT MANTIĞI ---
     function loadFromCache() {
         if (slides.length > 0) return;
         const cachedData = localStorage.getItem('cachedAnnouncements');
@@ -526,12 +522,75 @@
 
     function startSlideshow() { if (slides.length > 0) playCurrentSlide(); }
 
+    /* =========================================
+       JENERİK OLUŞTURUCU FONKSİYON
+       ========================================= */
+    function createJenerikHTML(category, defaultTitle) {
+        const cat = category ? category.toLowerCase().trim() : 'duyuru';
+        let title = defaultTitle || 'DUYURU';
+        
+        const customTitles = {
+            'spor': 'SPOR HABERİ',
+            'genelkultur': 'GENEL KÜLTÜR',
+            'yemek': 'GÜNÜN MENÜSÜ',
+            'tebrik': 'TEBRİKLER',
+            'sinav': 'SINAV TAKVİMİ',
+            'sınav': 'SINAV TAKVİMİ'
+        };
+        if (customTitles[cat]) title = customTitles[cat];
+        else title = title.toUpperCase();
+
+        let shapes = '';
+        for(let i=0; i<12; i++) {
+            const size = 40 + Math.random() * 150;
+            const mX = (Math.random() - 0.5) * 800;
+            const mY = (Math.random() - 0.5) * 800;
+            const rot = (Math.random() - 0.5) * 360;
+            const type = Math.random() > 0.5 ? 'border-radius: 50%;' : '';
+            shapes += `<div class="j-shape" style="top:${Math.random()*100}%; left:${Math.random()*100}%; width:${size}px; height:${size}px; ${type} --mX:${mX}px; --mY:${mY}px; --rot:${rot}deg;"></div>`;
+        }
+
+        let colorClass = `j-${cat}`;
+        const allowedCats = ['onemli', 'duyuru', 'sinav', 'etkinlik', 'spor', 'genelkultur', 'yemek', 'tebrik'];
+        if (!allowedCats.includes(cat)) {
+            if (cat === 'acil') colorClass = 'j-onemli';
+            else if (cat === 'bilim' || cat === 'teknoloji' || cat === 'kutlama') colorClass = 'j-etkinlik';
+            else if (cat === 'toplantı') colorClass = 'j-duyuru';
+            else colorClass = 'j-duyuru';
+        }
+
+        return `
+            <div class="jenerik-layer ${colorClass} temp-jenerik">
+                ${shapes}
+                <h1 class="jenerik-title">${title}</h1>
+            </div>
+        `;
+    }
+
     function playCurrentSlide() {
         clearAllTimers(); document.querySelectorAll('.slide-progress').forEach(bar => { bar.style.width = '0%'; bar.style.transition = 'none'; });
         const item = slides[currentSlideIndex]; if (!item) return;
-        currentAlbumIndex = 0;
-        if(item.album.length > 0) { playAlbumItem(item, currentSlideIndex, currentAlbumIndex); } 
-        else { startProgress(CONFIG.SLIDE_INTERVAL); currentSlideTimeout = setTimeout(nextSlide, CONFIG.SLIDE_INTERVAL); scheduleNextPreview(); }
+
+        // Eski jenerikleri temizle
+        document.querySelectorAll('.temp-jenerik').forEach(e => e.remove());
+
+        // Yeni Jeneriği Slaytın İçine Ekle
+        const activeSlideCard = els.slidesContainer.querySelectorAll('.slide')[currentSlideIndex].querySelector('.slide-card');
+        if (activeSlideCard) {
+            activeSlideCard.insertAdjacentHTML('beforeend', createJenerikHTML(item.kategori, item.catInfo.label));
+        }
+
+        // 2 Saniye Bekle, Sonra Asıl Slaytı (Video/Resim) Oynat
+        currentSlideTimeout = setTimeout(() => {
+            
+            // Jeneriği DOM'dan sil (CSS zaten soluklaştırıyor, biz kalabalık yapmasın diye uçuruyoruz)
+            setTimeout(() => { document.querySelectorAll('.temp-jenerik').forEach(e => e.remove()); }, 1000);
+
+            currentAlbumIndex = 0;
+            if(item.album.length > 0) { playAlbumItem(item, currentSlideIndex, currentAlbumIndex); } 
+            else { startProgress(CONFIG.SLIDE_INTERVAL); currentSlideTimeout = setTimeout(nextSlide, CONFIG.SLIDE_INTERVAL); scheduleNextPreview(); }
+        
+        }, CONFIG.JENERIK_DURATION);
     }
 
     function playAlbumItem(item, sIndex, aIndex) {
