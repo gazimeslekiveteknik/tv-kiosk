@@ -64,6 +64,7 @@
     let nextPreviewTimer = null;
     let fullscreenTriggerTimer = null;
     let fallbackTimer = null; 
+    let albumTransitionTimer = null; // Albüm geçişi için eklendi
     let currentDataString = null;
     const els = {};
 
@@ -103,6 +104,7 @@
         if (nextPreviewTimer) clearTimeout(nextPreviewTimer);
         if (fullscreenTriggerTimer) clearTimeout(fullscreenTriggerTimer);
         if (fallbackTimer) clearTimeout(fallbackTimer);
+        if (albumTransitionTimer) clearTimeout(albumTransitionTimer); // Eklendi
     }
 
     function destroyAllPlayers() {
@@ -601,13 +603,34 @@
         document.querySelectorAll(`#media-container-${sIndex} .album-item`).forEach(el => el.classList.remove('active'));
         document.getElementById(`album-item-${sIndex}-${aIndex}`).classList.add('active');
 
-        if (item.isAlbum) { container.classList.add('fullscreen-media'); if (textElement) textElement.classList.add('text-hidden'); } 
-        else { container.classList.remove('fullscreen-media'); if (textElement) textElement.classList.remove('text-hidden'); }
+        // Albüm mantığı güncellendi: İlk resim ise metni 5 saniye göster, sonra tam ekrana al
+        if (item.isAlbum) { 
+            if (aIndex === 0) {
+                container.classList.remove('fullscreen-media');
+                if (textElement) textElement.classList.remove('text-hidden');
+                
+                albumTransitionTimer = setTimeout(() => {
+                    container.classList.add('fullscreen-media');
+                    if (textElement) textElement.classList.add('text-hidden');
+                }, 5000);
+            } else {
+                container.classList.add('fullscreen-media'); 
+                if (textElement) textElement.classList.add('text-hidden'); 
+            }
+        } 
+        else { 
+            container.classList.remove('fullscreen-media'); 
+            if (textElement) textElement.classList.remove('text-hidden'); 
+        }
 
-        if (media.mediaType === 'youtube' || media.mediaType === 'video') { handleVideoSlide(media, `${sIndex}-${aIndex}`, container, textElement, item); } 
+        if (media.mediaType === 'youtube' || media.mediaType === 'video') { 
+            handleVideoSlide(media, `${sIndex}-${aIndex}`, container, textElement, item); 
+        } 
         else {
             if (!item.isAlbum) startProgress(CONFIG.SLIDE_INTERVAL);
-            currentSlideTimeout = setTimeout(() => { progressToNextAlbumItem(item, sIndex, aIndex); }, item.isAlbum ? 6000 : CONFIG.SLIDE_INTERVAL);
+            // İlk albüm fotoğrafı için süreyi uzattık: 5sn metin gösterimi + 6sn tam ekran
+            let duration = item.isAlbum ? (aIndex === 0 ? 11000 : 6000) : CONFIG.SLIDE_INTERVAL;
+            currentSlideTimeout = setTimeout(() => { progressToNextAlbumItem(item, sIndex, aIndex); }, duration);
         }
     }
 
