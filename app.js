@@ -1,5 +1,5 @@
 /* ============================================
-   TV KIOSK - APP.JS v7.7 (Smart Duty Merge & Iframe Support + Jenerik v4)
+   TV KIOSK - APP.JS v7.9 (Smart Duty Merge, Iframe & Unlimited HLS/m3u8 Live TV)
    ============================================ */
 
 (function () {
@@ -28,19 +28,23 @@
     `;
     document.head.appendChild(dynamicStyle);
 
+    // --- YOUTUBE API ---
     window.ytApiReady = false;
     window.ytPlayers = {};
-
     window.onYouTubeIframeAPIReady = function () {
         window.ytApiReady = true;
         initYouTubePlayers();
     };
-
     const ytScript = document.createElement('script');
     ytScript.src = "https://www.youtube.com/iframe_api";
     const firstScriptTag = document.getElementsByTagName('script')[0];
     if (firstScriptTag) firstScriptTag.parentNode.insertBefore(ytScript, firstScriptTag);
     else document.head.appendChild(ytScript);
+
+    // --- HLS.JS (Canlı TV / m3u8 Desteği İçin) ---
+    const hlsScript = document.createElement('script');
+    hlsScript.src = "https://cdn.jsdelivr.net/npm/hls.js@latest";
+    document.head.appendChild(hlsScript);
 
     const CATEGORY_MAP = {
         'duyuru': { icon: '📋', class: 'cat-duyuru', label: 'Duyuru' }, 'etkinlik': { icon: '🎉', class: 'cat-etkinlik', label: 'Etkinlik' },
@@ -402,12 +406,13 @@
         const script = document.createElement('script'); script.src = url; script.onerror = function () { clearTimeout(fetchTimeout); loadFromCache(); }; document.body.appendChild(script);
     }
 
-    // --- HTML / Iframe UZANTISINI DESTEKLEYEN YENİ VERSİYON ---
+    // --- GENİŞLETİLMİŞ MEDYA DESTEĞİ (HTML ve M3U8 eklendi) ---
     function getMediaType(url) {
         if (!url) return null; const lower = url.toLowerCase();
         if (lower.includes('youtube.com') || lower.includes('youtu.be')) return 'youtube';
+        if (lower.includes('.m3u8')) return 'hls'; // CANLI TV DESTEĞİ
         if (['.mp4', '.webm', '.ogg', '.mov'].some(ext => lower.includes(ext))) return 'video';
-        if (lower.includes('.html')) return 'iframe'; // <-- YENİ EKLENDİ
+        if (lower.includes('.html')) return 'iframe'; // SAYFA YANSITMA DESTEĞİ
         return 'image';
     }
 
@@ -474,6 +479,15 @@
             } 
             else if (media.mediaType === 'youtube') {
                 innerHtml = `<div id="yt-player-${slideIndex}-${albumIndex}" data-vid="${getYouTubeId(media.url)}" style="width:100%;height:100%;pointer-events:none;"></div>`;
+            }
+            // --- CANLI YAYIN TV (M3U8) GÖSTERİM ALANI ---
+            else if (media.mediaType === 'hls') {
+                innerHtml = `
+                    <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg, #1e293b, #0f172a);"></div>
+                    <div style="position:relative; z-index:1; width:100%; height:100%; display:flex; align-items:center; justify-content:center; padding:40px; box-sizing:border-box;">
+                        <video id="hls-video-${slideIndex}-${albumIndex}" data-src="${escapeAttr(media.url)}" playsinline autoplay style="max-width:100%; max-height:100%; object-fit:contain; border-radius:16px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.6); background:#000;"></video>
+                    </div>
+                `;
             }
             // --- IFRAME BÖLÜMÜ (SLAYT İÇİ BOYUTLARINDA) ---
             else if (media.mediaType === 'iframe') {
@@ -628,13 +642,13 @@
             if (textElement) textElement.classList.remove('text-hidden'); 
         }
 
-        if (media.mediaType === 'youtube' || media.mediaType === 'video') { 
+        // HLS DAHİL EDİLDİ
+        if (media.mediaType === 'youtube' || media.mediaType === 'video' || media.mediaType === 'hls') { 
             handleVideoSlide(media, `${sIndex}-${aIndex}`, container, textElement, item); 
         } 
         else {
             let duration = item.isAlbum ? (aIndex === 0 ? 11000 : 6000) : CONFIG.SLIDE_INTERVAL;
             
-            // IFRAME OYLAMA EKRANI İÇİN ÖZEL SÜRE (15 SANİYE)
             if (media.mediaType === 'iframe') duration = 15000;
 
             if (!item.isAlbum) {
@@ -659,7 +673,8 @@
                 if (state === 3) { clearTimeout(fallbackTimer); fallbackTimer = setTimeout(advance, 15000); }
                 if (state === 0) { clearTimeout(fallbackTimer); advance(); }
             };
-        } else if (media.mediaType === 'video') {
+        } 
+        else if (media.mediaType === 'video') {
             const playerObj = document.getElementById(`html-video-${idIndex}`);
             if (playerObj) {
                 fallbackTimer = setTimeout(advance, 10000); playerObj.currentTime = 0;
@@ -670,6 +685,43 @@
                 playerObj.onerror = () => { clearTimeout(fallbackTimer); advance(); };
             }
         }
+        // CANLI YAYIN (HLS / m3u8) OYNATMA MANTIĞI - SÜRE SINIRSIZ
+        else if (media.mediaType === 'hls') {
+            const playerObj = document.getElementById(`hls-video-${idIndex}`);
+            if (playerObj) {
+                // Süre sınırı yok, alt çubuğu tamamen dolu gösteriyoruz
+                if (progressTimer) clearInterval(progressTimer); 
+                const progressBar = document.getElementById(`progress-${currentSlideIndex}`);
+                if (progressBar) { 
+                    progressBar.style.width = '100%'; 
+                    progressBar.style.transition = 'none'; 
+                }
+
+                const src = playerObj.getAttribute('data-src');
+                
+                if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+                    if (playerObj.hlsObj) playerObj.hlsObj.destroy();
+                    const hls = new Hls();
+                    playerObj.hlsObj = hls;
+                    hls.loadSource(src);
+                    hls.attachMedia(playerObj);
+                    hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                        playerObj.play().catch(e => console.log('Live TV play error', e));
+                    });
+                    hls.on(Hls.Events.ERROR, function(event, data) {
+                        // Sadece yayın çökerse veya internet giderse kilitlenmemek için diğer slayta atlar
+                        if (data.fatal) { advance(); } 
+                    });
+                } else if (playerObj.canPlayType('application/vnd.apple.mpegurl')) {
+                    // Safari gibi yerel HLS destekleyen tarayıcılar için
+                    playerObj.src = src;
+                    playerObj.play().catch(e => console.log('Live TV native error', e));
+                } else {
+                    advance(); // Tarayıcı m3u8 desteklemiyorsa diğer slayta atla
+                }
+            }
+        }
+
         if (!item.isAlbum) { fullscreenTriggerTimer = setTimeout(() => { container.classList.add('fullscreen-media'); if (textElement) textElement.classList.add('text-hidden'); }, 4000); }
     }
 
@@ -689,8 +741,19 @@
 
     function stopSlideMedia(idIndex, media) {
         if (!media) return;
-        if (media.mediaType === 'youtube' && window.ytPlayers[idIndex] && typeof window.ytPlayers[idIndex].pauseVideo === 'function') window.ytPlayers[idIndex].pauseVideo();
-        else if (media.mediaType === 'video') { const video = document.getElementById(`html-video-${idIndex}`); if (video) video.pause(); }
+        if (media.mediaType === 'youtube' && window.ytPlayers[idIndex] && typeof window.ytPlayers[idIndex].pauseVideo === 'function') {
+            window.ytPlayers[idIndex].pauseVideo();
+        }
+        else if (media.mediaType === 'video') { 
+            const video = document.getElementById(`html-video-${idIndex}`); if (video) video.pause(); 
+        }
+        else if (media.mediaType === 'hls') {
+            const video = document.getElementById(`hls-video-${idIndex}`);
+            if (video) {
+                video.pause();
+                if (video.hlsObj) { video.hlsObj.destroy(); video.hlsObj = null; }
+            }
+        }
     }
 
     function nextSlide() {
