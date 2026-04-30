@@ -1,5 +1,5 @@
 /* ============================================
-   TV KIOSK - APP.JS v7.6 (Smart Duty Merge & Full Layout + Jenerik v4)
+   TV KIOSK - APP.JS v7.7 (Smart Duty Merge & Iframe Support + Jenerik v4)
    ============================================ */
 
 (function () {
@@ -64,7 +64,7 @@
     let nextPreviewTimer = null;
     let fullscreenTriggerTimer = null;
     let fallbackTimer = null; 
-    let albumTransitionTimer = null; // Albüm geçişi için eklendi
+    let albumTransitionTimer = null;
     let currentDataString = null;
     const els = {};
 
@@ -104,7 +104,7 @@
         if (nextPreviewTimer) clearTimeout(nextPreviewTimer);
         if (fullscreenTriggerTimer) clearTimeout(fullscreenTriggerTimer);
         if (fallbackTimer) clearTimeout(fallbackTimer);
-        if (albumTransitionTimer) clearTimeout(albumTransitionTimer); // Eklendi
+        if (albumTransitionTimer) clearTimeout(albumTransitionTimer);
     }
 
     function destroyAllPlayers() {
@@ -402,11 +402,15 @@
         const script = document.createElement('script'); script.src = url; script.onerror = function () { clearTimeout(fetchTimeout); loadFromCache(); }; document.body.appendChild(script);
     }
 
+    // --- HTML / Iframe UZANTISINI DESTEKLEYEN YENİ VERSİYON ---
     function getMediaType(url) {
         if (!url) return null; const lower = url.toLowerCase();
         if (lower.includes('youtube.com') || lower.includes('youtu.be')) return 'youtube';
-        if (['.mp4', '.webm', '.ogg', '.mov'].some(ext => lower.includes(ext))) return 'video'; return 'image';
+        if (['.mp4', '.webm', '.ogg', '.mov'].some(ext => lower.includes(ext))) return 'video';
+        if (lower.includes('.html')) return 'iframe'; // <-- YENİ EKLENDİ
+        return 'image';
     }
+
     function getYouTubeId(url) { const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?#]+)/); return match ? match[1] : null; }
 
     function processData(rows) {
@@ -471,6 +475,15 @@
             else if (media.mediaType === 'youtube') {
                 innerHtml = `<div id="yt-player-${slideIndex}-${albumIndex}" data-vid="${getYouTubeId(media.url)}" style="width:100%;height:100%;pointer-events:none;"></div>`;
             }
+            // --- IFRAME BÖLÜMÜ (SLAYT İÇİ BOYUTLARINDA) ---
+            else if (media.mediaType === 'iframe') {
+                innerHtml = `
+                    <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg, #1e293b, #0f172a);"></div>
+                    <div style="position:relative; z-index:1; width:100%; height:100%; display:flex; align-items:center; justify-content:center; padding:40px; box-sizing:border-box;">
+                        <iframe src="${escapeAttr(media.url)}" style="width:100%; height:100%; border:none; border-radius:16px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.6); background:#0b0f19;"></iframe>
+                    </div>
+                `;
+            }
             
             html += `<div class="album-item" id="album-item-${slideIndex}-${albumIndex}">${innerHtml}</div>`;
         });
@@ -524,9 +537,6 @@
 
     function startSlideshow() { if (slides.length > 0) playCurrentSlide(); }
 
-    /* =========================================
-       JENERİK OLUŞTURUCU FONKSİYON
-       ========================================= */
     function createJenerikHTML(category, defaultTitle) {
         const cat = category ? category.toLowerCase().trim() : 'duyuru';
         let title = defaultTitle || 'DUYURU';
@@ -573,19 +583,15 @@
         clearAllTimers(); document.querySelectorAll('.slide-progress').forEach(bar => { bar.style.width = '0%'; bar.style.transition = 'none'; });
         const item = slides[currentSlideIndex]; if (!item) return;
 
-        // Eski jenerikleri temizle
         document.querySelectorAll('.temp-jenerik').forEach(e => e.remove());
 
-        // Yeni Jeneriği Slaytın İçine Ekle
         const activeSlideCard = els.slidesContainer.querySelectorAll('.slide')[currentSlideIndex].querySelector('.slide-card');
         if (activeSlideCard) {
             activeSlideCard.insertAdjacentHTML('beforeend', createJenerikHTML(item.kategori, item.catInfo.label));
         }
 
-        // 2 Saniye Bekle, Sonra Asıl Slaytı (Video/Resim) Oynat
         currentSlideTimeout = setTimeout(() => {
             
-            // Jeneriği DOM'dan sil (CSS zaten soluklaştırıyor, biz kalabalık yapmasın diye uçuruyoruz)
             setTimeout(() => { document.querySelectorAll('.temp-jenerik').forEach(e => e.remove()); }, 1000);
 
             currentAlbumIndex = 0;
@@ -603,7 +609,6 @@
         document.querySelectorAll(`#media-container-${sIndex} .album-item`).forEach(el => el.classList.remove('active'));
         document.getElementById(`album-item-${sIndex}-${aIndex}`).classList.add('active');
 
-        // Albüm mantığı güncellendi: İlk resim ise metni 5 saniye göster, sonra tam ekrana al
         if (item.isAlbum) { 
             if (aIndex === 0) {
                 container.classList.remove('fullscreen-media');
@@ -627,9 +632,15 @@
             handleVideoSlide(media, `${sIndex}-${aIndex}`, container, textElement, item); 
         } 
         else {
-            if (!item.isAlbum) startProgress(CONFIG.SLIDE_INTERVAL);
-            // İlk albüm fotoğrafı için süreyi uzattık: 5sn metin gösterimi + 6sn tam ekran
             let duration = item.isAlbum ? (aIndex === 0 ? 11000 : 6000) : CONFIG.SLIDE_INTERVAL;
+            
+            // IFRAME OYLAMA EKRANI İÇİN ÖZEL SÜRE (15 SANİYE)
+            if (media.mediaType === 'iframe') duration = 15000;
+
+            if (!item.isAlbum) {
+                if (progressTimer) clearInterval(progressTimer); 
+                startProgress(duration);
+            }
             currentSlideTimeout = setTimeout(() => { progressToNextAlbumItem(item, sIndex, aIndex); }, duration);
         }
     }
