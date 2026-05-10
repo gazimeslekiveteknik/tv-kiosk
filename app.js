@@ -1,5 +1,5 @@
 /* ============================================
-   TV KIOSK - APP.JS v7.14 (Otomatik Kapanan Tören Modu & Performans Onarımı)
+   TV KIOSK - APP.JS v7.15 (Tören Modu Acil Durdurma & Performans)
    ============================================ */
 
 (function () {
@@ -9,7 +9,7 @@
         SLIDE_INTERVAL: 10000,      
         DATA_REFRESH: 120000, 
         CLOCK_REFRESH: 1000,
-        COMMAND_CHECK: 3000, // Tören modunu her 3 saniyede bir tarar
+        COMMAND_CHECK: 3000, // Tören ve Acil Durum komutlarını 3 saniyede bir tarar
         TICKER_SCROLL_SPEED: 70, 
         PROGRESS_STEP: 50,
         WEATHER_REFRESH: 600000,
@@ -160,9 +160,8 @@
         }
     }
 
-    // TÖREN MODU: 3 Saniyede bir arka planda komut dinleyicisi
+    // YENİ GÜNCELLEME: Acil durdurma komutunu (STOP) kaçırmamak için her zaman dinler.
     function checkRemoteCommands() {
-        if (isCeremonyMode) return;
         const sheetId = localStorage.getItem('kiosk_sheet_id');
         if (!sheetId) return;
         
@@ -176,7 +175,16 @@
                     if (r.c[0] && r.c[0].v === "AktifKomut") commandUrl = r.c[1].v;
                 }
 
-                if (commandUrl) {
+                // ACİL DURDURMA KOMUTU GELDİYSE
+                if (commandUrl === "STOP") {
+                    const scriptUrl = localStorage.getItem('kiosk_scripturl') || localStorage.getItem('kiosk_script_url');
+                    // Komutu sil ve sayfayı yenileyerek yayın akışına dön
+                    fetch(scriptUrl, { method: 'POST', body: JSON.stringify({ sheetId: localStorage.getItem('kiosk_sheet_id'), action: 'clearCommand' }) })
+                    .then(() => location.reload())
+                    .catch(() => location.reload());
+                } 
+                // TÖREN BAŞLATMA KOMUTU GELDİYSE (Zaten törende değilsek başlat)
+                else if (commandUrl && !isCeremonyMode) {
                     startCeremony(commandUrl);
                 }
             } catch(e) {}
@@ -185,7 +193,6 @@
         
         const script = document.createElement('script'); 
         script.src = url; 
-        // BELLEK TEMİZLEYİCİ: RAM'i şişirmemek için script işini bitirince kendini siler.
         script.onload = () => script.remove();
         script.onerror = () => script.remove();
         document.body.appendChild(script);
@@ -222,7 +229,6 @@
                 return;
             }
 
-            // Tören Youtube Oynatıcısı
             new YT.Player('ceremony-yt-player', {
                 videoId: vidId,
                 playerVars: { 
@@ -233,7 +239,6 @@
                         e.target.playVideo(); 
                     },
                     'onStateChange': function(e) {
-                        // VİDEO BİTTİĞİNDE OTOMATİK ESKİ HALİNE DÖNER
                         if (e.data === 0) { 
                             els.slidesContainer.innerHTML = `<div style="width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:24px;">Tören sona erdi. Yayın akışına dönülüyor...</div>`;
                             setTimeout(() => {
@@ -309,7 +314,7 @@
         syncInternetTime(); 
         startClock(); fetchWeather(); fetchData(sheetId); fetchSidebarData();
         
-        setInterval(checkRemoteCommands, CONFIG.COMMAND_CHECK); // Uzaktan Tören Dinleyicisi
+        setInterval(checkRemoteCommands, CONFIG.COMMAND_CHECK); 
 
         setInterval(() => fetchData(sheetId), CONFIG.DATA_REFRESH);
         setInterval(fetchWeather, CONFIG.WEATHER_REFRESH);
