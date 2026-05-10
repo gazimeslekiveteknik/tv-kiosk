@@ -1,5 +1,5 @@
 /* ============================================
-   TV KIOSK - APP.JS v7.15 (Tören Modu Acil Durdurma & Performans)
+   TV KIOSK - APP.JS v7.16 (Önbelleksiz Anlık Komut Taraması & Acil Durdurma)
    ============================================ */
 
 (function () {
@@ -72,6 +72,7 @@
     let currentDataString = null;
     let timeOffset = 0; 
     let isCeremonyMode = false;
+    let isCheckingCommand = false; // Ağ şişmesini önleyen güvenlik kilidi
     const els = {};
 
     let sidebarData = { sabahci: [], oglenci: [], ogretmenler: { sabahci: [], oglenci: [] }, ogrenciler: [] };
@@ -160,42 +161,43 @@
         }
     }
 
-    // YENİ GÜNCELLEME: Acil durdurma komutunu (STOP) kaçırmamak için her zaman dinler.
-    function checkRemoteCommands() {
+    // YENİ GÜNCELLEME: Google'ın önbelleğini atlayan ve Apps Script API'sini doğrudan okuyan yapı.
+    async function checkRemoteCommands() {
+        if (isCheckingCommand) return;
         const sheetId = localStorage.getItem('kiosk_sheet_id');
-        if (!sheetId) return;
-        
-        const url = `https://docs.google.com/spreadsheets/d/${getCleanSheetId(sheetId)}/gviz/tq?tqx=out:json;responseHandler:commandCb&sheet=AYARLAR&headers=0&t=${Date.now()}`;
-        
-        window.commandCb = function(json) {
-            try {
-                const rows = json.table.rows;
-                let commandUrl = null;
-                for (let r of rows) {
-                    if (r.c[0] && r.c[0].v === "AktifKomut") commandUrl = r.c[1].v;
-                }
+        const scriptUrl = localStorage.getItem('kiosk_scripturl') || localStorage.getItem('kiosk_script_url');
+        if (!sheetId || !scriptUrl) return;
 
-                // ACİL DURDURMA KOMUTU GELDİYSE
+        isCheckingCommand = true;
+        try {
+            const response = await fetch(`${scriptUrl}?sheetId=${sheetId}&t=${Date.now()}`);
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                const commandUrl = data.command;
+                
+                // ACİL DURDURMA EMRİ
                 if (commandUrl === "STOP") {
-                    const scriptUrl = localStorage.getItem('kiosk_scripturl') || localStorage.getItem('kiosk_script_url');
-                    // Komutu sil ve sayfayı yenileyerek yayın akışına dön
-                    fetch(scriptUrl, { method: 'POST', body: JSON.stringify({ sheetId: localStorage.getItem('kiosk_sheet_id'), action: 'clearCommand' }) })
-                    .then(() => location.reload())
-                    .catch(() => location.reload());
+                    document.body.classList.add('ceremony-active');
+                    els.slidesContainer.innerHTML = `<div style="width:100%; height:100%; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#ef4444;">
+                        <div style="font-size:80px; margin-bottom:20px;">🛑</div>
+                        <div style="font-size:28px; font-weight:bold;">Tören iptal edildi.</div>
+                        <div style="font-size:18px; opacity:0.8; margin-top:10px;">Sistem normal yayın akışına döndürülüyor...</div>
+                    </div>`;
+                    
+                    await fetch(scriptUrl, { method: 'POST', body: JSON.stringify({ sheetId: sheetId, action: 'clearCommand' }) });
+                    window.location.reload();
+                    return; 
                 } 
-                // TÖREN BAŞLATMA KOMUTU GELDİYSE (Zaten törende değilsek başlat)
+                // TÖREN BAŞLATMA EMRİ
                 else if (commandUrl && !isCeremonyMode) {
                     startCeremony(commandUrl);
                 }
-            } catch(e) {}
-            delete window.commandCb;
-        };
-        
-        const script = document.createElement('script'); 
-        script.src = url; 
-        script.onload = () => script.remove();
-        script.onerror = () => script.remove();
-        document.body.appendChild(script);
+            }
+        } catch (e) { 
+            // Ağ hatası olursa televizyon çökmez, bir sonraki döngüyü bekler.
+        }
+        isCheckingCommand = false;
     }
 
     function startCeremony(vidUrl) {
@@ -218,7 +220,6 @@
             </div>
         `;
 
-        // Komutu tekrar çalışmasın diye sistemden temizle
         const scriptUrl = localStorage.getItem('kiosk_scripturl') || localStorage.getItem('kiosk_script_url');
         fetch(scriptUrl, { method: 'POST', body: JSON.stringify({ sheetId: localStorage.getItem('kiosk_sheet_id'), action: 'clearCommand' }) });
 
