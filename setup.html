@@ -272,6 +272,15 @@
                     <div id="toren-status" style="display:none; text-align:center; padding:15px; background:rgba(16,185,129,0.1); color:#10b981; border-radius:8px; font-weight:600;">
                         ✅ Komut TV'ye gönderildi! Tören başlıyor.
                     </div>
+
+                    <div style="background: rgba(239, 68, 68, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed rgba(239, 68, 68, 0.5); text-align: center;">
+                        <label style="color:#ef4444; font-size:14px; font-weight:bold; display:block; margin-bottom:8px;">🚨 Acil Durum / İptal</label>
+                        <p style="color: var(--text-secondary); font-size: 12px; margin-bottom: 12px;">Yanlışlıkla basarsanız veya töreni erken bitirmek isterseniz bu butonu kullanın.</p>
+                        <button type="button" class="btn-save" style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 12px; font-size: 15px;" onclick="sendTorenCommand('STOP')">
+                            🛑 Töreni Durdur ve Normal Yayına Dön
+                        </button>
+                    </div>
+
                 </div>
                 
                 <div style="margin-top: 30px; padding: 15px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; color: #fbbf24; font-size: 13px;">
@@ -336,7 +345,6 @@
             progText.textContent = 'YouTube için yetki alınıyor...';
             
             try {
-                // 1. YouTube API'den geçici yükleme linki iste
                 const urlResp = await fetch(scriptUrl, { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -357,7 +365,6 @@
                 const CHUNK = 2 * 1024 * 1024; // 2MB Parçalarla yükleme
                 let uploaded = 0;
                 
-                // 2. Parça Parça (Chunked) Yükleme işlemi
                 while (uploaded < file.size) {
                     const end = Math.min(uploaded + CHUNK, file.size);
                     const put = await fetch(uploadUrl, { 
@@ -374,7 +381,6 @@
                         const vid = (await put.json()).id; 
                         const finalLink = `https://www.youtube.com/watch?v=${vid}`;
                         
-                        // Linki inputa yaz ve tarayıcıya kaydet
                         linkInput.value = finalLink;
                         localStorage.setItem('kiosk_toren_link_' + type, finalLink);
                         
@@ -398,17 +404,22 @@
             if(savedLink2 && document.getElementById('toren-link-2')) document.getElementById('toren-link-2').value = savedLink2;
         });
 
-        // TÖREN KOMUTU GÖNDERME
-        async function sendTorenCommand(type) {
-            const inputId = type === 1 ? 'toren-link-1' : 'toren-link-2';
-            const videoUrl = document.getElementById(inputId).value.trim();
+        // TÖREN KOMUTU VEYA İPTAL GÖNDERME
+        async function sendTorenCommand(typeOrCommand) {
+            let videoUrl = "";
+            
+            if (typeOrCommand === 'STOP') {
+                videoUrl = "STOP";
+            } else {
+                const inputId = typeOrCommand === 1 ? 'toren-link-1' : 'toren-link-2';
+                videoUrl = document.getElementById(inputId).value.trim();
 
-            if (!videoUrl || !videoUrl.includes('youtu')) {
-                alert("Lütfen önce bir video yükleyin veya geçerli bir YouTube linki yapıştırın!");
-                return;
+                if (!videoUrl || !videoUrl.includes('youtu')) {
+                    alert("Lütfen önce bir video yükleyin veya geçerli bir YouTube linki yapıştırın!");
+                    return;
+                }
+                localStorage.setItem('kiosk_toren_link_' + typeOrCommand, videoUrl);
             }
-
-            localStorage.setItem('kiosk_toren_link_' + type, videoUrl);
 
             const scriptUrl = localStorage.getItem('kiosk_script_url');
             const sheetId = localStorage.getItem('kiosk_sheet_id');
@@ -417,7 +428,7 @@
             statusDiv.style.display = 'block';
             statusDiv.style.background = "rgba(59, 130, 246, 0.1)";
             statusDiv.style.color = "#60a5fa";
-            statusDiv.textContent = "⏳ Komut iletiliyor...";
+            statusDiv.textContent = typeOrCommand === 'STOP' ? "⏳ Durdurma komutu iletiliyor..." : "⏳ Komut iletiliyor...";
 
             try {
                 const resp = await fetch(scriptUrl, {
@@ -427,9 +438,15 @@
                 });
                 const res = await resp.json();
                 if(res.status === 'success') {
-                    statusDiv.style.background = "rgba(16,185,129,0.1)";
-                    statusDiv.style.color = "#10b981";
-                    statusDiv.textContent = "✅ Komut TV'ye iletildi. Yayın hemen başlıyor!";
+                    if (typeOrCommand === 'STOP') {
+                        statusDiv.style.background = "rgba(245, 158, 11, 0.1)";
+                        statusDiv.style.color = "#f59e0b";
+                        statusDiv.textContent = "🛑 Komut alındı! TV normal yayına dönüyor...";
+                    } else {
+                        statusDiv.style.background = "rgba(16,185,129,0.1)";
+                        statusDiv.style.color = "#10b981";
+                        statusDiv.textContent = "✅ Komut TV'ye iletildi. Yayın hemen başlıyor!";
+                    }
                 }
             } catch (e) {
                 statusDiv.style.background = "rgba(239, 68, 68, 0.1)";
