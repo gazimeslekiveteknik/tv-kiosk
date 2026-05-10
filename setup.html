@@ -345,6 +345,7 @@
             progText.textContent = 'YouTube için yetki alınıyor...';
             
             try {
+                // 1. YouTube API'den geçici yükleme linki iste
                 const urlResp = await fetch(scriptUrl, { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -365,6 +366,7 @@
                 const CHUNK = 2 * 1024 * 1024; // 2MB Parçalarla yükleme
                 let uploaded = 0;
                 
+                // 2. Parça Parça (Chunked) Yükleme işlemi
                 while (uploaded < file.size) {
                     const end = Math.min(uploaded + CHUNK, file.size);
                     const put = await fetch(uploadUrl, { 
@@ -381,6 +383,7 @@
                         const vid = (await put.json()).id; 
                         const finalLink = `https://www.youtube.com/watch?v=${vid}`;
                         
+                        // Linki inputa yaz ve tarayıcıya kaydet
                         linkInput.value = finalLink;
                         localStorage.setItem('kiosk_toren_link_' + type, finalLink);
                         
@@ -447,11 +450,20 @@
                         statusDiv.style.color = "#10b981";
                         statusDiv.textContent = "✅ Komut TV'ye iletildi. Yayın hemen başlıyor!";
                     }
+                    
+                    // GÜNCELLENEN KISIM: 6 Saniye sonra uyarı kutusunu gizle
+                    setTimeout(() => {
+                        statusDiv.style.display = 'none';
+                    }, 6000);
                 }
             } catch (e) {
                 statusDiv.style.background = "rgba(239, 68, 68, 0.1)";
                 statusDiv.style.color = "#f87171";
                 statusDiv.textContent = "❌ Hata oluştu! İnternet bağlantınızı kontrol edin.";
+                
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 6000);
             }
         }
 
