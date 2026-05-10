@@ -1,5 +1,5 @@
 /* ============================================
-   TV KIOSK - APP.JS v7.12 (Otomatik Kapanan Tören Modu & Hata Düzeltmeleri)
+   TV KIOSK - APP.JS v7.14 (Otomatik Kapanan Tören Modu & Performans Onarımı)
    ============================================ */
 
 (function () {
@@ -9,7 +9,9 @@
         SLIDE_INTERVAL: 10000,      
         DATA_REFRESH: 120000, 
         CLOCK_REFRESH: 1000,
-        COMMAND_CHECK: 3000, // Tören modunu 3 saniyede bir kontrol eder
+        COMMAND_CHECK: 3000, // Tören modunu her 3 saniyede bir tarar
+        TICKER_SCROLL_SPEED: 70, 
+        PROGRESS_STEP: 50,
         WEATHER_REFRESH: 600000,
         SIDEBAR_REFRESH: 60000,
         NEXT_PREVIEW_SHOW: 3000,
@@ -158,6 +160,7 @@
         }
     }
 
+    // TÖREN MODU: 3 Saniyede bir arka planda komut dinleyicisi
     function checkRemoteCommands() {
         if (isCeremonyMode) return;
         const sheetId = localStorage.getItem('kiosk_sheet_id');
@@ -179,7 +182,13 @@
             } catch(e) {}
             delete window.commandCb;
         };
-        const script = document.createElement('script'); script.src = url; document.body.appendChild(script);
+        
+        const script = document.createElement('script'); 
+        script.src = url; 
+        // BELLEK TEMİZLEYİCİ: RAM'i şişirmemek için script işini bitirince kendini siler.
+        script.onload = () => script.remove();
+        script.onerror = () => script.remove();
+        document.body.appendChild(script);
     }
 
     function startCeremony(vidUrl) {
@@ -202,6 +211,7 @@
             </div>
         `;
 
+        // Komutu tekrar çalışmasın diye sistemden temizle
         const scriptUrl = localStorage.getItem('kiosk_scripturl') || localStorage.getItem('kiosk_script_url');
         fetch(scriptUrl, { method: 'POST', body: JSON.stringify({ sheetId: localStorage.getItem('kiosk_sheet_id'), action: 'clearCommand' }) });
 
@@ -212,6 +222,7 @@
                 return;
             }
 
+            // Tören Youtube Oynatıcısı
             new YT.Player('ceremony-yt-player', {
                 videoId: vidId,
                 playerVars: { 
@@ -222,6 +233,7 @@
                         e.target.playVideo(); 
                     },
                     'onStateChange': function(e) {
+                        // VİDEO BİTTİĞİNDE OTOMATİK ESKİ HALİNE DÖNER
                         if (e.data === 0) { 
                             els.slidesContainer.innerHTML = `<div style="width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:24px;">Tören sona erdi. Yayın akışına dönülüyor...</div>`;
                             setTimeout(() => {
@@ -275,7 +287,11 @@
             if (window.history && window.history.replaceState) window.history.replaceState({}, document.title, window.location.protocol + "//" + window.location.host + window.location.pathname);
             continueInit();
         };
-        const script = document.createElement('script'); script.src = url; script.onerror = () => { clearTimeout(magicTimeout); continueInit(); }; document.body.appendChild(script);
+        const script = document.createElement('script'); 
+        script.src = url; 
+        script.onload = () => script.remove();
+        script.onerror = () => { clearTimeout(magicTimeout); continueInit(); script.remove(); }; 
+        document.body.appendChild(script);
     }
 
     function continueInit() {
@@ -293,7 +309,7 @@
         syncInternetTime(); 
         startClock(); fetchWeather(); fetchData(sheetId); fetchSidebarData();
         
-        setInterval(checkRemoteCommands, CONFIG.COMMAND_CHECK); 
+        setInterval(checkRemoteCommands, CONFIG.COMMAND_CHECK); // Uzaktan Tören Dinleyicisi
 
         setInterval(() => fetchData(sheetId), CONFIG.DATA_REFRESH);
         setInterval(fetchWeather, CONFIG.WEATHER_REFRESH);
@@ -361,7 +377,11 @@
             } catch(e) {}
             delete window.sidebarCb;
         };
-        const script = document.createElement('script'); script.src = url; document.body.appendChild(script);
+        const script = document.createElement('script'); 
+        script.src = url; 
+        script.onload = () => script.remove();
+        script.onerror = () => script.remove();
+        document.body.appendChild(script);
     }
 
     function getMergedTeachers() {
@@ -524,7 +544,11 @@
             } catch (e) { loadFromCache(); }
             delete window.parseGoogleSheetData;
         };
-        const script = document.createElement('script'); script.src = url; script.onerror = function () { clearTimeout(fetchTimeout); loadFromCache(); }; document.body.appendChild(script);
+        const script = document.createElement('script'); 
+        script.src = url; 
+        script.onload = () => script.remove();
+        script.onerror = function () { clearTimeout(fetchTimeout); loadFromCache(); script.remove(); }; 
+        document.body.appendChild(script);
     }
 
     function getMediaType(url) {
@@ -657,14 +681,26 @@
     }
 
     function renderDots() { els.slideDots.innerHTML = ''; slides.forEach((_, i) => { const dot = document.createElement('div'); dot.className = `slide-dot ${i === 0 ? 'active' : ''}`; els.slideDots.appendChild(dot); }); }
+    
     function renderTicker() {
         let items = tickerItems.length > 0 ? tickerItems : slides;
         let displayItems = items.map(s => ({ icon: s.catInfo.icon, text: s.baslik + (s.icerik ? '  —  ' + s.icerik : '') }));
-        if (displayItems.length === 0) { els.tickerContent.textContent = 'Henüz duyuru bulunmuyor'; return; }
-        els.tickerContent.className = 'ticker-content scroll-mode';
+        
+        if (displayItems.length === 0) { 
+            els.tickerContent.textContent = 'Henüz duyuru bulunmuyor'; 
+            els.tickerContent.classList.remove('scroll-mode'); 
+            return; 
+        }
+        
+        els.tickerContent.classList.remove('scroll-mode');
         const buildItems = () => displayItems.map(item => `<span class="ticker-item"><span class="ticker-item-icon">${item.icon}</span> ${escapeHtml(item.text)}</span>`).join('<span class="ticker-separator">●</span>');
         els.tickerContent.innerHTML = buildItems() + '<span class="ticker-separator">●</span>' + buildItems();
-        requestAnimationFrame(() => { els.tickerContent.style.setProperty('--ticker-duration', `${(els.tickerContent.scrollWidth / 2) / CONFIG.TICKER_SCROLL_SPEED}s`); });
+        
+        void els.tickerContent.offsetWidth; 
+        els.tickerContent.classList.add('scroll-mode');
+        requestAnimationFrame(() => { 
+            els.tickerContent.style.setProperty('--ticker-duration', `${(els.tickerContent.scrollWidth / 2) / CONFIG.TICKER_SCROLL_SPEED}s`); 
+        });
     }
 
     function startSlideshow() { if (slides.length > 0 && !isCeremonyMode) playCurrentSlide(); }
@@ -906,7 +942,6 @@
     function showError(message) { els.slidesContainer.innerHTML = `<div class="slide active"><div class="slide-card cat-onemli no-media"><div class="slide-text"><div class="slide-icon">⚠️</div><h2 class="slide-title">Bilgi Ekranı</h2><p class="slide-content">${escapeHtml(message)}</p></div></div></div>`; }
     function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
     
-    // GÜNCELLENEN KISIM: Yazım hatası burada giderildi.
     function escapeAttr(text) { 
         if (!text) return '';
         return text.replace(/&/g, "&amp;")
