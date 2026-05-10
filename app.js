@@ -1,5 +1,5 @@
 /* ============================================
-   TV KIOSK - APP.JS v7.9 (Smart Duty Merge, Iframe & Unlimited HLS/m3u8 Live TV)
+   TV KIOSK - APP.JS v7.10 (Günlük Nöbet Temizleme, 5-Gün Eşleştirme & Optimize L-Bar)
    ============================================ */
 
 (function () {
@@ -14,7 +14,7 @@
         WEATHER_REFRESH: 600000,
         SIDEBAR_REFRESH: 60000,
         NEXT_PREVIEW_SHOW: 3000,
-        JENERIK_DURATION: 2000 // 2 Saniyelik Dinamik Jenerik Süresi
+        JENERIK_DURATION: 2000 
     };
 
     const dynamicStyle = document.createElement('style');
@@ -28,7 +28,6 @@
     `;
     document.head.appendChild(dynamicStyle);
 
-    // --- YOUTUBE API ---
     window.ytApiReady = false;
     window.ytPlayers = {};
     window.onYouTubeIframeAPIReady = function () {
@@ -41,7 +40,6 @@
     if (firstScriptTag) firstScriptTag.parentNode.insertBefore(ytScript, firstScriptTag);
     else document.head.appendChild(ytScript);
 
-    // --- HLS.JS (Canlı TV / m3u8 Desteği İçin) ---
     const hlsScript = document.createElement('script');
     hlsScript.src = "https://cdn.jsdelivr.net/npm/hls.js@latest";
     document.head.appendChild(hlsScript);
@@ -169,9 +167,8 @@
                     if (row.c && row.c[0] && row.c[1]) settings[(row.c[0].v || '').toString().replace(/\s+/g, '').toLowerCase()] = (row.c[1].v || '').toString().trim();
                 });
                 if (settings['okuladi'] || settings['okuladı']) localStorage.setItem('kiosk_school_name', settings['okuladi'] || settings['okuladı']);
-                if (settings['scripturl'] || settings['appscripturl']) localStorage.setItem('kiosk_script_url', settings['scripturl'] || settings['appscripturl']);
+                if (settings['scripturl'] || settings['appscripturl']) localStorage.setItem('kiosk_scripturl', settings['scripturl'] || settings['appscripturl']);
                 if (settings['logourl']) localStorage.setItem('kiosk_school_logo', settings['logourl']);
-                if (settings['sifre'] || settings['yöneticişifresi']) localStorage.setItem('kiosk_admin_password', settings['sifre'] || settings['yöneticişifresi']);
                 let city = settings['sehir'] || settings['şehir'];
                 let lat = settings['enlem']; let lon = settings['boylam'];
                 if (city) localStorage.setItem('kiosk_weather_city', city);
@@ -205,12 +202,12 @@
         setInterval(updateLessonTimer, 1000);
         setInterval(() => {
             const mergedT = getMergedTeachers();
-            if(mergedT.length > 5) renderDutyPage('duty-teachers', mergedT, 'teachers');
-            if(sidebarData.ogrenciler.length > 5) renderDutyPage('duty-students', sidebarData.ogrenciler, 'students');
+            if(mergedT.length > 4) renderDutyPage('duty-teachers', mergedT, 'teachers');
+            if(sidebarData.ogrenciler.length > 4) renderDutyPage('duty-students', sidebarData.ogrenciler, 'students');
         }, 10000);
     }
 
-    function startDemoMode() { els.schoolName.textContent = 'Gazi MTAL'; startClock(); fetchFreeWeather(); processData([{ baslik: 'Örnek Duyuru', icerik: 'Sistem demo modunda çalışıyor.', kategori: 'duyuru', aktif: 'evet' }]); }
+    function startDemoMode() { els.schoolName.textContent = 'Bilgi Ekranı'; startClock(); fetchFreeWeather(); processData([{ baslik: 'Örnek Duyuru', icerik: 'Sistem demo modunda çalışıyor.', kategori: 'duyuru', aktif: 'evet' }]); }
     function startClock() { updateClock(); setInterval(updateClock, CONFIG.CLOCK_REFRESH); }
     function updateClock() { const now = new Date(); els.time.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`; els.date.textContent = `${now.getDate()} ${TR_MONTHS[now.getMonth()]} ${now.getFullYear()}, ${TR_DAYS[now.getDay()]}`; }
     function getCleanSheetId(sheetId) { if (sheetId.includes('docs.google.com')) return sheetId.match(/\/d\/([a-zA-Z0-9_-]+)/)[1]; return sheetId; }
@@ -225,11 +222,31 @@
                     const dataObj = JSON.parse(json.table.rows[0].c[0].v);
                     sidebarData.sabahci = Array.isArray(dataObj.sabahci) ? dataObj.sabahci : [];
                     sidebarData.oglenci = Array.isArray(dataObj.oglenci) ? dataObj.oglenci : [];
-                    sidebarData.ogrenciler = Array.isArray(dataObj.ogrenciler) ? dataObj.ogrenciler : [];
                     
-                    const todayName = TR_DAYS[new Date().getDay()];
-                    let todayT = (dataObj.ogretmenler || {})[todayName];
+                    const now = new Date();
                     
+                    // Öğrenci nöbet verisini günlük olarak temizleme (tarih kontrolü)
+                    const todayKey = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,'0') + "-" + String(now.getDate()).padStart(2,'0');
+                    if (dataObj.studentSaveDate === todayKey) {
+                        sidebarData.ogrenciler = Array.isArray(dataObj.ogrenciler) ? dataObj.ogrenciler : [];
+                    } else {
+                        sidebarData.ogrenciler = []; // Veri önceki günlerden kalmıssa temizle
+                    }
+                    
+                    let todayT;
+                    // 5 Günlük Nöbet Dizisi Kontrolü (Hafta sonu kaymasını önleme)
+                    if (Array.isArray(dataObj.ogretmenler)) {
+                        let dayIndex = now.getDay() - 1; // 0: Pzt, 1: Salı, ..., 4: Cuma
+                        if (dayIndex >= 0 && dayIndex <= 4) {
+                            todayT = dataObj.ogretmenler[dayIndex];
+                        } else {
+                            todayT = { sabahci: [], oglenci: [] }; // Hafta sonu boş
+                        }
+                    } else {
+                        const todayName = TR_DAYS[now.getDay()];
+                        todayT = (dataObj.ogretmenler || {})[todayName];
+                    }
+
                     if (Array.isArray(todayT)) {
                         sidebarData.ogretmenler = { sabahci: todayT, oglenci: [] };
                     } else {
@@ -281,7 +298,8 @@
         if(!container) return;
         if(!items || items.length === 0) { container.innerHTML = '<div class="duty-item">Kayıt bulunamadı.</div>'; return; }
 
-        const LIMIT = 5; 
+        // Sığma (taşma) sorununu çözmek için ekrandaki limit 5'ten 4'e düşürüldü
+        const LIMIT = 4; 
         const totalPages = Math.ceil(items.length / LIMIT);
         if (dutyPages[typeKey] >= totalPages) dutyPages[typeKey] = 0;
 
@@ -406,13 +424,12 @@
         const script = document.createElement('script'); script.src = url; script.onerror = function () { clearTimeout(fetchTimeout); loadFromCache(); }; document.body.appendChild(script);
     }
 
-    // --- GENİŞLETİLMİŞ MEDYA DESTEĞİ (HTML ve M3U8 eklendi) ---
     function getMediaType(url) {
         if (!url) return null; const lower = url.toLowerCase();
         if (lower.includes('youtube.com') || lower.includes('youtu.be')) return 'youtube';
-        if (lower.includes('.m3u8')) return 'hls'; // CANLI TV DESTEĞİ
+        if (lower.includes('.m3u8')) return 'hls'; 
         if (['.mp4', '.webm', '.ogg', '.mov'].some(ext => lower.includes(ext))) return 'video';
-        if (lower.includes('.html')) return 'iframe'; // SAYFA YANSITMA DESTEĞİ
+        if (lower.includes('.html')) return 'iframe'; 
         return 'image';
     }
 
@@ -480,7 +497,6 @@
             else if (media.mediaType === 'youtube') {
                 innerHtml = `<div id="yt-player-${slideIndex}-${albumIndex}" data-vid="${getYouTubeId(media.url)}" style="width:100%;height:100%;pointer-events:none;"></div>`;
             }
-            // --- CANLI YAYIN TV (M3U8) GÖSTERİM ALANI ---
             else if (media.mediaType === 'hls') {
                 innerHtml = `
                     <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg, #1e293b, #0f172a);"></div>
@@ -489,7 +505,6 @@
                     </div>
                 `;
             }
-            // --- IFRAME BÖLÜMÜ (SLAYT İÇİ BOYUTLARINDA) ---
             else if (media.mediaType === 'iframe') {
                 innerHtml = `
                     <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg, #1e293b, #0f172a);"></div>
@@ -642,7 +657,6 @@
             if (textElement) textElement.classList.remove('text-hidden'); 
         }
 
-        // HLS DAHİL EDİLDİ
         if (media.mediaType === 'youtube' || media.mediaType === 'video' || media.mediaType === 'hls') { 
             handleVideoSlide(media, `${sIndex}-${aIndex}`, container, textElement, item); 
         } 
@@ -685,11 +699,9 @@
                 playerObj.onerror = () => { clearTimeout(fallbackTimer); advance(); };
             }
         }
-        // CANLI YAYIN (HLS / m3u8) OYNATMA MANTIĞI - SÜRE SINIRSIZ
         else if (media.mediaType === 'hls') {
             const playerObj = document.getElementById(`hls-video-${idIndex}`);
             if (playerObj) {
-                // Süre sınırı yok, alt çubuğu tamamen dolu gösteriyoruz
                 if (progressTimer) clearInterval(progressTimer); 
                 const progressBar = document.getElementById(`progress-${currentSlideIndex}`);
                 if (progressBar) { 
@@ -709,15 +721,13 @@
                         playerObj.play().catch(e => console.log('Live TV play error', e));
                     });
                     hls.on(Hls.Events.ERROR, function(event, data) {
-                        // Sadece yayın çökerse veya internet giderse kilitlenmemek için diğer slayta atlar
                         if (data.fatal) { advance(); } 
                     });
                 } else if (playerObj.canPlayType('application/vnd.apple.mpegurl')) {
-                    // Safari gibi yerel HLS destekleyen tarayıcılar için
                     playerObj.src = src;
                     playerObj.play().catch(e => console.log('Live TV native error', e));
                 } else {
-                    advance(); // Tarayıcı m3u8 desteklemiyorsa diğer slayta atla
+                    advance(); 
                 }
             }
         }
