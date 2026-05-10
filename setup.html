@@ -329,7 +329,6 @@
                 }
             });
 
-            // YENİ EKLENEN: Dosya seçildiğinde kapak fotoğrafı listesini gösteren kod
             const fileInputElem = document.getElementById('c-file');
             if(fileInputElem) {
                 fileInputElem.addEventListener('change', function(e) {
@@ -340,7 +339,6 @@
                     const files = Array.from(this.files);
                     const imageFiles = files.filter(f => f.type.startsWith('image/'));
                     
-                    // Sadece 1'den fazla dosya varsa ve içlerinde resim varsa göster
                     if (files.length > 1 && imageFiles.length > 0) {
                         container.style.display = 'block';
                         imageFiles.forEach((file, index) => {
@@ -460,6 +458,25 @@
                         if(json.table.rows.length > 0 && json.table.rows[0].c[0]) {
                             const savedData = JSON.parse(json.table.rows[0].c[0].v);
                             
+                            // YENİ: Nöbetçi öğrencilerin listesini kontrol et ve eskiyse sıfırla (Hem ekrandan hem veritabanından)
+                            const now = new Date();
+                            const todayStr = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,'0') + "-" + String(now.getDate()).padStart(2,'0');
+                            
+                            if (savedData.studentSaveDate && savedData.studentSaveDate !== todayStr) {
+                                savedData.ogrenciler = []; // Ekranda gösterme
+                                
+                                // Google Sheet üzerinden de temizle ki veritabanından kalıcı olarak silinsin
+                                const scriptUrl = localStorage.getItem('kiosk_script_url');
+                                const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
+                                if (scriptUrl && cleanSheetId) {
+                                    fetch(scriptUrl, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                        body: JSON.stringify({ sheetId: cleanSheetId, action: 'saveSidebarData', sidebarData: savedData })
+                                    }).catch(e => console.log('Otomatik temizleme işlemi başarısız', e));
+                                }
+                            }
+                            
                             document.getElementById('list-sabahci').innerHTML = '';
                             if(savedData.sabahci) savedData.sabahci.forEach(b => window.addTimeBlock('sabahci', b.start, b.end));
                             
@@ -566,7 +583,7 @@
                 document.getElementById('form-title').textContent = `İÇERİĞİ DÜZENLE`; 
                 document.getElementById('btn-submit-content').innerHTML = '💾 Kaydet'; 
                 document.getElementById('btn-cancel-edit').style.display = 'block';
-                document.getElementById('cover-selection-container').style.display = 'none'; // Kapak alanını gizle
+                document.getElementById('cover-selection-container').style.display = 'none'; 
                 
                 document.getElementById('c-baslik').value = row.c[0] ? (row.c[0].v || '') : ''; 
                 document.getElementById('c-icerik').value = row.c[1] ? (row.c[1].v || '') : ''; 
@@ -585,7 +602,7 @@
                 document.getElementById('btn-cancel-edit').style.display = 'none'; 
                 document.getElementById('content-form').reset(); 
                 document.getElementById('upload-progress-container').style.display = 'none'; 
-                document.getElementById('cover-selection-container').style.display = 'none'; // Kapak alanını gizle
+                document.getElementById('cover-selection-container').style.display = 'none'; 
             });
 
             async function deleteItem(rowIndex, gorselUrl, videoUrl) {
@@ -650,7 +667,6 @@
                         let uploadedGLinks = [];
                         let uploadedVLinks = [];
                         
-                        // YENİ: Hangi dosyanın kapak seçildiğini bulma
                         let coverFileName = null;
                         let coverUrl = "";
                         const coverSelectionContainer = document.getElementById('cover-selection-container');
@@ -678,7 +694,6 @@
                                     const res = await resp.json();
                                     
                                     if (res.status === 'success' && res.url) { 
-                                        // Eğer bu dosya seçilen kapaksa, ayrı değişkende tut, değilse listeye ekle
                                         if (coverFileName === file.name) {
                                             coverUrl = res.url;
                                         } else {
@@ -707,7 +722,6 @@
                             }
                         }
 
-                        // YENİ: Kaydedilen kapak URL'sini listenin en başına zorla ekliyoruz
                         if (coverUrl) {
                             uploadedGLinks.unshift(coverUrl);
                         }
