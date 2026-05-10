@@ -1,5 +1,5 @@
 /* ============================================
-   TV KIOSK - APP.JS v7.12 (Otomatik Kapanan Tören Modu & İnternet Saati)
+   TV KIOSK - APP.JS v7.12 (Otomatik Kapanan Tören Modu & Hata Düzeltmeleri)
    ============================================ */
 
 (function () {
@@ -9,7 +9,7 @@
         SLIDE_INTERVAL: 10000,      
         DATA_REFRESH: 120000, 
         CLOCK_REFRESH: 1000,
-        COMMAND_CHECK: 3000, // YENİ: Tepki süresi kısaltıldı (3 saniyede bir kontrol eder)
+        COMMAND_CHECK: 3000, // Tören modunu 3 saniyede bir kontrol eder
         WEATHER_REFRESH: 600000,
         SIDEBAR_REFRESH: 60000,
         NEXT_PREVIEW_SHOW: 3000,
@@ -24,8 +24,6 @@
         .fullscreen-media::after { opacity: 0 !important; }
         .slide-text { transition: opacity 0.5s ease; }
         .text-hidden { opacity: 0 !important; }
-        
-        /* Tören Modu için siyah arka plan tam ekran */
         .ceremony-active { background: #000 !important; }
     `;
     document.head.appendChild(dynamicStyle);
@@ -160,7 +158,6 @@
         }
     }
 
-    // YENİ: Sürekli olarak Google Sheet'te "Tören" komutu olup olmadığını kontrol eder.
     function checkRemoteCommands() {
         if (isCeremonyMode) return;
         const sheetId = localStorage.getItem('kiosk_sheet_id');
@@ -185,11 +182,10 @@
         const script = document.createElement('script'); script.src = url; document.body.appendChild(script);
     }
 
-    // YENİ: Tören Modunu başlatan ve videonun bittiğini tespit edip sistemi sıfırlayan ana fonksiyon
     function startCeremony(vidUrl) {
         isCeremonyMode = true;
         clearAllTimers();
-        destroyAllPlayers(); // Arkada çalan duyuru videosu/müziği varsa tamamen durdurur.
+        destroyAllPlayers(); 
 
         const vidMatch = vidUrl.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
         if (!vidMatch) {
@@ -197,7 +193,6 @@
         }
         const vidId = vidMatch[1];
 
-        // Ekranı temizle ve tam ekran siyah yap
         document.body.classList.add('ceremony-active');
         els.slidesContainer.innerHTML = `
             <div class="slide active" style="z-index: 99999;">
@@ -207,20 +202,16 @@
             </div>
         `;
 
-        // Komutu sistemden sil (Sürekli tekrar etmesini engelle)
         const scriptUrl = localStorage.getItem('kiosk_scripturl') || localStorage.getItem('kiosk_script_url');
         fetch(scriptUrl, { method: 'POST', body: JSON.stringify({ sheetId: localStorage.getItem('kiosk_sheet_id'), action: 'clearCommand' }) });
 
-        // Tören Oynatıcısını Kurulumu
         setTimeout(() => {
             if (!window.ytApiReady) {
-                // API yüklenemediyse basit iframe yedeği (Çok nadir durum)
                 els.slidesContainer.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${vidId}?autoplay=1&controls=0&rel=0&modestbranding=1" style="width:100%; height:100%; border:none;" allow="autoplay"></iframe>`;
-                setTimeout(() => location.reload(), 180000); // 3 dakika körlemesine bekleyip kendini yeniler
+                setTimeout(() => location.reload(), 180000); 
                 return;
             }
 
-            // Youtube Iframe API ile Profesyonel Oynatıcı
             new YT.Player('ceremony-yt-player', {
                 videoId: vidId,
                 playerVars: { 
@@ -228,20 +219,17 @@
                 },
                 events: {
                     'onReady': function(e) {
-                        e.target.playVideo(); // Oynatıcı hazır olunca hemen başlat
+                        e.target.playVideo(); 
                     },
                     'onStateChange': function(e) {
-                        // STATE: 0 (ENDED) -> Video bitti demektir!
                         if (e.data === 0) { 
                             els.slidesContainer.innerHTML = `<div style="width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:24px;">Tören sona erdi. Yayın akışına dönülüyor...</div>`;
-                            // 2 saniye sonra sayfayı tamamen yenile ve sistemi ilk haline döndür
                             setTimeout(() => {
                                 window.location.reload();
                             }, 2000);
                         }
                     },
                     'onError': function(e) {
-                        // Eğer link hatalıysa veya video silinmişse ekran siyah kalmasın diye sistemi 5 sn sonra yeniler
                         setTimeout(() => window.location.reload(), 5000);
                     }
                 }
@@ -305,7 +293,7 @@
         syncInternetTime(); 
         startClock(); fetchWeather(); fetchData(sheetId); fetchSidebarData();
         
-        setInterval(checkRemoteCommands, CONFIG.COMMAND_CHECK); // Uzaktan Kumanda Dinleyicisi Başlatıldı
+        setInterval(checkRemoteCommands, CONFIG.COMMAND_CHECK); 
 
         setInterval(() => fetchData(sheetId), CONFIG.DATA_REFRESH);
         setInterval(fetchWeather, CONFIG.WEATHER_REFRESH);
@@ -918,13 +906,14 @@
     function showError(message) { els.slidesContainer.innerHTML = `<div class="slide active"><div class="slide-card cat-onemli no-media"><div class="slide-text"><div class="slide-icon">⚠️</div><h2 class="slide-title">Bilgi Ekranı</h2><p class="slide-content">${escapeHtml(message)}</p></div></div></div>`; }
     function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
     
+    // GÜNCELLENEN KISIM: Yazım hatası burada giderildi.
     function escapeAttr(text) { 
         if (!text) return '';
-        return text.replace(/&/g, '&')
-                   .replace(/"/g, '"')
-                   .replace(/'/g, ''')
-                   .replace(/</g, '<')
-                   .replace(/>/g, '>'); 
+        return text.replace(/&/g, "&amp;")
+                   .replace(/"/g, "&quot;")
+                   .replace(/'/g, "&#39;")
+                   .replace(/</g, "&lt;")
+                   .replace(/>/g, "&gt;"); 
     }
     
     function fetchFreeWeather() { 
