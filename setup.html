@@ -98,6 +98,7 @@
             <button class="tab-btn" data-tab="tab-kurulum">Bağlantı</button>
             <button class="tab-btn active" data-tab="tab-icerik">İçerik Yönetimi</button>
             <button class="tab-btn" data-tab="tab-nobet">Nöbet & Ders Planı</button>
+            <button class="tab-btn" data-tab="tab-toren" style="background: rgba(239, 68, 68, 0.2); color: #f87171;">🇹🇷 TÖREN MODU</button>
             <button class="tab-btn" data-tab="tab-ayarlar">Sistem Ayarları</button>
         </div>
 
@@ -226,6 +227,45 @@
             </form>
         </div>
 
+        <div id="tab-toren" class="tab-content">
+            <div class="setup-form">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <div style="font-size: 50px;">🇹🇷</div>
+                    <h2 style="color: #f87171;">Okul Tören Modu</h2>
+                    <p style="color: var(--text-secondary); font-size: 14px;">Aşağıdaki kutulara Youtube linklerini yapıştırın ve butona basın. TV ekranındaki yayın anında durur ve tören videosu başlar.</p>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 25px;">
+                    
+                    <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.2);">
+                        <label style="color:#fcd34d; font-size:13px; font-weight:bold; display:block; margin-bottom:8px;">🎵 İstiklal Marşı YouTube Linki:</label>
+                        <input type="text" id="toren-link-1" placeholder="Örn: https://www.youtube.com/watch?v=..." style="width:100%; padding:12px; margin-bottom:12px; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px; font-size: 14px;">
+                        <button type="button" class="btn-save" style="background: linear-gradient(135deg, #ef4444, #b91c1c); padding: 12px;" 
+                                onclick="sendTorenCommand(1)">
+                            ▶️ İstiklal Marşı'nı Başlat
+                        </button>
+                    </div>
+                    
+                    <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; border: 1px solid rgba(156, 163, 175, 0.2);">
+                        <label style="color:#60a5fa; font-size:13px; font-weight:bold; display:block; margin-bottom:8px;">⏳ Saygı Duruşu + İstiklal Marşı YouTube Linki:</label>
+                        <input type="text" id="toren-link-2" placeholder="Örn: https://www.youtube.com/watch?v=..." style="width:100%; padding:12px; margin-bottom:12px; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px; font-size: 14px;">
+                        <button type="button" class="btn-save" style="background: linear-gradient(135deg, #4b5563, #1f2937); padding: 12px;" 
+                                onclick="sendTorenCommand(2)">
+                            ▶️ Saygı Duruşu ve İstiklal Marşı'nı Başlat
+                        </button>
+                    </div>
+
+                    <div id="toren-status" style="display:none; text-align:center; padding:15px; background:rgba(16,185,129,0.1); color:#10b981; border-radius:8px; font-weight:600;">
+                        ✅ Komut TV'ye gönderildi! Birazdan başlayacak.
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px; padding: 15px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; color: #fbbf24; font-size: 13px;">
+                    <strong>Not:</strong> Video başlatıldığında sistem otomatik olarak kilitlenir. <b>Video sona erdiğinde sistem otomatik olarak normal yayın akışına geri döner, herhangi bir işlem yapmanıza gerek yoktur.</b>
+                </div>
+            </div>
+        </div>
+
         <div id="tab-ayarlar" class="tab-content">
             <form class="setup-form" id="settings-form" style="position: relative;">
                 <div id="settings-loading-overlay" style="display: none; position: absolute; top:0; left:0; right:0; bottom:0; background:rgba(10,14,26,0.8); z-index:10; flex-direction:column; align-items:center; justify-content:center; color:white;"><div class="spinner"></div><div>Kaydediliyor...</div></div>
@@ -264,6 +304,54 @@
             ogrenciler: []
         };
 
+        // TÖREN MODU İÇİN LOCALSTORAGE LİNKLERİ YÜKLE
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedLink1 = localStorage.getItem('kiosk_toren_link_1');
+            const savedLink2 = localStorage.getItem('kiosk_toren_link_2');
+            if(savedLink1 && document.getElementById('toren-link-1')) document.getElementById('toren-link-1').value = savedLink1;
+            if(savedLink2 && document.getElementById('toren-link-2')) document.getElementById('toren-link-2').value = savedLink2;
+        });
+
+        // TÖREN KOMUTU GÖNDERME
+        async function sendTorenCommand(type) {
+            const inputId = type === 1 ? 'toren-link-1' : 'toren-link-2';
+            const videoUrl = document.getElementById(inputId).value.trim();
+
+            if (!videoUrl || !videoUrl.includes('youtu')) {
+                alert("Lütfen geçerli bir YouTube linki yapıştırın!");
+                return;
+            }
+
+            localStorage.setItem('kiosk_toren_link_' + type, videoUrl);
+
+            const scriptUrl = localStorage.getItem('kiosk_script_url');
+            const sheetId = localStorage.getItem('kiosk_sheet_id');
+            const statusDiv = document.getElementById('toren-status');
+
+            statusDiv.style.display = 'block';
+            statusDiv.style.background = "rgba(59, 130, 246, 0.1)";
+            statusDiv.style.color = "#60a5fa";
+            statusDiv.textContent = "⏳ Komut iletiliyor...";
+
+            try {
+                const resp = await fetch(scriptUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ sheetId: sheetId, action: 'setCommand', command: videoUrl })
+                });
+                const res = await resp.json();
+                if(res.status === 'success') {
+                    statusDiv.style.background = "rgba(16,185,129,0.1)";
+                    statusDiv.style.color = "#10b981";
+                    statusDiv.textContent = "✅ Komut TV'ye iletildi. Yayın başlıyor!";
+                }
+            } catch (e) {
+                statusDiv.style.background = "rgba(239, 68, 68, 0.1)";
+                statusDiv.style.color = "#f87171";
+                statusDiv.textContent = "❌ Hata oluştu! İnternet bağlantınızı kontrol edin.";
+            }
+        }
+
         (function () {
             let isAuthenticated = false; 
             let savedPassword = localStorage.getItem('kiosk_admin_password'); 
@@ -300,7 +388,7 @@
                 btn.addEventListener('click', () => {
                     const targetTab = btn.dataset.tab; 
                     document.getElementById('login-error').style.display = 'none';
-                    if ((targetTab === 'tab-kurulum' || targetTab === 'tab-ayarlar' || targetTab === 'tab-nobet') && savedPassword && !isAuthenticated) { 
+                    if ((targetTab === 'tab-kurulum' || targetTab === 'tab-ayarlar' || targetTab === 'tab-nobet' || targetTab === 'tab-toren') && savedPassword && !isAuthenticated) { 
                         loginOverlay.dataset.targetTab = targetTab; 
                         loginOverlay.style.display = 'flex'; 
                     } else { 
@@ -458,14 +546,12 @@
                         if(json.table.rows.length > 0 && json.table.rows[0].c[0]) {
                             const savedData = JSON.parse(json.table.rows[0].c[0].v);
                             
-                            // YENİ: Nöbetçi öğrencilerin listesini kontrol et ve eskiyse sıfırla (Hem ekrandan hem veritabanından)
+                            // Nöbetçi öğrencilerin listesini kontrol et ve eskiyse sıfırla
                             const now = new Date();
                             const todayStr = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,'0') + "-" + String(now.getDate()).padStart(2,'0');
                             
                             if (savedData.studentSaveDate && savedData.studentSaveDate !== todayStr) {
-                                savedData.ogrenciler = []; // Ekranda gösterme
-                                
-                                // Google Sheet üzerinden de temizle ki veritabanından kalıcı olarak silinsin
+                                savedData.ogrenciler = []; 
                                 const scriptUrl = localStorage.getItem('kiosk_script_url');
                                 const cleanSheetId = localStorage.getItem('kiosk_sheet_id');
                                 if (scriptUrl && cleanSheetId) {
