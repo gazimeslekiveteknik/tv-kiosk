@@ -1,5 +1,5 @@
 /* ============================================
-   TV KIOSK - APP.JS v7.10 (Günlük Nöbet Temizleme, 5-Gün Eşleştirme & Optimize L-Bar)
+   TV KIOSK - APP.JS v7.12 (Otomatik Kapanan Tören Modu & İnternet Saati)
    ============================================ */
 
 (function () {
@@ -9,8 +9,7 @@
         SLIDE_INTERVAL: 10000,      
         DATA_REFRESH: 120000, 
         CLOCK_REFRESH: 1000,
-        PROGRESS_STEP: 50,
-        TICKER_SCROLL_SPEED: 70,
+        COMMAND_CHECK: 3000, // YENİ: Tepki süresi kısaltıldı (3 saniyede bir kontrol eder)
         WEATHER_REFRESH: 600000,
         SIDEBAR_REFRESH: 60000,
         NEXT_PREVIEW_SHOW: 3000,
@@ -25,6 +24,9 @@
         .fullscreen-media::after { opacity: 0 !important; }
         .slide-text { transition: opacity 0.5s ease; }
         .text-hidden { opacity: 0 !important; }
+        
+        /* Tören Modu için siyah arka plan tam ekran */
+        .ceremony-active { background: #000 !important; }
     `;
     document.head.appendChild(dynamicStyle);
 
@@ -68,7 +70,8 @@
     let fallbackTimer = null; 
     let albumTransitionTimer = null;
     let currentDataString = null;
-    let timeOffset = 0; // YENİ: Gerçek internet saat sapmasını tutar
+    let timeOffset = 0; 
+    let isCeremonyMode = false;
     const els = {};
 
     let sidebarData = { sabahci: [], oglenci: [], ogretmenler: { sabahci: [], oglenci: [] }, ogrenciler: [] };
@@ -142,7 +145,6 @@
         window.addEventListener('resize', resizeKiosk); resizeKiosk();
     }
 
-    // YENİ EKLENEN: İnternet Saatini Google Sunucusundan veya Harici API'den Çekme
     async function syncInternetTime() {
         const scriptUrl = localStorage.getItem('kiosk_scripturl') || localStorage.getItem('kiosk_script_url');
         if (scriptUrl) {
@@ -152,11 +154,99 @@
                     const data = await response.json();
                     if (data.status === 'success' && data.timestamp) {
                         timeOffset = data.timestamp - Date.now();
-                        return;
                     }
                 }
             } catch (e) { }
         }
+    }
+
+    // YENİ: Sürekli olarak Google Sheet'te "Tören" komutu olup olmadığını kontrol eder.
+    function checkRemoteCommands() {
+        if (isCeremonyMode) return;
+        const sheetId = localStorage.getItem('kiosk_sheet_id');
+        if (!sheetId) return;
+        
+        const url = `https://docs.google.com/spreadsheets/d/${getCleanSheetId(sheetId)}/gviz/tq?tqx=out:json;responseHandler:commandCb&sheet=AYARLAR&headers=0&t=${Date.now()}`;
+        
+        window.commandCb = function(json) {
+            try {
+                const rows = json.table.rows;
+                let commandUrl = null;
+                for (let r of rows) {
+                    if (r.c[0] && r.c[0].v === "AktifKomut") commandUrl = r.c[1].v;
+                }
+
+                if (commandUrl) {
+                    startCeremony(commandUrl);
+                }
+            } catch(e) {}
+            delete window.commandCb;
+        };
+        const script = document.createElement('script'); script.src = url; document.body.appendChild(script);
+    }
+
+    // YENİ: Tören Modunu başlatan ve videonun bittiğini tespit edip sistemi sıfırlayan ana fonksiyon
+    function startCeremony(vidUrl) {
+        isCeremonyMode = true;
+        clearAllTimers();
+        destroyAllPlayers(); // Arkada çalan duyuru videosu/müziği varsa tamamen durdurur.
+
+        const vidMatch = vidUrl.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
+        if (!vidMatch) {
+            location.reload(); return;
+        }
+        const vidId = vidMatch[1];
+
+        // Ekranı temizle ve tam ekran siyah yap
+        document.body.classList.add('ceremony-active');
+        els.slidesContainer.innerHTML = `
+            <div class="slide active" style="z-index: 99999;">
+                <div class="slide-card no-media" style="background:#000; padding:0; overflow:hidden; border-radius: 0; width:100%; height:100%;">
+                    <div id="ceremony-yt-player" style="width:100%; height:100%; pointer-events:none;"></div>
+                </div>
+            </div>
+        `;
+
+        // Komutu sistemden sil (Sürekli tekrar etmesini engelle)
+        const scriptUrl = localStorage.getItem('kiosk_scripturl') || localStorage.getItem('kiosk_script_url');
+        fetch(scriptUrl, { method: 'POST', body: JSON.stringify({ sheetId: localStorage.getItem('kiosk_sheet_id'), action: 'clearCommand' }) });
+
+        // Tören Oynatıcısını Kurulumu
+        setTimeout(() => {
+            if (!window.ytApiReady) {
+                // API yüklenemediyse basit iframe yedeği (Çok nadir durum)
+                els.slidesContainer.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${vidId}?autoplay=1&controls=0&rel=0&modestbranding=1" style="width:100%; height:100%; border:none;" allow="autoplay"></iframe>`;
+                setTimeout(() => location.reload(), 180000); // 3 dakika körlemesine bekleyip kendini yeniler
+                return;
+            }
+
+            // Youtube Iframe API ile Profesyonel Oynatıcı
+            new YT.Player('ceremony-yt-player', {
+                videoId: vidId,
+                playerVars: { 
+                    autoplay: 1, controls: 0, modestbranding: 1, rel: 0, showinfo: 0, disablekb: 1, iv_load_policy: 3
+                },
+                events: {
+                    'onReady': function(e) {
+                        e.target.playVideo(); // Oynatıcı hazır olunca hemen başlat
+                    },
+                    'onStateChange': function(e) {
+                        // STATE: 0 (ENDED) -> Video bitti demektir!
+                        if (e.data === 0) { 
+                            els.slidesContainer.innerHTML = `<div style="width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:24px;">Tören sona erdi. Yayın akışına dönülüyor...</div>`;
+                            // 2 saniye sonra sayfayı tamamen yenile ve sistemi ilk haline döndür
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 2000);
+                        }
+                    },
+                    'onError': function(e) {
+                        // Eğer link hatalıysa veya video silinmişse ekran siyah kalmasın diye sistemi 5 sn sonra yeniler
+                        setTimeout(() => window.location.reload(), 5000);
+                    }
+                }
+            });
+        }, 100);
     }
 
     function init() {
@@ -212,15 +302,18 @@
         const schoolLogo = localStorage.getItem('kiosk_school_logo');
         if (schoolLogo && els.schoolLogo) { els.schoolLogo.src = schoolLogo; els.schoolLogo.style.display = 'block'; if (els.defaultSchoolIcon) els.defaultSchoolIcon.style.display = 'none'; }
         
-        syncInternetTime(); // YENİ: Başlangıçta internet saatini çek
+        syncInternetTime(); 
         startClock(); fetchWeather(); fetchData(sheetId); fetchSidebarData();
         
+        setInterval(checkRemoteCommands, CONFIG.COMMAND_CHECK); // Uzaktan Kumanda Dinleyicisi Başlatıldı
+
         setInterval(() => fetchData(sheetId), CONFIG.DATA_REFRESH);
         setInterval(fetchWeather, CONFIG.WEATHER_REFRESH);
         setInterval(fetchSidebarData, CONFIG.SIDEBAR_REFRESH);
         setInterval(updateLessonTimer, 1000);
-        setInterval(syncInternetTime, 3600000); // YENİ: Saati saatte bir Fatih ağından tazele
+        setInterval(syncInternetTime, 3600000); 
         setInterval(() => {
+            if (isCeremonyMode) return;
             const mergedT = getMergedTeachers();
             if(mergedT.length > 4) renderDutyPage('duty-teachers', mergedT, 'teachers');
             if(sidebarData.ogrenciler.length > 4) renderDutyPage('duty-students', sidebarData.ogrenciler, 'students');
@@ -230,11 +323,11 @@
     function startDemoMode() { els.schoolName.textContent = 'Bilgi Ekranı'; startClock(); fetchFreeWeather(); processData([{ baslik: 'Örnek Duyuru', icerik: 'Sistem demo modunda çalışıyor.', kategori: 'duyuru', aktif: 'evet' }]); }
     function startClock() { updateClock(); setInterval(updateClock, CONFIG.CLOCK_REFRESH); }
     
-    // YENİ: TV saatini değil, internetten çekilen ve sapması hesaplanmış saati kullanır.
     function updateClock() { const now = new Date(Date.now() + timeOffset); els.time.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`; els.date.textContent = `${now.getDate()} ${TR_MONTHS[now.getMonth()]} ${now.getFullYear()}, ${TR_DAYS[now.getDay()]}`; }
     function getCleanSheetId(sheetId) { if (sheetId.includes('docs.google.com')) return sheetId.match(/\/d\/([a-zA-Z0-9_-]+)/)[1]; return sheetId; }
 
     function fetchSidebarData() {
+        if (isCeremonyMode) return;
         const id = localStorage.getItem('kiosk_sheet_id'); if(!id || !navigator.onLine) return;
         const url = `https://docs.google.com/spreadsheets/d/${getCleanSheetId(id)}/gviz/tq?tqx=out:json;responseHandler:sidebarCb&sheet=YAN_PANEL&headers=0&t=${Date.now()}`;
         
@@ -245,24 +338,22 @@
                     sidebarData.sabahci = Array.isArray(dataObj.sabahci) ? dataObj.sabahci : [];
                     sidebarData.oglenci = Array.isArray(dataObj.oglenci) ? dataObj.oglenci : [];
                     
-                    const now = new Date(Date.now() + timeOffset); // YENİ: Senkronize zaman
+                    const now = new Date(Date.now() + timeOffset); 
                     
-                    // Öğrenci nöbet verisini günlük olarak temizleme (tarih kontrolü)
                     const todayKey = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,'0') + "-" + String(now.getDate()).padStart(2,'0');
                     if (dataObj.studentSaveDate === todayKey) {
                         sidebarData.ogrenciler = Array.isArray(dataObj.ogrenciler) ? dataObj.ogrenciler : [];
                     } else {
-                        sidebarData.ogrenciler = []; // Veri önceki günlerden kalmıssa temizle
+                        sidebarData.ogrenciler = []; 
                     }
                     
                     let todayT;
-                    // 5 Günlük Nöbet Dizisi Kontrolü (Hafta sonu kaymasını önleme)
                     if (Array.isArray(dataObj.ogretmenler)) {
-                        let dayIndex = now.getDay() - 1; // 0: Pzt, 1: Salı, ..., 4: Cuma
+                        let dayIndex = now.getDay() - 1; 
                         if (dayIndex >= 0 && dayIndex <= 4) {
                             todayT = dataObj.ogretmenler[dayIndex];
                         } else {
-                            todayT = { sabahci: [], oglenci: [] }; // Hafta sonu boş
+                            todayT = { sabahci: [], oglenci: [] }; 
                         }
                     } else {
                         const todayName = TR_DAYS[now.getDay()];
@@ -286,7 +377,7 @@
     }
 
     function getMergedTeachers() {
-        const now = new Date(Date.now() + timeOffset); // YENİ: Senkronize zaman
+        const now = new Date(Date.now() + timeOffset); 
         const currentMins = (now.getHours() * 60) + now.getMinutes();
         let isSabah = true, isOglenci = true; 
         
@@ -316,11 +407,11 @@
     }
 
     function renderDutyPage(containerId, items, typeKey) {
+        if (isCeremonyMode) return;
         const container = document.getElementById(containerId);
         if(!container) return;
         if(!items || items.length === 0) { container.innerHTML = '<div class="duty-item">Kayıt bulunamadı.</div>'; return; }
 
-        // Sığma (taşma) sorununu çözmek için ekrandaki limit 5'ten 4'e düşürüldü
         const LIMIT = 4; 
         const totalPages = Math.ceil(items.length / LIMIT);
         if (dutyPages[typeKey] >= totalPages) dutyPages[typeKey] = 0;
@@ -343,7 +434,8 @@
     }
 
     function updateLessonTimer() {
-        const now = new Date(Date.now() + timeOffset); // YENİ: Senkronize zaman
+        if (isCeremonyMode) return;
+        const now = new Date(Date.now() + timeOffset); 
         const currentMins = (now.getHours() * 60) + now.getMinutes();
         const currentSecs = now.getSeconds();
 
@@ -423,6 +515,7 @@
     }
 
     function fetchData(sheetId) {
+        if (isCeremonyMode) return;
         if (!navigator.onLine) { loadFromCache(); return; }
         const id = getCleanSheetId(sheetId);
         const url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json;responseHandler:parseGoogleSheetData&sheet=DUYURULAR&headers=1`;
@@ -586,7 +679,7 @@
         requestAnimationFrame(() => { els.tickerContent.style.setProperty('--ticker-duration', `${(els.tickerContent.scrollWidth / 2) / CONFIG.TICKER_SCROLL_SPEED}s`); });
     }
 
-    function startSlideshow() { if (slides.length > 0) playCurrentSlide(); }
+    function startSlideshow() { if (slides.length > 0 && !isCeremonyMode) playCurrentSlide(); }
 
     function createJenerikHTML(category, defaultTitle) {
         const cat = category ? category.toLowerCase().trim() : 'duyuru';
@@ -631,6 +724,7 @@
     }
 
     function playCurrentSlide() {
+        if (isCeremonyMode) return;
         clearAllTimers(); document.querySelectorAll('.slide-progress').forEach(bar => { bar.style.width = '0%'; bar.style.transition = 'none'; });
         const item = slides[currentSlideIndex]; if (!item) return;
 
@@ -653,6 +747,7 @@
     }
 
     function playAlbumItem(item, sIndex, aIndex) {
+        if (isCeremonyMode) return;
         clearAllTimers(); const media = item.album[aIndex];
         const container = document.getElementById(`media-container-${sIndex}`);
         const textElement = container.closest('.slide-card').querySelector('.slide-text');
@@ -696,6 +791,7 @@
     }
 
     function handleVideoSlide(media, idIndex, container, textElement, item) {
+        if (isCeremonyMode) return;
         if (media.mediaType === 'youtube' && !navigator.onLine) { currentSlideTimeout = setTimeout(() => progressToNextAlbumItem(item, currentSlideIndex, currentAlbumIndex), 100); return; }
         const advance = () => progressToNextAlbumItem(item, currentSlideIndex, currentAlbumIndex);
 
@@ -758,6 +854,7 @@
     }
 
     function progressToNextAlbumItem(item, sIndex, aIndex) {
+        if (isCeremonyMode) return;
         stopSlideMedia(`${sIndex}-${aIndex}`, item.album[aIndex]);
         if (aIndex + 1 < item.album.length) {
             currentAlbumIndex++; playAlbumItem(item, sIndex, currentAlbumIndex);
@@ -789,6 +886,7 @@
     }
 
     function nextSlide() {
+        if (isCeremonyMode) return;
         clearAllTimers();
         if (slides.length > 1) {
             const allSlides = els.slidesContainer.querySelectorAll('.slide'); const allDots = els.slideDots.querySelectorAll('.slide-dot');
@@ -804,12 +902,14 @@
     }
 
     function startProgress(duration) {
+        if (isCeremonyMode) return;
         const progressBar = document.getElementById(`progress-${currentSlideIndex}`); if (!progressBar) return; let elapsed = 0;
         progressBar.style.transition = 'none'; progressBar.style.width = '0%'; void progressBar.offsetWidth;
         progressTimer = setInterval(() => { elapsed += CONFIG.PROGRESS_STEP; progressBar.style.width = `${Math.min((elapsed / duration) * 100, 100)}%`; progressBar.style.transition = `width ${CONFIG.PROGRESS_STEP}ms linear`; }, CONFIG.PROGRESS_STEP);
     }
 
     function scheduleNextPreview() {
+        if (isCeremonyMode) return;
         if (nextPreviewTimer) clearTimeout(nextPreviewTimer); if (slides.length <= 1 || !els.nextPreview) return;
         const currentItem = slides[currentSlideIndex]; if (currentItem.album.length > 0) return;
         nextPreviewTimer = setTimeout(() => { els.nextPreviewTitle.textContent = slides[(currentSlideIndex + 1) % slides.length].baslik; els.nextPreview.classList.add('visible'); setTimeout(() => els.nextPreview.classList.remove('visible'), 2800); }, CONFIG.SLIDE_INTERVAL - CONFIG.NEXT_PREVIEW_SHOW);
@@ -820,11 +920,11 @@
     
     function escapeAttr(text) { 
         if (!text) return '';
-        return text.replace(/&/g, '&amp;')
-                   .replace(/"/g, '&quot;')
-                   .replace(/'/g, '&#39;')
-                   .replace(/</g, '&lt;')
-                   .replace(/>/g, '&gt;'); 
+        return text.replace(/&/g, '&')
+                   .replace(/"/g, '"')
+                   .replace(/'/g, ''')
+                   .replace(/</g, '<')
+                   .replace(/>/g, '>'); 
     }
     
     function fetchFreeWeather() { 
