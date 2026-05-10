@@ -68,6 +68,7 @@
     let fallbackTimer = null; 
     let albumTransitionTimer = null;
     let currentDataString = null;
+    let timeOffset = 0; // YENİ: Gerçek internet saat sapmasını tutar
     const els = {};
 
     let sidebarData = { sabahci: [], oglenci: [], ogretmenler: { sabahci: [], oglenci: [] }, ogrenciler: [] };
@@ -141,6 +142,23 @@
         window.addEventListener('resize', resizeKiosk); resizeKiosk();
     }
 
+    // YENİ EKLENEN: İnternet Saatini Google Sunucusundan veya Harici API'den Çekme
+    async function syncInternetTime() {
+        const scriptUrl = localStorage.getItem('kiosk_scripturl') || localStorage.getItem('kiosk_script_url');
+        if (scriptUrl) {
+            try {
+                const response = await fetch(scriptUrl);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'success' && data.timestamp) {
+                        timeOffset = data.timestamp - Date.now();
+                        return;
+                    }
+                }
+            } catch (e) { }
+        }
+    }
+
     function init() {
         cacheDom(); applyAutoScaling(); 
         if (!navigator.onLine && els.offlineBadge) els.offlineBadge.classList.remove('hidden');
@@ -194,12 +212,14 @@
         const schoolLogo = localStorage.getItem('kiosk_school_logo');
         if (schoolLogo && els.schoolLogo) { els.schoolLogo.src = schoolLogo; els.schoolLogo.style.display = 'block'; if (els.defaultSchoolIcon) els.defaultSchoolIcon.style.display = 'none'; }
         
+        syncInternetTime(); // YENİ: Başlangıçta internet saatini çek
         startClock(); fetchWeather(); fetchData(sheetId); fetchSidebarData();
         
         setInterval(() => fetchData(sheetId), CONFIG.DATA_REFRESH);
         setInterval(fetchWeather, CONFIG.WEATHER_REFRESH);
         setInterval(fetchSidebarData, CONFIG.SIDEBAR_REFRESH);
         setInterval(updateLessonTimer, 1000);
+        setInterval(syncInternetTime, 3600000); // YENİ: Saati saatte bir Fatih ağından tazele
         setInterval(() => {
             const mergedT = getMergedTeachers();
             if(mergedT.length > 4) renderDutyPage('duty-teachers', mergedT, 'teachers');
@@ -209,7 +229,9 @@
 
     function startDemoMode() { els.schoolName.textContent = 'Bilgi Ekranı'; startClock(); fetchFreeWeather(); processData([{ baslik: 'Örnek Duyuru', icerik: 'Sistem demo modunda çalışıyor.', kategori: 'duyuru', aktif: 'evet' }]); }
     function startClock() { updateClock(); setInterval(updateClock, CONFIG.CLOCK_REFRESH); }
-    function updateClock() { const now = new Date(); els.time.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`; els.date.textContent = `${now.getDate()} ${TR_MONTHS[now.getMonth()]} ${now.getFullYear()}, ${TR_DAYS[now.getDay()]}`; }
+    
+    // YENİ: TV saatini değil, internetten çekilen ve sapması hesaplanmış saati kullanır.
+    function updateClock() { const now = new Date(Date.now() + timeOffset); els.time.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`; els.date.textContent = `${now.getDate()} ${TR_MONTHS[now.getMonth()]} ${now.getFullYear()}, ${TR_DAYS[now.getDay()]}`; }
     function getCleanSheetId(sheetId) { if (sheetId.includes('docs.google.com')) return sheetId.match(/\/d\/([a-zA-Z0-9_-]+)/)[1]; return sheetId; }
 
     function fetchSidebarData() {
@@ -223,7 +245,7 @@
                     sidebarData.sabahci = Array.isArray(dataObj.sabahci) ? dataObj.sabahci : [];
                     sidebarData.oglenci = Array.isArray(dataObj.oglenci) ? dataObj.oglenci : [];
                     
-                    const now = new Date();
+                    const now = new Date(Date.now() + timeOffset); // YENİ: Senkronize zaman
                     
                     // Öğrenci nöbet verisini günlük olarak temizleme (tarih kontrolü)
                     const todayKey = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,'0') + "-" + String(now.getDate()).padStart(2,'0');
@@ -264,7 +286,7 @@
     }
 
     function getMergedTeachers() {
-        const now = new Date();
+        const now = new Date(Date.now() + timeOffset); // YENİ: Senkronize zaman
         const currentMins = (now.getHours() * 60) + now.getMinutes();
         let isSabah = true, isOglenci = true; 
         
@@ -321,7 +343,7 @@
     }
 
     function updateLessonTimer() {
-        const now = new Date();
+        const now = new Date(Date.now() + timeOffset); // YENİ: Senkronize zaman
         const currentMins = (now.getHours() * 60) + now.getMinutes();
         const currentSecs = now.getSeconds();
 
