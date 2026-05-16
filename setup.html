@@ -551,6 +551,10 @@
                 
                 if (tabId === 'tab-icerik') fetchExistingContents();
                 if (tabId === 'tab-nobet') fetchSidebarDataForSetup();
+                
+                // YENİ EKLENEN ÇÖZÜM: Kullanıcı Tören sekmesine tıkladığında Sheet'ten en güncel veriyi çek
+                if (tabId === 'tab-toren') fetchTorenLinksFromSheet();
+
                 if (tabId === 'tab-ayarlar') {
                     document.getElementById('s-okuladi').value = localStorage.getItem('kiosk_school_name') || ''; 
                     document.getElementById('s-sifre').value = localStorage.getItem('kiosk_admin_password') || '';
