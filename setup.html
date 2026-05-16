@@ -327,6 +327,60 @@
             ogrenciler: []
         };
 
+        // YENİ EKLENEN: Tören Linklerini Sheet'ten çekme fonksiyonu
+        function fetchTorenLinksFromSheet() {
+            const sheetId = localStorage.getItem('kiosk_sheet_id');
+            if (!sheetId) return;
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:loadTorenLinksCb&sheet=YAN_PANEL&headers=0&t=${Date.now()}`;
+            
+            window.loadTorenLinksCb = function (json) {
+                try {
+                    if(json.table.rows.length > 0 && json.table.rows[0].c[0]) {
+                        const savedData = JSON.parse(json.table.rows[0].c[0].v);
+                        if(savedData.torenLink1) {
+                            if(document.getElementById('toren-link-1')) document.getElementById('toren-link-1').value = savedData.torenLink1;
+                            localStorage.setItem('kiosk_toren_link_1', savedData.torenLink1);
+                        }
+                        if(savedData.torenLink2) {
+                            if(document.getElementById('toren-link-2')) document.getElementById('toren-link-2').value = savedData.torenLink2;
+                            localStorage.setItem('kiosk_toren_link_2', savedData.torenLink2);
+                        }
+                    }
+                } catch (e) { console.error("Tören linkleri yüklenemedi:", e); }
+                delete window.loadTorenLinksCb;
+            };
+            const script = document.createElement('script'); script.src = url; document.body.appendChild(script);
+        }
+
+        // YENİ EKLENEN: Tören Linklerini Sheet'e kalıcı kaydetme fonksiyonu
+        function updateTorenLinksInSheet(type, newLink) {
+            const sheetId = localStorage.getItem('kiosk_sheet_id');
+            const scriptUrl = localStorage.getItem('kiosk_script_url');
+            if (!sheetId || !scriptUrl) return;
+
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:updateTorenCb&sheet=YAN_PANEL&headers=0&t=${Date.now()}`;
+            
+            window.updateTorenCb = async function (json) {
+                try {
+                    let savedData = {};
+                    if(json.table.rows.length > 0 && json.table.rows[0].c[0]) {
+                        savedData = JSON.parse(json.table.rows[0].c[0].v);
+                    }
+
+                    if (type === 1) savedData.torenLink1 = newLink;
+                    if (type === 2) savedData.torenLink2 = newLink;
+
+                    await fetch(scriptUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ sheetId: sheetId, action: 'saveSidebarData', sidebarData: savedData })
+                    });
+                } catch (e) { console.error("Tören linki güncellenirken hata:", e); }
+                delete window.updateTorenCb;
+            };
+            const script = document.createElement('script'); script.src = url; document.body.appendChild(script);
+        }
+
         // --- TÖREN MODU İÇİN BİLGİSAYARDAN YOUTUBE'A DOĞRUDAN VİDEO YÜKLEME ---
         async function uploadTorenVideo(type) {
             const fileInput = document.getElementById('file-toren-' + type);
@@ -386,6 +440,9 @@
                         // Linki inputa yaz ve tarayıcıya kaydet
                         linkInput.value = finalLink;
                         localStorage.setItem('kiosk_toren_link_' + type, finalLink);
+
+                        // YENİ EKLENEN: Linki Google Sheet'e kalıcı olarak kaydet
+                        updateTorenLinksInSheet(type, finalLink);
                         
                         progText.style.color = '#10b981';
                         progText.textContent = '✅ Video Başarıyla YouTube Kanalınıza Yüklendi ve Kaydedildi!';
@@ -405,6 +462,9 @@
             const savedLink2 = localStorage.getItem('kiosk_toren_link_2');
             if(savedLink1 && document.getElementById('toren-link-1')) document.getElementById('toren-link-1').value = savedLink1;
             if(savedLink2 && document.getElementById('toren-link-2')) document.getElementById('toren-link-2').value = savedLink2;
+
+            // YENİ EKLENEN: Sheet üzerinden en güncel linkleri getir (Başka bir cihazdan eklenmiş olabilir)
+            fetchTorenLinksFromSheet();
         });
 
         // TÖREN KOMUTU VEYA İPTAL GÖNDERME
@@ -422,6 +482,9 @@
                     return;
                 }
                 localStorage.setItem('kiosk_toren_link_' + typeOrCommand, videoUrl);
+
+                // YENİ EKLENEN: Manuel bir link yapıştırıldığında da bunu Google Sheet'e kaydet
+                updateTorenLinksInSheet(typeOrCommand, videoUrl);
             }
 
             const scriptUrl = localStorage.getItem('kiosk_script_url');
@@ -678,6 +741,16 @@
                                 }
                             }
                             
+                            // YENİ EKLENEN: Sidebar datası çekildiğinde Tören linklerini de güncelle (Garanti önlem)
+                            if(savedData.torenLink1) {
+                                if(document.getElementById('toren-link-1')) document.getElementById('toren-link-1').value = savedData.torenLink1;
+                                localStorage.setItem('kiosk_toren_link_1', savedData.torenLink1);
+                            }
+                            if(savedData.torenLink2) {
+                                if(document.getElementById('toren-link-2')) document.getElementById('toren-link-2').value = savedData.torenLink2;
+                                localStorage.setItem('kiosk_toren_link_2', savedData.torenLink2);
+                            }
+
                             document.getElementById('list-sabahci').innerHTML = '';
                             if(savedData.sabahci) savedData.sabahci.forEach(b => window.addTimeBlock('sabahci', b.start, b.end));
                             
@@ -714,7 +787,19 @@
                     e.preventDefault();
                     window.saveCurrentDayTeachers();
                     
-                    let finalData = { sabahci: [], oglenci: [], ogretmenler: nobetData.ogretmenler, ogrenciler: [] };
+                    const now = new Date();
+                    const todayStr = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,'0') + "-" + String(now.getDate()).padStart(2,'0');
+
+                    // YENİ EKLENEN: Nöbet verisini kaydederken var olan tören linklerini ve tarihi korumak için finalData'ya ekledik
+                    let finalData = { 
+                        sabahci: [], 
+                        oglenci: [], 
+                        ogretmenler: nobetData.ogretmenler, 
+                        ogrenciler: [],
+                        studentSaveDate: todayStr,
+                        torenLink1: localStorage.getItem('kiosk_toren_link_1') || '',
+                        torenLink2: localStorage.getItem('kiosk_toren_link_2') || ''
+                    };
                     
                     document.querySelectorAll('#list-sabahci .dynamic-row').forEach(r => {
                         finalData.sabahci.push({ start: r.querySelector('.inp-start').value, end: r.querySelector('.inp-end').value });
